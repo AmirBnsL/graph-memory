@@ -1,0 +1,1353 @@
+{
+  "mode": "vector",
+  "k": 10,
+  "provider": "ollama",
+  "model": "qwen2.5:7b-instruct",
+  "n": 50,
+  "F1": 0.13914285714285712,
+  "EM": 0.0,
+  "F1_by_category": {
+    "1": 0.08145363408521304,
+    "2": 0.18055555555555555,
+    "3": 0.15374149659863948
+  },
+  "n_by_category": {
+    "1": 19,
+    "2": 24,
+    "3": 7
+  },
+  "mean_latency_s": 0.2639269256591797,
+  "total_latency_s": 13.205228805541992,
+  "mean_prompt_chars": 1551.74,
+  "rows": [
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline go to the LGBTQ support group?",
+      "gold": "7 May 2023",
+      "pred": "8 May, 2023",
+      "F1": 0.6666666666666666,
+      "EM": 0.0,
+      "latency_s": 12.650030612945557,
+      "prompt_chars": 1919,
+      "evidence": [
+        "D1:3"
+      ],
+      "context_ids": [
+        "D9:11",
+        "D14:34",
+        "D1:3",
+        "D5:2",
+        "D8:22",
+        "D3:2",
+        "D14:12",
+        "D10:5",
+        "D18:13",
+        "D6:14"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Melanie paint a sunrise?",
+      "gold": "2022",
+      "pred": "Last year.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.012603521347045898,
+      "prompt_chars": 1678,
+      "evidence": [
+        "D1:12"
+      ],
+      "context_ids": [
+        "D1:13",
+        "D1:14",
+        "D14:6",
+        "D1:15",
+        "D6:5",
+        "D14:7",
+        "D14:31",
+        "D8:7",
+        "D17:13",
+        "D4:9"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 3,
+      "question": "What fields would Caroline be likely to pursue in her educaton?",
+      "gold": "Psychology, counseling certification",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.018093347549438477,
+      "prompt_chars": 1280,
+      "evidence": [
+        "D1:9",
+        "D1:11"
+      ],
+      "context_ids": [
+        "D1:10",
+        "D12:20",
+        "D17:26",
+        "D14:24",
+        "D1:4",
+        "D12:12",
+        "D12:18",
+        "D19:6",
+        "D14:18",
+        "D8:22"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What did Caroline research?",
+      "gold": "Adoption agencies",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.011151552200317383,
+      "prompt_chars": 1289,
+      "evidence": [
+        "D2:8"
+      ],
+      "context_ids": [
+        "D14:18",
+        "D1:4",
+        "D12:20",
+        "D17:26",
+        "D1:10",
+        "D14:20",
+        "D12:12",
+        "D16:12",
+        "D7:10",
+        "D14:24"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What is Caroline's identity?",
+      "gold": "Transgender woman",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.01086878776550293,
+      "prompt_chars": 1333,
+      "evidence": [
+        "D1:5"
+      ],
+      "context_ids": [
+        "D14:18",
+        "D14:20",
+        "D17:22",
+        "D12:12",
+        "D9:17",
+        "D17:26",
+        "D1:4",
+        "D8:36",
+        "D12:20",
+        "D4:2"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Melanie run a charity race?",
+      "gold": "The sunday before 25 May 2023",
+      "pred": "25 May, 2023",
+      "F1": 0.7499999999999999,
+      "EM": 0.0,
+      "latency_s": 0.010766029357910156,
+      "prompt_chars": 1283,
+      "evidence": [
+        "D2:1"
+      ],
+      "context_ids": [
+        "D4:9",
+        "D10:23",
+        "D6:5",
+        "D2:2",
+        "D17:25",
+        "D7:23",
+        "D8:23",
+        "D10:1",
+        "D11:16",
+        "D7:27"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When is Melanie planning on going camping?",
+      "gold": "June 2023",
+      "pred": "next month",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010655641555786133,
+      "prompt_chars": 1678,
+      "evidence": [
+        "D2:7"
+      ],
+      "context_ids": [
+        "D10:12",
+        "D2:7",
+        "D4:9",
+        "D10:13",
+        "D17:25",
+        "D15:1",
+        "D4:6",
+        "D10:1",
+        "D12:21",
+        "D12:17"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What is Caroline's relationship status?",
+      "gold": "Single",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010305643081665039,
+      "prompt_chars": 1265,
+      "evidence": [
+        "D3:13",
+        "D2:14"
+      ],
+      "context_ids": [
+        "D8:22",
+        "D2:17",
+        "D12:20",
+        "D9:7",
+        "D17:26",
+        "D4:18",
+        "D3:22",
+        "D6:2",
+        "D12:18",
+        "D12:12"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline give a speech at a school?",
+      "gold": "The week before 9 June 2023",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.01089334487915039,
+      "prompt_chars": 1300,
+      "evidence": [
+        "D3:1"
+      ],
+      "context_ids": [
+        "D1:4",
+        "D14:18",
+        "D6:2",
+        "D17:26",
+        "D8:14",
+        "D8:22",
+        "D12:20",
+        "D19:6",
+        "D14:20",
+        "D12:12"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline meet up with her friends, family, and mentors?",
+      "gold": "The week before 9 June 2023",
+      "pred": "15 July, 2023",
+      "F1": 0.25,
+      "EM": 0.0,
+      "latency_s": 0.023029088973999023,
+      "prompt_chars": 1362,
+      "evidence": [
+        "D3:11"
+      ],
+      "context_ids": [
+        "D1:4",
+        "D8:22",
+        "D17:26",
+        "D14:18",
+        "D3:22",
+        "D6:2",
+        "D12:14",
+        "D12:12",
+        "D8:14",
+        "D8:32"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "How long has Caroline had her current group of friends for?",
+      "gold": "4 years",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.012426376342773438,
+      "prompt_chars": 1279,
+      "evidence": [
+        "D3:13"
+      ],
+      "context_ids": [
+        "D8:22",
+        "D6:2",
+        "D1:4",
+        "D3:22",
+        "D8:38",
+        "D17:26",
+        "D12:14",
+        "D12:12",
+        "D8:36",
+        "D12:20"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "Where did Caroline move from 4 years ago?",
+      "gold": "Sweden",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.011626243591308594,
+      "prompt_chars": 1423,
+      "evidence": [
+        "D3:13",
+        "D4:3"
+      ],
+      "context_ids": [
+        "D1:4",
+        "D17:26",
+        "D8:22",
+        "D6:2",
+        "D12:12",
+        "D12:20",
+        "D14:18",
+        "D3:22",
+        "D4:8",
+        "D1:18"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "How long ago was Caroline's 18th birthday?",
+      "gold": "10 years ago",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.011056900024414062,
+      "prompt_chars": 1647,
+      "evidence": [
+        "D4:5"
+      ],
+      "context_ids": [
+        "D14:18",
+        "D8:14",
+        "D11:1",
+        "D1:4",
+        "D6:2",
+        "D8:22",
+        "D4:8",
+        "D3:22",
+        "D17:26",
+        "D3:16"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What career path has Caroline decided to persue?",
+      "gold": "counseling or mental health for Transgender people",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.01016688346862793,
+      "prompt_chars": 1270,
+      "evidence": [
+        "D4:13",
+        "D1:11"
+      ],
+      "context_ids": [
+        "D1:10",
+        "D12:20",
+        "D12:12",
+        "D17:26",
+        "D1:4",
+        "D14:18",
+        "D12:10",
+        "D8:22",
+        "D14:24",
+        "D18:11"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 3,
+      "question": "Would Caroline still want to pursue counseling as a career if she hadn't received support growing up?",
+      "gold": "Likely no",
+      "pred": "No information available.",
+      "F1": 0.4,
+      "EM": 0.0,
+      "latency_s": 0.010872840881347656,
+      "prompt_chars": 1397,
+      "evidence": [
+        "D4:15",
+        "D3:5"
+      ],
+      "context_ids": [
+        "D12:12",
+        "D18:11",
+        "D19:13",
+        "D12:10",
+        "D8:22",
+        "D19:6",
+        "D3:22",
+        "D12:20",
+        "D4:18",
+        "D8:32"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What activities does Melanie partake in?",
+      "gold": "pottery, camping, painting, swimming",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010548830032348633,
+      "prompt_chars": 1181,
+      "evidence": [
+        "D5:4",
+        "D9:1",
+        "D1:12",
+        "D1:18"
+      ],
+      "context_ids": [
+        "D17:25",
+        "D4:9",
+        "D4:1",
+        "D11:16",
+        "D8:23",
+        "D4:17",
+        "D10:1",
+        "D10:23",
+        "D15:1",
+        "D7:27"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Melanie sign up for a pottery class?",
+      "gold": "2 July 2023",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.011346817016601562,
+      "prompt_chars": 1814,
+      "evidence": [
+        "D5:4"
+      ],
+      "context_ids": [
+        "D5:5",
+        "D12:3",
+        "D14:4",
+        "D16:11",
+        "D17:25",
+        "D4:9",
+        "D17:9",
+        "D1:15",
+        "D5:12",
+        "D16:9"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When is Caroline going to the transgender conference?",
+      "gold": "July 2023",
+      "pred": "This month.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010414838790893555,
+      "prompt_chars": 1791,
+      "evidence": [
+        "D5:13"
+      ],
+      "context_ids": [
+        "D14:34",
+        "D5:13",
+        "D9:11",
+        "D5:16",
+        "D14:35",
+        "D3:1",
+        "D14:12",
+        "D6:2",
+        "D12:18",
+        "D8:22"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "Where has Melanie camped?",
+      "gold": "beach, mountains, forest",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010048389434814453,
+      "prompt_chars": 1196,
+      "evidence": [
+        "D6:16",
+        "D4:6",
+        "D8:32"
+      ],
+      "context_ids": [
+        "D6:5",
+        "D4:9",
+        "D10:1",
+        "D15:1",
+        "D8:23",
+        "D17:25",
+        "D10:23",
+        "D11:16",
+        "D10:13",
+        "D7:27"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What do Melanie's kids like?",
+      "gold": "dinosaurs, nature",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010575532913208008,
+      "prompt_chars": 1245,
+      "evidence": [
+        "D6:6",
+        "D4:8"
+      ],
+      "context_ids": [
+        "D17:25",
+        "D4:9",
+        "D10:23",
+        "D18:12",
+        "D18:6",
+        "D8:3",
+        "D8:29",
+        "D4:17",
+        "D4:1",
+        "D10:1"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Melanie go to the museum?",
+      "gold": "5 July 2023",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010170936584472656,
+      "prompt_chars": 1233,
+      "evidence": [
+        "D6:4"
+      ],
+      "context_ids": [
+        "D4:9",
+        "D10:23",
+        "D6:5",
+        "D8:23",
+        "D10:1",
+        "D17:25",
+        "D11:16",
+        "D1:13",
+        "D4:1",
+        "D4:17"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline have a picnic?",
+      "gold": "The week before 6 July 2023",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010452747344970703,
+      "prompt_chars": 1660,
+      "evidence": [
+        "D6:11"
+      ],
+      "context_ids": [
+        "D8:14",
+        "D4:8",
+        "D1:4",
+        "D14:18",
+        "D6:2",
+        "D10:8",
+        "D11:1",
+        "D12:18",
+        "D8:22",
+        "D3:22"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 3,
+      "question": "Would Caroline likely have Dr. Seuss books on her bookshelf?",
+      "gold": "Yes, since she collects classic children's books",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.011655569076538086,
+      "prompt_chars": 1360,
+      "evidence": [
+        "D6:9"
+      ],
+      "context_ids": [
+        "D7:10",
+        "D12:20",
+        "D14:20",
+        "D17:26",
+        "D14:24",
+        "D12:18",
+        "D14:18",
+        "D3:22",
+        "D8:36",
+        "D2:17"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What books has Melanie read?",
+      "gold": "\"Nothing is Impossible\", \"Charlotte's Web\"",
+      "pred": "Charlotte's Web",
+      "F1": 0.6666666666666666,
+      "EM": 0.0,
+      "latency_s": 0.01064300537109375,
+      "prompt_chars": 1260,
+      "evidence": [
+        "D7:8",
+        "D6:10"
+      ],
+      "context_ids": [
+        "D7:10",
+        "D17:25",
+        "D6:8",
+        "D6:10",
+        "D4:1",
+        "D4:17",
+        "D11:16",
+        "D8:23",
+        "D4:9",
+        "D10:1"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What does Melanie do to destress?",
+      "gold": "Running, pottery",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010723352432250977,
+      "prompt_chars": 1177,
+      "evidence": [
+        "D7:22",
+        "D5:4"
+      ],
+      "context_ids": [
+        "D17:25",
+        "D11:16",
+        "D4:1",
+        "D7:25",
+        "D4:17",
+        "D7:27",
+        "D7:23",
+        "D4:9",
+        "D8:23",
+        "D10:1"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline go to the LGBTQ conference?",
+      "gold": "10 July 2023",
+      "pred": "12 July, 2023",
+      "F1": 0.6666666666666666,
+      "EM": 0.0,
+      "latency_s": 0.010157585144042969,
+      "prompt_chars": 2165,
+      "evidence": [
+        "D7:1"
+      ],
+      "context_ids": [
+        "D9:11",
+        "D14:34",
+        "D5:2",
+        "D3:2",
+        "D8:22",
+        "D1:4",
+        "D7:1",
+        "D11:6",
+        "D1:3",
+        "D14:12"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Melanie read the book \"nothing is impossible\"?",
+      "gold": "2022",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010876893997192383,
+      "prompt_chars": 1181,
+      "evidence": [
+        "D7:8"
+      ],
+      "context_ids": [
+        "D17:25",
+        "D11:16",
+        "D4:1",
+        "D8:23",
+        "D4:9",
+        "D4:17",
+        "D10:23",
+        "D10:1",
+        "D15:1",
+        "D7:27"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 3,
+      "question": "Would Caroline pursue writing as a career option?",
+      "gold": "LIkely no; though she likes reading, she wants to be a counselor",
+      "pred": "No information available.",
+      "F1": 0.14285714285714288,
+      "EM": 0.0,
+      "latency_s": 0.010317564010620117,
+      "prompt_chars": 1267,
+      "evidence": [
+        "D7:5",
+        "D7:9"
+      ],
+      "context_ids": [
+        "D1:10",
+        "D12:20",
+        "D12:12",
+        "D14:24",
+        "D12:18",
+        "D17:26",
+        "D1:4",
+        "D3:22",
+        "D12:10",
+        "D17:22"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline go to the adoption meeting?",
+      "gold": "The friday before 15 July 2023",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.011201620101928711,
+      "prompt_chars": 1509,
+      "evidence": [
+        "D8:9"
+      ],
+      "context_ids": [
+        "D2:13",
+        "D13:16",
+        "D8:22",
+        "D2:9",
+        "D19:2",
+        "D3:22",
+        "D6:2",
+        "D1:4",
+        "D1:18",
+        "D17:26"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Melanie go to the pottery workshop?",
+      "gold": "The Friday before 15 July 2023",
+      "pred": "Last Fri",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010360479354858398,
+      "prompt_chars": 1876,
+      "evidence": [
+        "D8:2"
+      ],
+      "context_ids": [
+        "D5:5",
+        "D12:3",
+        "D16:11",
+        "D14:4",
+        "D17:9",
+        "D8:2",
+        "D5:12",
+        "D4:9",
+        "D16:9",
+        "D1:15"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 3,
+      "question": "Would Melanie be considered a member of the LGBTQ community?",
+      "gold": "Likely no, she does not refer to herself as part of it",
+      "pred": "No information available.",
+      "F1": 0.13333333333333333,
+      "EM": 0.0,
+      "latency_s": 0.010491371154785156,
+      "prompt_chars": 2249,
+      "evidence": [],
+      "context_ids": [
+        "D10:5",
+        "D9:2",
+        "D9:11",
+        "D14:34",
+        "D13:15",
+        "D9:16",
+        "D17:25",
+        "D4:13",
+        "D1:3",
+        "D5:13"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Melanie go camping in June?",
+      "gold": "The week before 27 June 2023",
+      "pred": "27 June, 2023",
+      "F1": 0.7499999999999999,
+      "EM": 0.0,
+      "latency_s": 0.010547876358032227,
+      "prompt_chars": 1545,
+      "evidence": [
+        "D4:8"
+      ],
+      "context_ids": [
+        "D4:9",
+        "D6:5",
+        "D8:23",
+        "D4:8",
+        "D17:25",
+        "D10:23",
+        "D10:13",
+        "D10:1",
+        "D10:12",
+        "D11:16"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What LGBTQ+ events has Caroline participated in?",
+      "gold": "Pride parade, school speech, support group",
+      "pred": "parade",
+      "F1": 0.2857142857142857,
+      "EM": 0.0,
+      "latency_s": 0.010854959487915039,
+      "prompt_chars": 1788,
+      "evidence": [
+        "D5:1",
+        "D8:17",
+        "D3:1",
+        "D1:3"
+      ],
+      "context_ids": [
+        "D9:11",
+        "D14:34",
+        "D1:4",
+        "D5:2",
+        "D3:2",
+        "D8:14",
+        "D8:22",
+        "D11:6",
+        "D14:18",
+        "D1:10"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline go to a pride parade during the summer?",
+      "gold": "The week before 3 July 2023",
+      "pred": "20 July, 2023",
+      "F1": 0.5,
+      "EM": 0.0,
+      "latency_s": 0.010159015655517578,
+      "prompt_chars": 2187,
+      "evidence": [
+        "D5:1"
+      ],
+      "context_ids": [
+        "D8:14",
+        "D1:4",
+        "D10:7",
+        "D10:8",
+        "D5:2",
+        "D9:8",
+        "D14:18",
+        "D4:8",
+        "D11:1",
+        "D14:23"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What events has Caroline participated in to help children?",
+      "gold": "Mentoring program, school speech",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010218143463134766,
+      "prompt_chars": 1740,
+      "evidence": [
+        "D9:2",
+        "D3:3"
+      ],
+      "context_ids": [
+        "D1:4",
+        "D19:6",
+        "D4:8",
+        "D10:8",
+        "D14:18",
+        "D19:4",
+        "D14:20",
+        "D8:32",
+        "D12:20",
+        "D8:14"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Melanie go camping in July?",
+      "gold": "two weekends before 17 July 2023",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010091066360473633,
+      "prompt_chars": 1545,
+      "evidence": [
+        "D9:1"
+      ],
+      "context_ids": [
+        "D4:9",
+        "D6:5",
+        "D4:8",
+        "D10:23",
+        "D8:23",
+        "D10:13",
+        "D10:12",
+        "D17:25",
+        "D10:1",
+        "D11:16"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline join a mentorship program?",
+      "gold": "The weekend before 17 July 2023",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010174036026000977,
+      "prompt_chars": 1516,
+      "evidence": [
+        "D9:2"
+      ],
+      "context_ids": [
+        "D1:4",
+        "D17:26",
+        "D14:18",
+        "D8:22",
+        "D9:4",
+        "D19:8",
+        "D1:10",
+        "D19:6",
+        "D8:32",
+        "D12:20"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What did Melanie paint recently?",
+      "gold": "sunset",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010216236114501953,
+      "prompt_chars": 1397,
+      "evidence": [
+        "D8:6; D9:17"
+      ],
+      "context_ids": [
+        "D1:15",
+        "D1:13",
+        "D14:31",
+        "D6:5",
+        "D5:5",
+        "D16:12",
+        "D9:16",
+        "D14:6",
+        "D8:7",
+        "D4:1"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What activities has Melanie done with her family?",
+      "gold": "Pottery, painting, camping, museum, swimming, hiking",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010399580001831055,
+      "prompt_chars": 1285,
+      "evidence": [
+        "D8:4",
+        "D8:6",
+        "D9:1",
+        "D6:4",
+        "D1:18",
+        "D3:14"
+      ],
+      "context_ids": [
+        "D4:9",
+        "D10:23",
+        "D8:29",
+        "D17:25",
+        "D18:12",
+        "D4:1",
+        "D11:16",
+        "D8:23",
+        "D15:1",
+        "D4:17"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "In what ways is Caroline participating in the LGBTQ community?",
+      "gold": "Joining activist group, going to pride parades, participating in an art show, mentoring program",
+      "pred": "joining the transgender community, advocating through 'Connected LGBTQ Activists'",
+      "F1": 0.09523809523809525,
+      "EM": 0.0,
+      "latency_s": 0.010572195053100586,
+      "prompt_chars": 1790,
+      "evidence": [
+        "D10:3",
+        "D5:1",
+        "D9:12",
+        "D9:2"
+      ],
+      "context_ids": [
+        "D9:11",
+        "D14:34",
+        "D5:2",
+        "D14:12",
+        "D14:14",
+        "D12:20",
+        "D10:5",
+        "D12:12",
+        "D8:22",
+        "D14:24"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "How many times has Melanie gone to the beach in 2023?",
+      "gold": "2",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.01073002815246582,
+      "prompt_chars": 1315,
+      "evidence": [
+        "D10:8",
+        "D6:16"
+      ],
+      "context_ids": [
+        "D4:9",
+        "D10:23",
+        "D4:1",
+        "D6:5",
+        "D17:25",
+        "D8:23",
+        "D10:1",
+        "D15:1",
+        "D11:16",
+        "D10:11"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline join a new activist group?",
+      "gold": "The Tuesday before 20 July 2023",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.01111292839050293,
+      "prompt_chars": 1525,
+      "evidence": [
+        "D10:3"
+      ],
+      "context_ids": [
+        "D1:4",
+        "D18:11",
+        "D9:11",
+        "D18:13",
+        "D6:14",
+        "D12:20",
+        "D14:18",
+        "D17:26",
+        "D10:4",
+        "D8:32"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 3,
+      "question": "Would Melanie be more interested in going to a national park or a theme park?",
+      "gold": "National park; she likes the outdoors",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.0111846923828125,
+      "prompt_chars": 1436,
+      "evidence": [
+        "D10:12",
+        "D10:14"
+      ],
+      "context_ids": [
+        "D17:25",
+        "D12:17",
+        "D7:23",
+        "D8:23",
+        "D10:1",
+        "D1:15",
+        "D14:29",
+        "D4:1",
+        "D8:35",
+        "D4:17"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What kind of art does Caroline make?",
+      "gold": "abstract art",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.009920358657836914,
+      "prompt_chars": 1584,
+      "evidence": [
+        "D11:12",
+        "D11:8",
+        "D9:14"
+      ],
+      "context_ids": [
+        "D16:12",
+        "D14:24",
+        "D14:18",
+        "D9:17",
+        "D14:26",
+        "D17:22",
+        "D9:15",
+        "D14:20",
+        "D1:10",
+        "D11:7"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When is Melanie's daughter's birthday?",
+      "gold": "13 August",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.011142969131469727,
+      "prompt_chars": 1335,
+      "evidence": [
+        "D11:1"
+      ],
+      "context_ids": [
+        "D4:9",
+        "D10:23",
+        "D10:1",
+        "D17:25",
+        "D18:12",
+        "D19:1",
+        "D11:16",
+        "D3:17",
+        "D6:5",
+        "D1:13"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline attend a pride parade in August?",
+      "gold": "The Friday before 14 August 2023",
+      "pred": "14 August, 2023",
+      "F1": 0.7499999999999999,
+      "EM": 0.0,
+      "latency_s": 0.011253118515014648,
+      "prompt_chars": 2346,
+      "evidence": [
+        "D11:4"
+      ],
+      "context_ids": [
+        "D8:14",
+        "D10:7",
+        "D9:8",
+        "D5:2",
+        "D5:1",
+        "D11:4",
+        "D14:23",
+        "D1:4",
+        "D11:1",
+        "D10:8"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 3,
+      "question": "Would Melanie be considered an ally to the transgender community?",
+      "gold": "Yes, she is supportive",
+      "pred": "Yes.",
+      "F1": 0.4,
+      "EM": 0.0,
+      "latency_s": 0.010841846466064453,
+      "prompt_chars": 2723,
+      "evidence": [],
+      "context_ids": [
+        "D10:5",
+        "D17:25",
+        "D5:13",
+        "D9:6",
+        "D14:12",
+        "D3:3",
+        "D9:2",
+        "D4:13",
+        "D9:11",
+        "D13:15"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "Who supports Caroline when she has a negative experience?",
+      "gold": "Her mentors, family, and friends",
+      "pred": "They",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.011693477630615234,
+      "prompt_chars": 1347,
+      "evidence": [
+        "D12:1",
+        "D3:11"
+      ],
+      "context_ids": [
+        "D18:11",
+        "D12:12",
+        "D19:13",
+        "D12:20",
+        "D3:22",
+        "D12:10",
+        "D18:13",
+        "D6:14",
+        "D8:22",
+        "D8:32"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 1,
+      "question": "What types of pottery have Melanie and her kids made?",
+      "gold": "bowls, cup",
+      "pred": "Bowls, pots.",
+      "F1": 0.5,
+      "EM": 0.0,
+      "latency_s": 0.010214805603027344,
+      "prompt_chars": 1983,
+      "evidence": [
+        "D12:14",
+        "D8:4",
+        "D5:6"
+      ],
+      "context_ids": [
+        "D5:5",
+        "D12:3",
+        "D16:11",
+        "D5:6",
+        "D14:4",
+        "D16:9",
+        "D8:5",
+        "D5:12",
+        "D8:4",
+        "D8:2"
+      ]
+    },
+    {
+      "sample_id": "conv-26",
+      "category": 2,
+      "question": "When did Caroline and Melanie go to a pride fesetival together?",
+      "gold": "2022",
+      "pred": "15 July, 2023",
+      "F1": 0.0,
+      "EM": 0.0,
+      "latency_s": 0.010486602783203125,
+      "prompt_chars": 1633,
+      "evidence": [
+        "D12:15"
+      ],
+      "context_ids": [
+        "D8:22",
+        "D14:18",
+        "D9:11",
+        "D8:14",
+        "D1:4",
+        "D9:7",
+        "D17:26",
+        "D8:36",
+        "D6:2",
+        "D4:8"
+      ]
+    }
+  ]
+}
