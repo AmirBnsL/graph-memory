@@ -54,7 +54,11 @@ ssh "$SSH_HOST" "
   fi
   cd '$REPO_DIR'
   git remote set-url origin '$REPO_SSH'
-  git fetch --all --quiet
+  if ! git fetch --all --quiet; then
+    echo 'WARNING: git fetch failed -- the deploy key is probably not authorized on GitHub yet.'
+    echo '         Add ~/.ssh/gm_deploy.pub at https://github.com/AmirBnsL/graph-memory/settings/keys'
+    echo '         (tick \"Allow write access\"), then re-run this script.'
+  fi
   echo \"branch: \$(git branch --show-current)\"
   git status --short --branch
 "
