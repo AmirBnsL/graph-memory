@@ -25,6 +25,7 @@ from pathlib import Path
 
 import answer as answer_mod
 import llm
+import manifest
 from load import load_loco
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -130,6 +131,13 @@ def main() -> None:
     cats = set(args.categories) if args.categories else None
     s = run(args.mode, args.k, args.n_conv, args.n_qa, cats)
     path = save(s)
+    mpath = manifest.write(
+        manifest.build(
+            args.mode, args.k, args.n_conv, args.n_qa, path,
+            extra={"summary": {k: v for k, v in s.items() if k != "rows"}},
+        ),
+        path,
+    )
 
     print("\n" + "=" * 60)
     print(f"mode={s['mode']} k={s['k']} model={s['provider']}/{s['model']} n={s['n']}")

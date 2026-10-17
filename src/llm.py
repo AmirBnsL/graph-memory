@@ -66,7 +66,7 @@ def resolve_config() -> dict[str, str]:
     if not model:
         raise SystemExit(
             f"LLM_MODEL is not set for provider '{provider}'.\n"
-            "Example:  export LLM_PROVIDER=groq LLM_MODEL=llama-3.3-70b-versatile"
+            "Example:  export LLM_PROVIDER=ollama LLM_MODEL=qwen2.5:7b-instruct"
         )
     return {"provider": provider, "base_url": base_url, "api_key": key, "model": model}
 

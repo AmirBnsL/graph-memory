@@ -1,0 +1,32 @@
+{
+  "_comment": "Pinned benchmark inputs. A number is only credible if the hash below matches what produced it. Changing any field invalidates every result already in results/.",
+  "locomo": {
+    "source": "https://github.com/snap-research/locomo",
+    "commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+    "commit_date": "2024-08-12",
+    "file_in_repo": "data/locomo10.json",
+    "local_path": "data/locomo/data/locomo10.json",
+    "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+    "bytes": 2805274,
+    "verified": "2026-10-17",
+    "expected_shape": {
+      "conversations": 10,
+      "turns": 5882,
+      "qa": 1986,
+      "qa_by_category": { "1": 282, "2": 321, "3": 96, "4": 841, "5": 446 }
+    },
+    "restore": "git clone https://github.com/snap-research/locomo data/locomo && git -C data/locomo checkout 3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+    "known_issues": [
+      "Roughly 6.4% of gold answers are score-corrupting (benchmark audit, 2026). F1 is therefore a noisy ground truth, and single-run deltas below ~2 points are not interpretable.",
+      "A popular LoCoMo judge configuration accepted 62.8% of deliberately wrong answers (Penfield Labs, Apr 2026; non-peer-reviewed). This is why F1/EM is the headline metric here and judge scores are secondary.",
+      "The HuggingFace dataset 'adymaharana/locomo' is EMPTY. Always load from the GitHub repo.",
+      "The category-number to semant-ics mapping (which integer means multi-hop / temporal / open-domain) is not yet verified against the paper. Treat labels as TODO-verify."
+    ]
+  },
+  "longmemeval": {
+    "status": "pending",
+    "local_path": null,
+    "sha256": null,
+    "note": "Primary benchmark, not yet fetched. Must come from the official release, not an HF re-upload. Community reports of ground-truth arithmetic errors and mislabeled evidence are still unverified."
+  }
+}

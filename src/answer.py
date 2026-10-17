@@ -26,6 +26,9 @@ SYSTEM = (
     "answer, reply exactly: No information available."
 )
 
+# Kept as a named constant so a run manifest can hash the exact template used.
+PROMPT_TEMPLATE = "Context:\n{context}\n\nQuestion: {question}\nAnswer:"
+
 
 @dataclass
 class AnswerResult:
@@ -40,7 +43,7 @@ def _render(turns: list[Turn]) -> str:
 
 
 def _ask(question: str, context: str) -> str:
-    prompt = f"Context:\n{context}\n\nQuestion: {question}\nAnswer:"
+    prompt = PROMPT_TEMPLATE.format(context=context, question=question)
     return llm.complete(prompt, system=SYSTEM, max_tokens=64)
 
 
