@@ -68,14 +68,61 @@ def main() -> int:
     else:
         print(f"WARNING: {dpath} missing -- the loader will raise FileNotFoundError")
 
-    argv = sys.argv[1:] or shlex.split(os.environ.get("EVAL_ARGS", ""))
-    print("eval args:", argv or "(none)")
-    rc = subprocess.run(
-        [PY, os.path.join(REPO, "src", "eval.py"), *argv], cwd=REPO
-    ).returncode
-    print(f"eval exit={rc}")
-    return rc
+    # The kernel's own sys.argv is IPython's launch flags, NOT ours. Never read it.
+    argv = shlex.split(os.environ.get("EVAL_ARGS", ""))
+    print(f"EVAL_ARGS={os.environ.get('EVAL_ARGS')!r} -> {argv or '(none)'}")
+    if not argv:
+        print("WARNING: no eval args; eval.py will use its own defaults")
+
+    print("-- preflight: one LLM call --", flush=True)
+    pf = subprocess.run(
+        [PY, os.path.join(REPO, "src", "llm.py")], cwd=REPO,
+        capture_output=True, text=True, timeout=600,
+    )
+    print((pf.stdout or pf.stderr).strip()[:400])
+    if pf.returncode != 0:
+        print("preflight FAILED -- not starting the run", file=sys.stderr)
+        return 5
+
+    cmd = [PY, os.path.join(REPO, "src", "eval.py"), *argv]
+    print("$", " ".join(cmd), flush=True)
+    logf = os.path.join(REPO, "results", "eval.log")
+
+    # DETACH=1 for long runs: `colab exec` holding a websocket for an hour is how
+    # you get "Timeout waiting for reply". Detach, then poll the log.
+    if os.environ.get("DETACH") == "1":
+        os.makedirs(os.path.dirname(logf), exist_ok=True)
+        with open(logf, "w") as lf:
+            proc = subprocess.Popen(
+                cmd, cwd=REPO, stdout=lf, stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+        print(f"detached pid={proc.pid}\nlog={logf}")
+        return 0
+
+    # Capture: a child inheriting fd 1 writes straight past the kernel's output
+    # capture, and every line is silently lost (this is exactly what happened on
+    # the first run -- eval exited 0 and we saw none of its output).
+    r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)
+    os.makedirs(os.path.dirname(logf), exist_ok=True)
+    open(logf, "w").write(r.stdout + r.stderr)
+
+    lines = r.stdout.splitlines()
+    if len(lines) > 60:
+        print(f"[{len(lines)} output lines -- showing the last 40]")
+        print("\n".join(lines[-40:]))
+    else:
+        print(r.stdout)
+    if r.stderr.strip():
+        print("--- stderr ---")
+        print(r.stderr[-2000:])
+
+    print(f"eval exit={r.returncode}  (full log on VM: {logf})")
+    return r.returncode
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Deliberately not SystemExit: inside a Jupyter kernel that only produces a
+    # traceback, and `colab exec` does not propagate the code anyway. Parse the
+    # printed DRIVER_EXIT line instead.
+    print(f"DRIVER_EXIT={main()}")

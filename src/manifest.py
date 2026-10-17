@@ -46,12 +46,28 @@ def _sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8", "ignore")).hexdigest()
 
 
+# Output directories are excluded from the dirty check. results/ is deliberately
+# committed, so the moment a run writes its own output the tree looks dirty --
+# every manifest would claim dirty=True, which makes the field useless.
+_OUTPUT_DIRS = ("results", "cache", "graphs")
+
+# The code-state snapshot is taken the FIRST time this module is imported, which
+# -- because eval.py imports manifest at module load -- is before the run has
+# written anything. That ordering is the whole point.
+_GIT: dict | None = None
+
+
 def git_state() -> dict:
-    return {
-        "commit": _sh(["git", "rev-parse", "HEAD"]) or "unknown",
-        "branch": _sh(["git", "branch", "--show-current"]) or "unknown",
-        "dirty": bool(_sh(["git", "status", "--porcelain"])),
-    }
+    global _GIT
+    if _GIT is None:
+        spec = ["--", ".", *(f":(exclude){d}" for d in _OUTPUT_DIRS)]
+        _GIT = {
+            "commit": _sh(["git", "rev-parse", "HEAD"]) or "unknown",
+            "branch": _sh(["git", "branch", "--show-current"]) or "unknown",
+            "dirty": bool(_sh(["git", "status", "--porcelain", *spec])),
+            "dirty_excludes": list(_OUTPUT_DIRS),
+        }
+    return _GIT
 
 
 def datasets() -> dict:
