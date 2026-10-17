@@ -1,0 +1,21 @@
+# environments
+.venv/
+
+# benchmark data (cloned by hash; reproduce with `git clone`, don't commit)
+data/
+
+# caches -- rebuildable from cache/llm/*.json only if you keep them;
+# by default these are large and regenerable
+cache/
+graphs/embeddings/
+
+# results are small and SHOULD be committed so numbers are auditable
+# results/   <- intentionally NOT ignored
+
+# python
+__pycache__/
+*.pyc
+
+# secrets -- never commit
+.env
+*.key
