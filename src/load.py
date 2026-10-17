@@ -8,6 +8,11 @@ Provenance (do not edit lightly):
   LoCoMo: github.com/snap-research/locomo  commit 3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376 (2024-08-12)
   The HF dataset `adymaharana/locomo` is EMPTY -- do not use load_dataset() for LoCoMo.
 
+Category 5 is ADVERSARIAL: the question's premise is false (in 75% of the
+nameable ones it attributes a fact to the wrong speaker). Its `answer` field is
+empty BY DESIGN and the real content lives in `adversarial_answer`. Loading both
+is not optional -- dropping it silently turns 446/1986 questions unscorable.
+
 Run:  python src/load.py --stats
 """
 from __future__ import annotations
@@ -42,6 +47,9 @@ class QA:
     answer: str
     evidence: list[str] = field(default_factory=list)
     category: int = -1
+    # Category 5 only: the reply a system gives if it falls for the false
+    # premise. `answer` is empty for these BY DESIGN -- see eval.py.
+    adversarial_answer: str = ""
 
 
 @dataclass
@@ -110,6 +118,7 @@ def load_loco(limit: int | None = None, path: Path | None = None) -> list[Conver
                 answer=str(q.get("answer", "")),
                 evidence=list(q.get("evidence", []) or []),
                 category=q.get("category", -1),
+                adversarial_answer=str(q.get("adversarial_answer", "")),
             )
             for q in c.get("qa", [])
         ]
