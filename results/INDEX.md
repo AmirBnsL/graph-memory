@@ -78,6 +78,52 @@ Per category, full run:
 | adversarial | 446 | 0.000 | 82% | 0.406 |
 | **answerable (1-4)** | **1540** | **0.203** | **57.1%** | – |
 
+## k-sweep -- k chosen from data, not guessed
+
+The paper sweeps k ∈ {2,5,10,25,50} and its optimum is **k=25 (dialog) / k=5
+(observation)**, not 10. Ours was k=10 by fiat. Same harness, `--mode vector`, one
+detached process for the whole grid (VM commit `6fe2b10`):
+
+| k | F1 | F1_paper | EM | F1_answerable | refusal_acc | recall_any | recall_all | coverage | prompt chars | latency s |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 2 | 0.076 | 0.283 | 0.037 | 0.098 | 0.922 | 0.162 | 0.136 | 0.148 | 299 | 0.32 |
+| 5 | 0.120 | 0.318 | 0.059 | 0.155 | 0.881 | 0.259 | 0.214 | 0.234 | 748 | 0.46 |
+| 10 | 0.158 | 0.341 | 0.074 | 0.203 | 0.816 | 0.346 | 0.288 | 0.314 | 1503 | 0.63 |
+| 25 | – | – | – | – | – | – | – | – | – | – |
+| 50 | – | – | – | – | – | – | – | – | – | – |
+
+Every answer-side metric rises monotonically with k and `refusal_accuracy` falls
+monotonically -- the H1 trade-off in the data: more context means fewer false
+refusals (answerable F1 0.098 → 0.203) and more false accepts on adversarial
+questions (refusal 0.922 → 0.816). Retrieval recall by category (paper §4.1):
+
+| label | n | k=2 | k=5 | k=10 |
+|---|---|---|---|---|
+| multi-hop | 282 | 0.057 | 0.167 | 0.270 |
+| temporal | 321 | 0.168 | 0.243 | 0.330 |
+| open-domain | 96 | 0.098 | 0.130 | 0.207 |
+| single-hop | 841 | 0.180 | 0.274 | 0.360 |
+| adversarial | 446 | 0.206 | 0.327 | 0.406 |
+| **overall** | **1982** | **0.162** | **0.259** | **0.346** |
+
+k=10 stays the canonical baseline until the grid completes; 25 and 50 are in flight.
+Resuming is safe: `colab/run_sweep.py` skips any k whose result **and** manifest
+already exist, and `colab/pull_results.py` pulls finished rows into this repo
+(anything left on the VM dies with the session).
+
+### Provenance caveats for every sweep row
+- **`serving.served_by` / `serving.quantization` read `"unknown"`.** The sweep was
+  launched without `LLM_SERVED_BY`/`LLM_QUANTIZATION` exported, so those manifest
+  fields cannot name them. `provenance/serving.json` pins the same facts
+  independently (ollama 0.40.6, Q4_K_M) -- reconcile the two when quoting.
+- **Every row is from VM commit `6fe2b10`**, the bundle commit. `run_remote.py`'s
+  per-k `git fetch` fails by design (no key on the VM), so a sweep cannot advance
+  past what the uploaded bundle carried.
+- **The manifests embed the pre-correction `datasets.json`** (still carrying the
+  stale "category mapping TODO-verify" line). The corrected copy is at local
+  `provenance/datasets.json` (commit `29ad6e3`). Same facts, version skew -- the
+  manifests are historical records and are deliberately not rewritten.
+
 ## Retrieval is the bottleneck -- now measured
 
 `recall@10 = 0.346` (any gold turn), `0.288` (all gold turns), coverage `0.314`.
@@ -138,9 +184,10 @@ below every memory system. Two readings, and both push the same way:
 
 ## Known gaps in this run
 
-- **Retriever is weak and k is unjustified.** `all-MiniLM-L6-v2` at k=10 recovers
+- **Retriever is weak; k is now being swept.** `all-MiniLM-L6-v2` at k=10 recovers
   34.6% of gold evidence; the paper sweeps k ∈ {2,5,10,25,50} and its optimum is
-  **k=25 (dialog) / k=5 (observation)**, not 10. Sweep, and swap the retriever.
+  **k=25 (dialog) / k=5 (observation)**, not 10. The sweep is in flight (k=2 and 5
+  are in, see above). The **retriever swap is the real fix and is still outstanding.**
 - **We evaluate 10 conversations, not 50.** `locomo10.json` holds 10 convs at 588.2
   turns/conv and 13,377 tokens/conv, vs the paper's 304.9 turns and 9,209 tokens
   across 50. Our numbers are a *denser* subset; state this in every write-up.

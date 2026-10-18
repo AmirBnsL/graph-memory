@@ -1,0 +1,132 @@
+{
+  "created": "2026-10-18T08:11:39+0000",
+  "run": {
+    "mode": "vector",
+    "k": 2,
+    "n_conv": null,
+    "n_qa": null
+  },
+  "result_file": "20261018-081139_vector_k2_qwen2.5:7b-instruct.json",
+  "code": {
+    "commit": "6fe2b1072f0a0efdaf83ff5c5b53de9dbb10678f",
+    "branch": "master",
+    "dirty": false,
+    "dirty_excludes": [
+      "results",
+      "cache",
+      "graphs"
+    ]
+  },
+  "data": {
+    "_comment": "Pinned benchmark inputs. A number is only credible if the hash below matches what produced it. Changing any field invalidates every result already in results/.",
+    "locomo": {
+      "source": "https://github.com/snap-research/locomo",
+      "commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+      "commit_date": "2024-08-12",
+      "file_in_repo": "data/locomo10.json",
+      "local_path": "data/locomo/data/locomo10.json",
+      "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+      "bytes": 2805274,
+      "verified": "2026-10-17",
+      "expected_shape": {
+        "conversations": 10,
+        "turns": 5882,
+        "qa": 1986,
+        "qa_by_category": {
+          "1": 282,
+          "2": 321,
+          "3": 96,
+          "4": 841,
+          "5": 446
+        }
+      },
+      "restore": "git clone https://github.com/snap-research/locomo data/locomo && git -C data/locomo checkout 3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+      "known_issues": [
+        "Roughly 6.4% of gold answers are score-corrupting (benchmark audit, 2026). F1 is therefore a noisy ground truth, and single-run deltas below ~2 points are not interpretable.",
+        "A popular LoCoMo judge configuration accepted 62.8% of deliberately wrong answers (Penfield Labs, Apr 2026; non-peer-reviewed). This is why F1/EM is the headline metric here and judge scores are secondary.",
+        "The HuggingFace dataset 'adymaharana/locomo' is EMPTY. Always load from the GitHub repo.",
+        "The category-number to semant-ics mapping (which integer means multi-hop / temporal / open-domain) is not yet verified against the paper. Treat labels as TODO-verify."
+      ]
+    },
+    "longmemeval": {
+      "status": "pending",
+      "local_path": null,
+      "sha256": null,
+      "note": "Primary benchmark, not yet fetched. Must come from the official release, not an HF re-upload. Community reports of ground-truth arithmetic errors and mislabeled evidence are still unverified."
+    }
+  },
+  "model": {
+    "provider": "ollama",
+    "model": "qwen2.5:7b-instruct",
+    "base_url": "http://localhost:11434/v1"
+  },
+  "serving": {
+    "served_by": "unknown",
+    "quantization": "unknown"
+  },
+  "prompts": {
+    "system_sha256": "626cc48943dddc59d23201a73a1d236f222f2ac885fb4ef02ad4c71169485ac1",
+    "template_sha256": "c75b00c3a7cc15eebfd108677bce059b45161f7ca288b95d5fab47b00ace27df"
+  },
+  "env": {
+    "sha256": "8f104f69ba5833c8a884a6791e0a751c354edb7febeec4dd2ee22327a8cc40b6",
+    "n_packages": 718
+  },
+  "hardware": {
+    "python": "3.13.15",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "gpu": "Tesla T4",
+    "gpu_count": 1
+  },
+  "summary": {
+    "mode": "vector",
+    "k": 2,
+    "provider": "ollama",
+    "model": "qwen2.5:7b-instruct",
+    "n": 1986,
+    "F1": 0.07561767043387309,
+    "EM": 0.03726082578046324,
+    "F1_paper": 0.28256631091725676,
+    "F1_answerable": 0.09751733342965711,
+    "n_answerable": 1540,
+    "refusal_accuracy": 0.92152466367713,
+    "n_adversarial": 446,
+    "recall_any": 0.16246215943491424,
+    "recall_all": 0.136226034308779,
+    "evidence_coverage": 0.14766152952328535,
+    "n_with_evidence": 1982,
+    "recall_any_by_category": {
+      "1": 0.05673758865248227,
+      "2": 0.16822429906542055,
+      "3": 0.09782608695652174,
+      "4": 0.17954815695600476,
+      "5": 0.2062780269058296
+    },
+    "F1_by_category": {
+      "1": 0.04070528565209416,
+      "2": 0.06818743734631585,
+      "3": 0.04041847313906138,
+      "4": 0.13427997873753164,
+      "5": 0.0
+    },
+    "n_by_category": {
+      "1": 282,
+      "2": 321,
+      "3": 96,
+      "4": 841,
+      "5": 446
+    },
+    "category_names": {
+      "1": "multi-hop",
+      "2": "temporal",
+      "3": "open-domain",
+      "4": "single-hop",
+      "5": "adversarial"
+    },
+    "mean_latency_s": 0.3218469380852199,
+    "total_latency_s": 639.6295733451843,
+    "mean_prompt_chars": 299.25579053373616
+  }
+}

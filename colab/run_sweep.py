@@ -15,10 +15,18 @@ Env:
     VAR        the flag to vary            (default --k)
     SWEEP      comma-separated values      (default 2,5,10,25,50 -- the paper's grid)
     BASE_ARGS  everything held fixed       (default --mode vector)
+    FORCE=1    re-run values that are already done
     DETACH=1   fork into the background and return immediately
+
+Resumable: a value is SKIPPED when both its result JSON and its sibling manifest
+already exist in results/. Relaunching the same command therefore runs only the
+values still missing, which is what makes a dead session cheap to recover from.
+Pull finished rows into the local repo with colab/pull_results.py -- the VM's
+/content is wiped when the session ends, so nothing is safe until it is local.
 """
 from __future__ import annotations
 
+import glob
 import os
 import subprocess
 import sys
@@ -27,7 +35,8 @@ import time
 REPO = os.environ.get("REPO_DIR", "/content/graph-memory")
 PY = sys.executable or "python3"
 DRIVER = os.path.join(REPO, "colab", "run_remote.py")
-LOG = os.path.join(REPO, "results", "sweep.log")
+RESULTS = os.path.join(REPO, "results")
+LOG = os.path.join(RESULTS, "sweep.log")
 
 VAR = os.environ.get("VAR", "--k")
 VALUES = [v.strip() for v in os.environ.get("SWEEP", "2,5,10,25,50").split(",") if v.strip()]
@@ -35,6 +44,22 @@ BASE = os.environ.get("BASE_ARGS", "--mode vector")
 
 # Lines worth echoing into the live log from each run's captured output.
 KEEP = ("F1", "recall", "refusal", "cat", "ERROR", "WARNING", "DRIVER_EXIT", "exit=")
+
+
+def done_result(value: str) -> str | None:
+    """Path of a finished run for this value, or None if it still needs running.
+
+    A value counts as done only when BOTH the result JSON and its sibling manifest
+    exist -- provenance precedes numbers, so a result without a manifest is a
+    diagnostic, not a checkpoint. Rescored files are derived artifacts, never a
+    checkpoint, so they are ignored here.
+    """
+    for p in sorted(glob.glob(os.path.join(RESULTS, f"*_k{value}_*.json"))):
+        if p.endswith(".manifest.json") or "_rescored" in p:
+            continue
+        if os.path.exists(p[: -len(".json")] + ".manifest.json"):
+            return p
+    return None
 
 
 def main() -> int:
@@ -49,6 +74,11 @@ def main() -> int:
     say(f"VAR={VAR}  VALUES={VALUES}  BASE_ARGS={BASE!r}  REPO={REPO}")
 
     for i, v in enumerate(VALUES, 1):
+        prev = done_result(v)
+        if prev and os.environ.get("FORCE") != "1":
+            say(f"\n===== [{i}/{len(VALUES)}] {VAR} {v}  SKIPPED "
+                f"(already done: {os.path.basename(prev)}) =====")
+            continue
         args = f"{BASE} {VAR} {v}"
         say(f"\n===== [{i}/{len(VALUES)}] {VAR} {v}  args={args!r}  "
             f"at {time.strftime('%H:%M:%S')} =====")
