@@ -57,6 +57,20 @@ def main() -> int:
         if rc != 0:
             print("ERROR: clone failed", file=sys.stderr)
             return rc
+    elif os.path.exists(BUNDLE):
+        # Existing checkout: fast-forward it from the uploaded bundle. git fetches
+        # from a bundle path directly, so updating code costs an upload -- no
+        # session recreation, no re-pulling the model, and still no credential.
+        # Without this, a fix after setup could only reach the VM by wiping it.
+        print(f"checkout exists -- updating from bundle {BUNDLE}", flush=True)
+        rc = run(["git", "-C", REPO, "fetch", "--quiet", BUNDLE, "master"])
+        if rc == 0:
+            ff = run(["git", "-C", REPO, "merge", "--ff-only", "--quiet", "FETCH_HEAD"])
+            if ff.returncode != 0:
+                print("WARNING: fast-forward from bundle failed "
+                      "(local commits or edits?)", flush=True)
+        else:
+            print("WARNING: fetch from bundle failed", flush=True)
     if not os.path.exists(SETUP):
         print(f"ERROR: {SETUP} missing after clone", file=sys.stderr)
         return 2
