@@ -100,25 +100,29 @@ def main() -> int:
         print(f"detached pid={proc.pid}\nlog={logf}")
         return 0
 
-    # Capture: a child inheriting fd 1 writes straight past the kernel's output
-    # capture, and every line is silently lost (this is exactly what happened on
-    # the first run -- eval exited 0 and we saw none of its output).
-    r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)
+    # Tee: stream eval's output into results/eval.log as it arrives. Capturing it
+    # all and printing at the end (the previous behaviour) meant a 20-minute run
+    # was completely opaque. Reading line-by-line keeps the kernel's output
+    # capture intact -- a child that inherits fd 1 writes straight past it and is
+    # silently lost -- while making the run tail-able from another session.
     os.makedirs(os.path.dirname(logf), exist_ok=True)
-    open(logf, "w").write(r.stdout + r.stderr)
+    lines: list[str] = []
+    with open(logf, "w", buffering=1) as lf:
+        proc = subprocess.Popen(cmd, cwd=REPO, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, text=True, bufsize=1)
+        for line in proc.stdout:
+            lf.write(line)
+            lines.append(line.rstrip())
+        rc = proc.wait()
 
-    lines = r.stdout.splitlines()
     if len(lines) > 60:
         print(f"[{len(lines)} output lines -- showing the last 40]")
         print("\n".join(lines[-40:]))
     else:
-        print(r.stdout)
-    if r.stderr.strip():
-        print("--- stderr ---")
-        print(r.stderr[-2000:])
+        print("\n".join(lines))
 
-    print(f"eval exit={r.returncode}  (full log on VM: {logf})")
-    return r.returncode
+    print(f"eval exit={rc}  (full log on VM: {logf})")
+    return rc
 
 
 if __name__ == "__main__":
