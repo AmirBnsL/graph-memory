@@ -26,10 +26,33 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 LOCOMO_PATH = ROOT / "data" / "locomo" / "data" / "locomo10.json"
 
-# LoCoMo QA category numbers as they literally appear in locom10.json.
-# NOTE: the semantic mapping (which number means multi-hop / temporal / ...) is
-# NOT yet verified against the paper -- treat labels as "TODO verify".
-CATEGORY_SIZES = {4: 70, 5: 47, 2: 37, 1: 32, 3: 13}  # observed in conv-26
+# ---------------------------------------------------------------------------
+# QA category labels -- VERIFIED against the paper 2026-10-18.
+#
+# The paper's section 4.1 *enumerates* the five reasoning types as
+#     1=single-hop, 2=multi-hop, 3=temporal, 4=open-domain, 5=adversarial
+# but the RELEASED locomo10.json does NOT use that order. Two independent
+# checks fix the real mapping:
+#   (a) structure -- cat1 is 98% multi-evidence-turn, cat2 is 77% "When ...",
+#       cat3 is "Would ... likely" commonsense, cat4 is 95% single-turn,
+#       cat5 is 100% `adversarial_answer`;
+#   (b) proportions -- our per-category shares track paper Table 5 within a few
+#       points (multi-hop 14.2% vs 14.6%, open-domain 4.8% vs 3.9%,
+#       adversarial 22.5% vs 24.9%); cat1-as-single-hop is off by 22 points.
+# Getting this wrong mislabels every per-category number in the ledger.
+# Evidence: vault note 03-benchmarks/LoCoMo (2402.17753).md, section F2.
+# ---------------------------------------------------------------------------
+CATEGORY_NAMES = {
+    1: "multi-hop",
+    2: "temporal",
+    3: "open-domain",
+    4: "single-hop",
+    5: "adversarial",
+}
+
+# Cat 5: false-premise questions whose `answer` is empty BY DESIGN. Single source
+# of truth -- eval.py imports this rather than re-declaring it.
+ADVERSARIAL_CATEGORY = 5
 
 
 @dataclass
