@@ -1,0 +1,8 @@
+provider: ollama
+model: qwen2.5:7b-instruct
+max_tokens: 64
+temperature: 0.0
+# The frozen answering model. Never change mid-experiment: the LLM cache is keyed
+# by (provider, model, payload), so switching models silently cold-starts the
+# cache and invalidates every comparison. provenance/serving.json pins the
+# serving stack (version + quantization) that this model is served through.

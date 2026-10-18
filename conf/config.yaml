@@ -1,0 +1,42 @@
+# The single source of truth for what a run IS.
+#
+# RULE: config = what to test. Env = where it runs (LLM_BASE_URL, LLM_API_KEY,
+# REPO_DIR). Machine facts (what served the model, at what precision) live in
+# provenance/serving.json and are embedded into the manifest whole -- they are
+# never set per experiment. Keeping that split is what prevents the
+# "serving: unknown" class of manifest bug.
+#
+# The resolved config is hashed into every run manifest (manifest.config.sha256),
+# and resume compares that hash plus the code commit and env hash. So editing
+# anything here invalidates the affected results -- on purpose. That is the
+# content-hash rule workflow engines use (Snakemake/DVC), minus the framework.
+#
+# Run:
+#   python src/eval.py                                    # defaults
+#   python src/eval.py k=25                               # one override
+#   python src/eval.py --multirun k=2,5,10,25,50          # the k grid
+#
+# Sweep + resume on the VM:
+#   colab exec -s gm-dev --env DETACH=1 --env SWEEP=2,5,10,25,50 -f colab/run_sweep.py
+# (a relaunch skips any k whose manifest matches on config+code+env)
+defaults:
+  - benchmark: locomo
+  - mode: vector
+  - reader: qwen25-7b
+  - _self_
+
+k: 10
+
+limits:
+  n_conv: null       # cap conversations (smoke tests)
+  n_qa: null         # cap questions
+  categories: null   # e.g. [1, 4] -- the VERIFIED mapping lives in src/load.py
+
+hydra:
+  job:
+    chdir: false     # every path is __file__-anchored; never move the cwd
+  run:
+    dir: /tmp/opencode/hydra/${now:%Y%m%d-%H%M%S}
+  sweep:
+    dir: /tmp/opencode/hydra/${now:%Y%m%d-%H%M%S}
+    subdir: ${hydra.job.num}

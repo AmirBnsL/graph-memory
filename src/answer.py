@@ -42,34 +42,45 @@ def _render(turns: list[Turn]) -> str:
     return "\n".join(f"[{t.dia_id}] {t.date_time} | {t.speaker}: {t.text}" for t in turns)
 
 
-def _ask(question: str, context: str) -> str:
+def _ask(question: str, context: str, reader: dict | None = None) -> str:
+    r = reader or {}
     prompt = PROMPT_TEMPLATE.format(context=context, question=question)
-    return llm.complete(prompt, system=SYSTEM, max_tokens=64)
+    return llm.complete(prompt, system=SYSTEM,
+                        max_tokens=int(r.get("max_tokens", 64)),
+                        temperature=float(r.get("temperature", 0.0)),
+                        overrides=r)
 
 
-def answer_full(conv: Conversation, qa: QA) -> AnswerResult:
+def answer_full(conv: Conversation, qa: QA, k: int = 10,
+                reader: dict | None = None, retriever: str | None = None) -> AnswerResult:
+    """Stuff the whole conversation in. NOT runnable until num_ctx is explicit
+    (provenance/serving.json -> effective_context_tokens): a whole conversation
+    is ~15k tokens and would be truncated from the front. Kept for the H1
+    upper-bound arm only; k and retriever are accepted and ignored so the
+    mode registry stays uniform."""
     t0 = time.time()
     ctx = _render(conv.turns)
-    out = _ask(qa.question, ctx)
+    out = _ask(qa.question, ctx, reader)
     return AnswerResult(out, [t.dia_id for t in conv.turns], len(ctx), time.time() - t0)
 
 
-def answer_vector(conv: Conversation, qa: QA, k: int = 10) -> AnswerResult:
+def answer_vector(conv: Conversation, qa: QA, k: int = 10,
+                  reader: dict | None = None, retriever: str | None = None) -> AnswerResult:
     t0 = time.time()
     texts = [t.text for t in conv.turns]
-    hits = embed.top_k(qa.question, texts, k=k)
+    hits = embed.top_k(qa.question, texts, k=k, model_name=retriever or embed.MODEL_NAME)
     picked = [conv.turns[i] for i, _ in hits]
     ctx = _render(picked)
-    out = _ask(qa.question, ctx)
+    out = _ask(qa.question, ctx, reader)
     return AnswerResult(out, [t.dia_id for t in picked], len(ctx), time.time() - t0)
 
 
 MODES = {"full": answer_full, "vector": answer_vector}
 
 
-def answer(conv: Conversation, qa: QA, mode: str = "vector", k: int = 10) -> AnswerResult:
-    if mode not in MODES:
+def answer(conv: Conversation, qa: QA, mode: str = "vector", k: int = 10,
+           reader: dict | None = None, retriever: str | None = None) -> AnswerResult:
+    fn = MODES.get(mode)
+    if fn is None:
         raise ValueError(f"unknown mode {mode!r}; have {sorted(MODES)}")
-    if mode == "vector":
-        return answer_vector(conv, qa, k=k)
-    return MODES[mode](conv, qa)
+    return fn(conv, qa, k=k, reader=reader, retriever=retriever)

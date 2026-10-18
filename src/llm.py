@@ -53,8 +53,18 @@ PRESETS: dict[str, dict[str, str]] = {
 }
 
 
-def resolve_config() -> dict[str, str]:
-    provider = os.environ.get("LLM_PROVIDER", "ollama").lower()
+def resolve_config(overrides: dict | None = None) -> dict:
+    """Resolve the LLM endpoint + model.
+
+    Split of authority, and the reason it is worth a function:
+      * config (the `reader` block) owns WHAT -- provider, model
+      * env owns WHERE -- base_url, api key, which is machine-specific
+
+    `overrides` is the experiment config's reader block; it wins over env for
+    what-is-being-tested, while env always decides where to reach it.
+    """
+    ov = overrides or {}
+    provider = str(ov.get("provider") or os.environ.get("LLM_PROVIDER", "ollama")).lower()
     preset = PRESETS.get(provider, PRESETS["ollama"])
     base_url = os.environ.get("LLM_BASE_URL") or preset["base_url"]
     key = os.environ.get("LLM_API_KEY")
@@ -62,13 +72,24 @@ def resolve_config() -> dict[str, str]:
         key = os.environ.get(preset["api_key_env"])
     if not key:
         key = preset.get("api_key", "")
-    model = os.environ.get("LLM_MODEL")
+    model = ov.get("model") or os.environ.get("LLM_MODEL")
     if not model:
         raise SystemExit(
             f"LLM_MODEL is not set for provider '{provider}'.\n"
-            "Example:  export LLM_PROVIDER=ollama LLM_MODEL=qwen2.5:7b-instruct"
+            "Set it in the experiment config (reader.model) or:\n"
+            "  export LLM_PROVIDER=ollama LLM_MODEL=qwen2.5:7b-instruct"
         )
     return {"provider": provider, "base_url": base_url, "api_key": key, "model": model}
+
+
+def resolve_identity(overrides: dict | None = None) -> tuple[str | None, str | None]:
+    """Provider/model for the record. Degrades to (None, None) when unset so
+    rescore can run with no LLM configured instead of aborting."""
+    try:
+        cfg = resolve_config(overrides)
+        return cfg["provider"], cfg["model"]
+    except SystemExit:
+        return None, None
 
 
 def _cache_path(cfg: dict[str, str], payload: str) -> Path:
@@ -77,9 +98,16 @@ def _cache_path(cfg: dict[str, str], payload: str) -> Path:
 
 
 def complete(prompt: str, system: str | None = None, temperature: float = 0.0,
-             max_tokens: int = 512, retries: int = 3) -> str:
-    """Return the model's text. Cached on disk -- identical calls never re-hit the API."""
-    cfg = resolve_config()
+             max_tokens: int = 512, retries: int = 3,
+             overrides: dict | None = None) -> str:
+    """Return the model's text. Cached on disk -- identical calls never re-hit the API.
+
+    `overrides` is the experiment config's reader block (provider/model). It must
+    reach THIS call, not just the caller: the cache key is
+    sha256(provider|model|payload), so a model resolved from env when the config
+    said otherwise would silently read another model's cache.
+    """
+    cfg = resolve_config(overrides)
     payload = json.dumps({"system": system, "prompt": prompt,
                           "temperature": temperature, "max_tokens": max_tokens},
                          sort_keys=True, ensure_ascii=False)

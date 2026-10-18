@@ -1,0 +1,5 @@
+name: full
+# Stuff the whole conversation into the prompt. NOT runnable until num_ctx is
+# set explicitly (ollama clamps the runtime window to ~4096; a whole conversation
+# is ~15k tokens) -- a `full` number would be a truncation artifact. See
+# provenance/serving.json -> effective_context_tokens.

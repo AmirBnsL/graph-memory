@@ -91,7 +91,10 @@ say "done."
 echo
 echo "  run a smoke test:"
 echo "    colab exec -s gm-dev --timeout 0 \\"
-echo "      --env EVAL_ARGS=\"--mode vector --k 10 --n-conv 1 --n-qa 50\" \\"
+echo "      --env EVAL_ARGS=\"limits.n_conv=1 limits.n_qa=50\" \\"
 echo "      -f colab/run_remote.py"
+echo
+echo "  sweep:  colab exec -s gm-dev --env DETACH=1 --env SWEEP=2,5,10,25,50 \\"
+echo "            -f colab/run_sweep.py"
 echo
 echo "  stop the meter:  colab stop -s gm-dev"

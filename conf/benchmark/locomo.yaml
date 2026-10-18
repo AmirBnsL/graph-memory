@@ -1,0 +1,4 @@
+name: locomo
+# Path + sha256 pin live in provenance/datasets.json -- the single source of
+# truth for data provenance. Duplicating them here would let the two drift.
+loader: locomo

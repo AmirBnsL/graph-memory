@@ -54,9 +54,12 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 import answer as answer_mod
+import config as config_mod
+import hydra
 import llm
 import manifest
-from load import ADVERSARIAL_CATEGORY, CATEGORY_NAMES, load_loco
+from load import (ADVERSARIAL_CATEGORY, CATEGORY_NAMES, load_loco,
+                  load_longmemeval)
 
 ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "results"
@@ -128,15 +131,21 @@ def recall(evidence: list[str], context_ids: list[str]) -> dict:
 
 
 def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
-        categories: set[int] | None) -> dict:
-    convs = load_loco(limit=n_conv)
+        categories: set[int] | None, reader: dict | None = None,
+        retriever: str | None = None, benchmark: str = "locomo") -> dict:
+    loaders = {"locomo": load_loco, "longmemeval": load_longmemeval}
+    if benchmark not in loaders:
+        raise ValueError(f"unknown benchmark {benchmark!r}; have {sorted(loaders)}")
+    convs = loaders[benchmark](limit=n_conv)
     rows = []
     t_start = time.time()
+    identity = llm.resolve_identity(reader)
     for conv in convs:
         for qa in conv.qa:
             if categories and qa.category not in categories:
                 continue
-            res = answer_mod.answer(conv, qa, mode=mode, k=k)
+            res = answer_mod.answer(conv, qa, mode=mode, k=k,
+                                    reader=reader, retriever=retriever)
             adv = qa.category == ADVERSARIAL_CATEGORY
             rows.append({
                 "sample_id": conv.sample_id,
@@ -163,20 +172,17 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
         if n_qa and len(rows) >= n_qa:
             break
 
-    return summarize(rows, mode=mode, k=k, t_start=t_start)
+    return summarize(rows, mode=mode, k=k, t_start=t_start, identity=identity)
 
 
 def _identity() -> tuple[str | None, str | None]:
     """Provider/model for the record. Rescoring must work with no LLM configured,
     so a missing config degrades to None instead of aborting the rescore."""
-    try:
-        cfg = llm.resolve_config()
-        return cfg["provider"], cfg["model"]
-    except SystemExit:
-        return None, None
+    return llm.resolve_identity()
 
 
-def summarize(rows: list[dict], mode: str, k: int, t_start: float = 0.0) -> dict:
+def summarize(rows: list[dict], mode: str, k: int, t_start: float = 0.0,
+              identity: tuple[str | None, str | None] | None = None) -> dict:
     """Metrics for one run. Always reports every convention, never just one."""
     by_cat = defaultdict(list)
     for r in rows:
@@ -185,7 +191,7 @@ def summarize(rows: list[dict], mode: str, k: int, t_start: float = 0.0) -> dict
     ans = [r for r in rows if not r.get("adversarial")]
     adv = [r for r in rows if r.get("adversarial")]
     retr = [r for r in rows if r.get("recall_any") is not None]
-    provider, model = _identity()
+    provider, model = identity if identity is not None else _identity()
 
     # Paper convention: adversarial counts as correct when declined. This is the
     # number comparable to LoCoMo Tables 2-3 (see the module docstring).
@@ -267,68 +273,62 @@ def report(s: dict) -> None:
     print("=" * 60)
 
 
-def rescore(path: Path) -> Path:
-    """Re-score stored predictions without re-running the model.
+def find_existing(cfg_values: dict) -> Path | None:
+    """A prior result this run would exactly reproduce, or None.
 
-    Scoring changes must never require paying for the LLM again -- the rows are
-    the evidence, the metrics are just a function of them.
+    Resume is a CONTENT-HASH decision, not a filename-pattern one: a run is
+    skippable only when a prior manifest matches on config + code commit + env.
+    Checking existence alone would silently return stale results after a prompt
+    or retriever change -- which is the failure class this harness exists to
+    prevent. Pre-refactor manifests carry no config hash, so they are never
+    resume-eligible: they were produced by different code.
     """
-    d = json.loads(path.read_text())
-    for r in d["rows"]:
-        adv = r.get("category") == ADVERSARIAL_CATEGORY
-        r["adversarial"] = adv
-        r["F1"] = 0.0 if adv else f1(r["pred"], r["gold"])
-        r["EM"] = 0.0 if adv else em(r["pred"], r["gold"])
-        r["refusal_correct"] = is_refusal(r["pred"]) if adv else None
-        r.update(recall(r.get("evidence"), r.get("context_ids")))
-
-    s = summarize(d["rows"], mode=d["mode"], k=d["k"])
-    s["rescored_from"] = path.name
-    s["created"] = d.get("created")
-    s["total_latency_s"] = d.get("total_latency_s")  # keep the original run's wall clock
-    # Carry the identity forward from the file being rescored -- no LLM needed here.
-    s["provider"] = d.get("provider") or s.get("provider")
-    s["model"] = d.get("model") or s.get("model")
-    out = save(s, suffix="_rescored")
-
-    man = path.with_suffix(".manifest.json")
-    if man.exists():
-        m = json.loads(man.read_text())
-        m["rescored_from"] = path.name
-        m["note"] = ("metrics recomputed from stored rows (paper-convention F1, "
-                     "refusal accuracy, recall@k, verified category labels); "
-                     "predictions unchanged")
-        out.with_suffix(".manifest.json").write_text(
-            json.dumps(m, indent=2, ensure_ascii=False))
-
-    report(s)
-    print(f"  rescored -> {out}")
-    return out
+    want = config_mod.hash_dict({k: v for k, v in cfg_values.items() if k != "hydra"})
+    code = manifest.git_state()
+    env = manifest.env_freeze()["sha256"]
+    for mf in sorted(RESULTS.glob("*.manifest.json")):
+        try:
+            m = json.loads(mf.read_text())
+        except json.JSONDecodeError:
+            continue
+        if m.get("config", {}).get("sha256") != want:
+            continue
+        c = m.get("code", {})
+        if c.get("commit") != code["commit"] or bool(c.get("dirty")) != bool(code["dirty"]):
+            continue
+        if m.get("env", {}).get("sha256") != env:
+            continue
+        rf = RESULTS / m.get("result_file", "")
+        if rf.exists():
+            return rf
+    return None
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--mode", choices=["full", "vector"], default="vector")
-    ap.add_argument("--k", type=int, default=10)
-    ap.add_argument("--n-conv", type=int, default=None)
-    ap.add_argument("--n-qa", type=int, default=None)
-    ap.add_argument("--categories", type=int, nargs="*", default=None)
-    ap.add_argument("--rescore", type=str, default=None,
-                    help="re-score an existing results JSON instead of running")
-    args = ap.parse_args()
+@hydra.main(config_path="../conf", config_name="config", version_base=None)
+def main(cfg) -> None:
+    values = config_mod.to_plain(cfg)
+    limits = values.get("limits") or {}
 
-    if args.rescore:
-        rescore(Path(args.rescore))
+    prev = find_existing(values)
+    if prev:
+        print(f"RESUME: an identical run already exists -- {prev.name}")
+        print("        (config + code + env hashes all match; no LLM calls made)")
+        d = json.loads(prev.read_text())
+        d.pop("rows", None)
+        report(d)
         return
 
-    cats = set(args.categories) if args.categories else None
-    s = run(args.mode, args.k, args.n_conv, args.n_qa, cats)
+    cats = limits.get("categories")
+    mode = config_mod.group_name(values["mode"])
+    benchmark = config_mod.group_name(values["benchmark"])
+    s = run(mode, values["k"], limits.get("n_conv"), limits.get("n_qa"),
+            set(cats) if cats else None,
+            reader=values.get("reader"), retriever=values.get("retriever"),
+            benchmark=benchmark)
     path = save(s)
     mpath = manifest.write(
-        manifest.build(
-            args.mode, args.k, args.n_conv, args.n_qa, path,
-            extra={"summary": {k: v for k, v in s.items() if k != "rows"}},
-        ),
+        manifest.build(values, path,
+                       extra={"summary": {k: v for k, v in s.items() if k != "rows"}}),
         path,
     )
     report(s)

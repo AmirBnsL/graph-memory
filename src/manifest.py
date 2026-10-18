@@ -29,11 +29,18 @@ import time
 from pathlib import Path
 
 import answer
+import config as config_mod
 import llm
 
 ROOT = Path(__file__).resolve().parent.parent
 PROVENANCE = ROOT / "provenance" / "datasets.json"
 SERVING = ROOT / "provenance" / "serving.json"
+
+
+def config_hash(cfg: dict) -> str:
+    """The hash resume compares. Excluded keys would make two different configs
+    collide, so everything except Hydra's own machinery is included."""
+    return config_mod.hash_dict({k: v for k, v in cfg.items() if k != "hydra"})
 
 
 def _sh(cmd: list[str]) -> str:
@@ -91,6 +98,31 @@ def serving_pin() -> dict:
     return json.loads(SERVING.read_text())
 
 
+def serving() -> dict:
+    """What served the model, from the PIN, not from env vars.
+
+    The pin is the authority: reading LLM_SERVED_BY / LLM_QUANTIZATION instead is
+    what produced a sweep's worth of manifests reading "unknown" -- the sweep was
+    launched without those exported, and a fact that depends on the shell is not
+    a fact. The pin is embedded whole regardless, so the measured context window
+    (a constraint on which k values are even valid) is always on record. Env is
+    used only as a fallback when provenance/serving.json is absent.
+    """
+    pin = serving_pin()
+    if "answering_model" in pin:
+        am = pin["answering_model"]
+        return {
+            "served_by": am.get("served_by", "unknown"),
+            "quantization": am.get("quantization", "unknown"),
+            "pinned": pin,
+        }
+    return {
+        "served_by": os.environ.get("LLM_SERVED_BY", "unknown"),
+        "quantization": os.environ.get("LLM_QUANTIZATION", "unknown"),
+        "pinned": pin,
+    }
+
+
 def prompts() -> dict:
     return {
         "system_sha256": _sha(answer.SYSTEM),
@@ -124,25 +156,36 @@ def hardware() -> dict:
     return info
 
 
-def build(mode: str, k: int, n_conv: int | None, n_qa: int | None,
-          result_path: Path, extra: dict | None = None) -> dict:
-    cfg = llm.resolve_config()
+def build(cfg: dict, result_path: Path, extra: dict | None = None) -> dict:
+    """Build a manifest from the RESOLVED experiment config.
+
+    `cfg` is the plain dict form of the Hydra config (src/config.py::to_plain).
+    It is hashed into the manifest, which is what makes resume a content-hash
+    decision rather than a filename-pattern guess: a run is skippable only when
+    a prior manifest matches on config + code + env.
+    """
+    limits = cfg.get("limits") or {}
+    provider, model = llm.resolve_identity(cfg.get("reader"))
+    cfg_values = {k: v for k, v in cfg.items() if k != "hydra"}
     m: dict = {
         "created": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-        "run": {"mode": mode, "k": k, "n_conv": n_conv, "n_qa": n_qa},
+        "run": {
+            "mode": config_mod.group_name(cfg.get("mode")),
+            "benchmark": config_mod.group_name(cfg.get("benchmark")),
+            "k": cfg.get("k"),
+            "n_conv": limits.get("n_conv"),
+            "n_qa": limits.get("n_qa"),
+        },
         "result_file": result_path.name,
         "code": git_state(),
+        "config": {"sha256": config_hash(cfg_values), "values": cfg_values},
         "data": datasets(),
         "model": {
-            "provider": cfg["provider"],
-            "model": cfg["model"],
-            "base_url": cfg["base_url"],
+            "provider": provider,
+            "model": model,
+            "base_url": cfg.get("base_url") or (llm.resolve_config((cfg.get("reader") or {})).get("base_url")),
         },
-        "serving": {
-            "served_by": os.environ.get("LLM_SERVED_BY", "unknown"),
-            "quantization": os.environ.get("LLM_QUANTIZATION", "unknown"),
-            "pinned": serving_pin(),
-        },
+        "serving": serving(),
         "prompts": prompts(),
         "env": env_freeze(),
         "hardware": hardware(),
