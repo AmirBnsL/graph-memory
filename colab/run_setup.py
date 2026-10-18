@@ -4,10 +4,18 @@
 `colab exec -f` executes a PYTHON file in the kernel, so the bash setup script
 cannot be sent directly. This shim exists for one reason: the repo has to exist
 before `vm_setup.sh` can be run from it, and `vm_setup.sh` itself is what clones
-the repo. So: clone (idempotent, same URL the setup script uses), then bash.
+the repo.
 
-    colab new -s gm-dev --gpu T4
+    git bundle create /tmp/gm.bundle --all
+    colab upload -s gm-dev /tmp/gm.bundle /content/gm.bundle
     colab exec -s gm-dev --timeout 1800 -f colab/run_setup.py
+
+Source order, deliberately:
+  1. a git bundle at $BUNDLE, if one was uploaded -- a bundle carries the exact
+     commit with NO credential on the VM at all. Preferred.
+  2. the SSH remote otherwise -- requires a key on the VM, which a fresh runtime
+     does not have (and which we do not want: the previous session carried a
+     full-account key, the opposite of this repo's "no secrets on the VM" rule).
 
 Output is captured line-by-line and re-printed: a child that inherits fd 1 writes
 straight past the kernel's output capture and is silently lost.
@@ -20,6 +28,7 @@ import sys
 
 REPO = os.environ.get("REPO_DIR", "/content/graph-memory")
 REPO_SSH = os.environ.get("REPO_SSH", "git@github.com:AmirBnsL/graph-memory.git")
+BUNDLE = os.environ.get("BUNDLE", "/content/gm.bundle")
 SETUP = os.path.join(REPO, "colab", "vm_setup.sh")
 
 
@@ -33,8 +42,18 @@ def run(cmd: list[str], cwd: str | None = None) -> int:
 
 def main() -> int:
     if not os.path.isdir(os.path.join(REPO, ".git")):
-        print(f"cloning {REPO_SSH} -> {REPO}", flush=True)
-        rc = run(["git", "clone", "--quiet", REPO_SSH, REPO])
+        if os.path.exists(BUNDLE):
+            print(f"cloning from bundle {BUNDLE} -> {REPO} (no credential on the VM)",
+                  flush=True)
+            rc = run(["git", "clone", "--quiet", BUNDLE, REPO])
+            if rc == 0:
+                # Point origin at the real remote: a fetch that fails because the
+                # VM has no key is then LOUD, instead of silently serving the
+                # bundle forever while looking like an up-to-date checkout.
+                run(["git", "-C", REPO, "remote", "set-url", "origin", REPO_SSH])
+        else:
+            print(f"no bundle at {BUNDLE}; falling back to {REPO_SSH}", flush=True)
+            rc = run(["git", "clone", "--quiet", REPO_SSH, REPO])
         if rc != 0:
             print("ERROR: clone failed", file=sys.stderr)
             return rc
