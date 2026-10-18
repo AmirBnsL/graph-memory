@@ -66,7 +66,7 @@ def main() -> int:
         rc = run(["git", "-C", REPO, "fetch", "--quiet", BUNDLE, "master"])
         if rc == 0:
             ff = run(["git", "-C", REPO, "merge", "--ff-only", "--quiet", "FETCH_HEAD"])
-            if ff.returncode != 0:
+            if ff != 0:
                 print("WARNING: fast-forward from bundle failed "
                       "(local commits or edits?)", flush=True)
         else:
