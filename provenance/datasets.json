@@ -20,7 +20,9 @@
       "Roughly 6.4% of gold answers are score-corrupting (benchmark audit, 2026). F1 is therefore a noisy ground truth, and single-run deltas below ~2 points are not interpretable.",
       "A popular LoCoMo judge configuration accepted 62.8% of deliberately wrong answers (Penfield Labs, Apr 2026; non-peer-reviewed). This is why F1/EM is the headline metric here and judge scores are secondary.",
       "The HuggingFace dataset 'adymaharana/locomo' is EMPTY. Always load from the GitHub repo.",
-      "The category-number to semant-ics mapping (which integer means multi-hop / temporal / open-domain) is not yet verified against the paper. Treat labels as TODO-verify."
+      "VERIFIED 2026-10-18: the released locomo10.json does NOT use the paper's section 4.1 enumeration order. Real mapping: 1=multi-hop, 2=temporal, 3=open-domain, 4=single-hop, 5=adversarial -- from (a) evidence-turn structure (cat1 98% multi-evidence-turn, cat2 77% 'When ...', cat3 'Would ... likely' commonsense, cat4 95% single-turn, cat5 100% adversarial_answer) and (b) per-category proportions tracking paper Table 5 within a few points. See src/load.py CATEGORY_NAMES.",
+      "The paper scores the adversarial category with the same F1 and INCLUDES it in its Overall column, reporting Human=89.4 -- only possible if a correct refusal counts as a match. Its adversarial column is therefore refusal accuracy, and F1_paper (not F1) is the convention-matched number.",
+      "Table 3's Dialog k=10 multi-hop recall cell reads 247.4: impossible (>100%) and non-monotone against its neighbours (34.4 -> 247.4 -> 64.1 -> 75.5). Treat that cell as unusable."
     ]
   },
   "longmemeval": {

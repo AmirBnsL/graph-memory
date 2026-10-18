@@ -1,0 +1,24 @@
+{
+  "_comment": "Measured properties of the serving stack, pinned like the dataset. These are not incidental: they bound which experiments are even valid, so they get the same treatment as provenance/datasets.json. Embedded whole into every manifest, which also means a run does not have to rely on env vars (LLM_SERVED_BY / LLM_QUANTIZATION) to record what served it.",
+  "answering_model": {
+    "provider": "ollama",
+    "model": "qwen2.5:7b-instruct",
+    "base_url": "http://localhost:11434/v1",
+    "served_by": "ollama 0.40.6",
+    "quantization": "Q4_K_M (GGUF)",
+    "declared_context_length": 32768,
+    "max_output_tokens_per_call": 64,
+    "recorded_from": "results/20261017-222247_vector_k10_qwen2.5:7b-instruct.manifest.json + `ollama show` on a T4, 2026-10-18"
+  },
+  "effective_context_tokens": {
+    "value": 4096,
+    "measured": "2026-10-18",
+    "method": "head/tail needle test. FIRST_MARKER=ALPHA7 at the very start of the prompt, LAST_MARKER=BETA9 at the very end, filler sized to ~2k / ~4k / ~8k tokens, asking the model to report both. At ~2000 and ~4000 tokens it returned FIRST=ALPHA7 LAST=BETA9. At ~8000 tokens it returned FIRST=<x> LAST=<BETA9>: the head was clipped, so the prompt was truncated from the front.",
+    "consequence": "k<=50 is safe (a k=50 context is ~2k tokens). `full` mode is NOT runnable: whole conversations are ~15k tokens and would be silently truncated from the front -- a `full` number would be an artifact. Do not report one until num_ctx is set explicitly and this test is re-run.",
+    "why_not_declared": "The model declares 32768, but ollama clamps the runtime num_ctx to its server default. Declared length is not effective length; only the test above settles it."
+  },
+  "known_notes": [
+    "Measured on a Colab free-tier Tesla T4. GPU model is recorded per run in the manifest's hardware block.",
+    "A fresh Colab runtime has no SSH key. Code is delivered as an uploaded git bundle, so no credential is ever placed on the VM. Do not reintroduce one."
+  ]
+}

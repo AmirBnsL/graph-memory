@@ -6,7 +6,9 @@ question a reproduction cares about: *what exactly produced this number?*
 Recorded per run:
     code       git commit, branch, dirty flag
     data       pinned datasets + sha256 (provenance/datasets.json, embedded whole)
-    model      provider, model id, base_url, what served it, at what precision
+    model      provider, model id, base_url
+    serving    what served it, at what precision, and its MEASURED context window
+               (provenance/serving.json, embedded whole) -- not env-var dependent
     prompts    sha256 of the system prompt and the answer template
     env        sha256 of the frozen package list, so "same environment" is checkable
     hardware   python / torch / CUDA / GPU name
@@ -31,6 +33,7 @@ import llm
 
 ROOT = Path(__file__).resolve().parent.parent
 PROVENANCE = ROOT / "provenance" / "datasets.json"
+SERVING = ROOT / "provenance" / "serving.json"
 
 
 def _sh(cmd: list[str]) -> str:
@@ -74,6 +77,18 @@ def datasets() -> dict:
     if not PROVENANCE.exists():
         return {"status": "MISSING", "expected_at": str(PROVENANCE)}
     return json.loads(PROVENANCE.read_text())
+
+
+def serving_pin() -> dict:
+    """Measured serving-stack facts (context window, precision, server version).
+
+    Embedded whole rather than read from env vars: the effective context window is
+    a constraint on which k values are valid, and it must be recorded even for a
+    run launched without LLM_SERVED_BY / LLM_QUANTIZATION set.
+    """
+    if not SERVING.exists():
+        return {"status": "MISSING", "expected_at": str(SERVING)}
+    return json.loads(SERVING.read_text())
 
 
 def prompts() -> dict:
@@ -126,6 +141,7 @@ def build(mode: str, k: int, n_conv: int | None, n_qa: int | None,
         "serving": {
             "served_by": os.environ.get("LLM_SERVED_BY", "unknown"),
             "quantization": os.environ.get("LLM_QUANTIZATION", "unknown"),
+            "pinned": serving_pin(),
         },
         "prompts": prompts(),
         "env": env_freeze(),
