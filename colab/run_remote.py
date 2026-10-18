@@ -35,6 +35,27 @@ def git(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", REPO, *args], capture_output=True, text=True)
 
 
+def reader_from_config(repo: str) -> dict:
+    """The reader block from conf/ -- the experiment's source of truth for WHAT.
+
+    The preflight must resolve the model the same way the run will. The model
+    now lives in the config (reader.model), not in env, so a preflight that
+    reads only env fails with "LLM_MODEL is not set" even though the config is
+    perfectly complete -- which is exactly what happened on the first sweep
+    launch after the Hydra refactor.
+    """
+    src = os.path.join(repo, "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    import config as config_mod  # noqa: PLC0415 -- late import: repo must exist
+    from hydra import compose, initialize_config_dir  # noqa: PLC0415
+
+    cfg_dir = os.path.join(repo, "conf")
+    with initialize_config_dir(config_dir=cfg_dir, version_base=None):
+        values = config_mod.to_plain(compose(config_name="config"))
+    return values.get("reader") or {}
+
+
 def main() -> int:
     if not os.path.isdir(os.path.join(REPO, ".git")):
         print(f"ERROR: no git checkout at {REPO}. Run colab/vm_setup.sh first.")
@@ -75,8 +96,14 @@ def main() -> int:
         print("WARNING: no eval args; eval.py will use its own defaults")
 
     print("-- preflight: one LLM call --", flush=True)
+    pf_env = dict(os.environ)
+    reader = reader_from_config(REPO)
+    if reader.get("model"):
+        pf_env["LLM_MODEL"] = str(reader["model"])
+    if reader.get("provider"):
+        pf_env["LLM_PROVIDER"] = str(reader["provider"])
     pf = subprocess.run(
-        [PY, os.path.join(REPO, "src", "llm.py")], cwd=REPO,
+        [PY, os.path.join(REPO, "src", "llm.py")], cwd=REPO, env=pf_env,
         capture_output=True, text=True, timeout=600,
     )
     print((pf.stdout or pf.stderr).strip()[:400])
