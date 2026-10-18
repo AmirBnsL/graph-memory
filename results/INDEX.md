@@ -86,11 +86,17 @@ detached process for the whole grid (VM commit `6fe2b10`):
 
 | k | F1 | F1_paper | EM | F1_answerable | refusal_acc | recall_any | recall_all | coverage | prompt chars | latency s |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 2 | 0.076 | 0.283 | 0.037 | 0.098 | 0.922 | 0.162 | 0.136 | 0.148 | 299 | 0.32 |
-| 5 | 0.120 | 0.318 | 0.059 | 0.155 | 0.881 | 0.259 | 0.214 | 0.234 | 748 | 0.46 |
+| 2 | 0.076 | 0.282 | 0.037 | 0.098 | 0.919 | 0.162 | 0.136 | 0.148 | 299 | 0.33 |
+| 5 | 0.118 | 0.316 | 0.059 | 0.153 | 0.879 | 0.259 | 0.214 | 0.234 | 748 | 0.46 |
 | 10 | 0.158 | 0.341 | 0.074 | 0.203 | 0.816 | 0.346 | 0.288 | 0.314 | 1503 | 0.63 |
 | 25 | – | – | – | – | – | – | – | – | – | – |
 | 50 | – | – | – | – | – | – | – | – | – | – |
+
+*(k=2 and k=5 are the Hydra-harness runs of 2026-10-18 21:46/22:01 — commit `ab316b8`,
+config-hashed manifests, serving read from the pin. They supersede the morning
+runs of the same config, which were produced by pre-Hydra code and are not
+resume-eligible. The numbers agree to ~0.003, which is the harness refactor
+changing plumbing and not results.)*
 
 Every answer-side metric rises monotonically with k and `refusal_accuracy` falls
 monotonically -- the H1 trade-off in the data: more context means fewer false
