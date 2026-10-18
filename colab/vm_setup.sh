@@ -55,8 +55,10 @@ fi
 say "LoCoMo pinned OK (sha256 ${GOT_SHA:0:16}...)"
 
 # 3. extras the stock image lacks ---------------------------------------------
-say "installing cloud delta: bitsandbytes"
-uv pip install --system --quiet bitsandbytes
+# hydra-core: the config layer (conf/). Not in requirements.txt's install path
+# here because that file pins torch==+cpu and must never be installed on the VM.
+say "installing cloud delta: bitsandbytes + hydra (config layer)"
+uv pip install --system --quiet bitsandbytes hydra-core omegaconf
 
 # 4. model server -------------------------------------------------------------
 if ! command -v ollama >/dev/null 2>&1; then

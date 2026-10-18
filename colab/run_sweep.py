@@ -62,7 +62,11 @@ def main() -> int:
     out = (r.stdout or "") + (r.stderr or "")
     log.write("----- raw driver output -----\n" + out + "\n")
     say(f"DRIVER_EXIT={r.returncode}")
-    say(f"\nsweep done {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    # The marker must reflect the outcome: the local watcher greps for
+    # "sweep done", and a failure that prints "done" would false-trigger it.
+    say(f"\nsweep done {time.strftime('%Y-%m-%d %H:%M:%S')}"
+        if r.returncode == 0 else
+        f"\nsweep FAILED (DRIVER_EXIT={r.returncode}) {time.strftime('%Y-%m-%d %H:%M:%S')}")
     return r.returncode
 
 
