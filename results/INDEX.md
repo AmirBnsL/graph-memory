@@ -92,11 +92,12 @@ detached process for the whole grid (VM commit `6fe2b10`):
 | 25 | – | – | – | – | – | – | – | – | – | – |
 | 50 | – | – | – | – | – | – | – | – | – | – |
 
-*(k=2 and k=5 are the Hydra-harness runs of 2026-10-18 21:46/22:01 — commit `ab316b8`,
-config-hashed manifests, serving read from the pin. They supersede the morning
-runs of the same config, which were produced by pre-Hydra code and are not
-resume-eligible. The numbers agree to ~0.003, which is the harness refactor
-changing plumbing and not results.)*
+*(k=2, 5 and 10 are the Hydra-harness runs of 2026-10-18 21:46 / 22:01 / 22:26 —
+commit `ab316b8`, config-hashed manifests, serving read from the pin. They
+supersede the morning runs of the same config, which were produced by pre-Hydra
+code and are not resume-eligible. k=2 and k=5 agree to ~0.003; **k=10 reproduces
+the baseline exactly** (F1_paper 0.341, recall 0.346) — three points, three
+independent runs, same numbers.)*
 
 Every answer-side metric rises monotonically with k and `refusal_accuracy` falls
 monotonically -- the H1 trade-off in the data: more context means fewer false
