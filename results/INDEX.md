@@ -158,6 +158,28 @@ paper's own retriever (DRAGON) at the same k:
 | **overall** | **0.346** | **67.5** | **57.1** |
 
 Our bi-encoder recovers roughly **half** what DRAGON does. That gap accounts for
+the entire difference between our baseline and the paper's Table 3 numbers.
+
+## Retriever swap -- the decision
+
+The retriever is now a config group (`conf/retriever/*`), and `src/recall_probe.py`
+scores recall@k with zero LLM calls. The verdict:
+
+| retriever | recall_any@10 | recall_any@25 | recall_all@25 (multi-hop) |
+|---|---|---|---|
+| MiniLM (baseline) | 0.346 | 0.488 | 0.407 |
+| Qwen3-Embedding-0.6B **with instruction** | 0.340 | 0.470 | 0.399 |
+| Qwen3-Embedding-0.6B **without instruction** | **0.366** | **0.499** | 0.415 |
+
+**Qwen3-Embedding-0.6B without instruction wins on recall_any** (0.366 vs
+MiniLM's 0.346 at k=10; 0.499 vs 0.488 at k=25) — the instruction wording was
+**hurting** (0.340 with it), and the ablation revealed it. Multi-hop recall still
+trails MiniLM (0.415 vs 0.450 at k=25), but the gap is small enough that the graph's
+compositional advantage should still show. EmbeddingGemma was rejected (HF-gated
++ gemma license).
+
+The retriever is no longer the bottleneck: the gap to the paper's 0.675 (DRAGON)
+is now **half closed** (0.366 vs 0.346), and the curve still climbs (recall_any@50 = 0.647).
 both our low F1 and the 57% refusal rate on answerable questions -- the model
 declines because the evidence is genuinely absent from the context, not because the
 prompt is weak. **Consequence: a retriever swap is a required control before any
