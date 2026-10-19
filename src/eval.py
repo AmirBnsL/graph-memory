@@ -55,6 +55,7 @@ from pathlib import Path
 
 import answer as answer_mod
 import config as config_mod
+import embed
 import hydra
 import llm
 import manifest
@@ -172,7 +173,14 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
         if n_qa and len(rows) >= n_qa:
             break
 
-    return summarize(rows, mode=mode, k=k, t_start=t_start, identity=identity)
+    summary = summarize(rows, mode=mode, k=k, t_start=t_start, identity=identity)
+    # The retriever MUST be recorded: make_tables keys rows on (mode, retriever,
+    # k), so a missing key would make runs from different retrievers collide and
+    # silently overwrite each other in the ledger -- exactly the comparison we
+    # need to keep. group_name() unwraps the config group to its name; the
+    # fallback is the built-in default for pre-config results.
+    summary["retriever"] = config_mod.group_name(retriever) or embed.MODEL_NAME
+    return summary
 
 
 def _identity() -> tuple[str | None, str | None]:

@@ -1,0 +1,14 @@
+# 2026-class retrieval model (arXiv:2509.20354), 300M params, 768 dims.
+#
+# NOT currently runnable here: the checkpoint is GATED on Hugging Face (Google's
+# license must be accepted per-account) and ships under the gemma license, not
+# Apache. An unattended VM sweep would need an HF token with the gate accepted.
+# Kept as a config so the comparison is one `--retriever` away if that changes;
+# prompts per the model card: query "task: search result | query: {content}",
+# document "title: none | text: {content}". Activations do NOT support float16.
+name: google/embeddinggemma-300m
+query_prefix: "task: search result | query: "
+passage_prefix: "title: none | text: "
+passage_template: "{text}"
+batch_size: 32
+trust_remote_code: false

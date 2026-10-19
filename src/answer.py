@@ -52,7 +52,8 @@ def _ask(question: str, context: str, reader: dict | None = None) -> str:
 
 
 def answer_full(conv: Conversation, qa: QA, k: int = 10,
-                reader: dict | None = None, retriever: str | None = None) -> AnswerResult:
+                reader: dict | None = None,
+                retriever: dict | str | None = None) -> AnswerResult:
     """Stuff the whole conversation in. NOT runnable until num_ctx is explicit
     (provenance/serving.json -> effective_context_tokens): a whole conversation
     is ~15k tokens and would be truncated from the front. Kept for the H1
@@ -65,10 +66,12 @@ def answer_full(conv: Conversation, qa: QA, k: int = 10,
 
 
 def answer_vector(conv: Conversation, qa: QA, k: int = 10,
-                  reader: dict | None = None, retriever: str | None = None) -> AnswerResult:
+                  reader: dict | None = None,
+                  retriever: dict | str | None = None) -> AnswerResult:
     t0 = time.time()
-    texts = [t.text for t in conv.turns]
-    hits = embed.top_k(qa.question, texts, k=k, model_name=retriever or embed.MODEL_NAME)
+    s = embed.spec(retriever)
+    texts = embed.passage_texts(conv.turns, s)
+    hits = embed.top_k(qa.question, texts, k=k, retriever=s)
     picked = [conv.turns[i] for i, _ in hits]
     ctx = _render(picked)
     out = _ask(qa.question, ctx, reader)
@@ -79,7 +82,8 @@ MODES = {"full": answer_full, "vector": answer_vector}
 
 
 def answer(conv: Conversation, qa: QA, mode: str = "vector", k: int = 10,
-           reader: dict | None = None, retriever: str | None = None) -> AnswerResult:
+           reader: dict | None = None,
+           retriever: dict | str | None = None) -> AnswerResult:
     fn = MODES.get(mode)
     if fn is None:
         raise ValueError(f"unknown mode {mode!r}; have {sorted(MODES)}")

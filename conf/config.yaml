@@ -23,6 +23,7 @@ defaults:
   - benchmark: locomo
   - mode: vector
   - reader: qwen25-7b
+  - retriever: minilm
   - _self_
 
 k: 10

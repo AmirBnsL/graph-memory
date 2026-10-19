@@ -1,0 +1,9 @@
+# The retriever every existing result used. Kept byte-identical to the
+# pre-config era so the k-sweep rows stay comparable: bare turn text, no
+# prefixes, ST mean pooling + normalize (inside the checkpoint).
+name: all-MiniLM-L6-v2
+query_prefix: ""
+passage_prefix: ""
+passage_template: "{text}"
+batch_size: 64
+trust_remote_code: false

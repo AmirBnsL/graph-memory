@@ -1,0 +1,16 @@
+# 2026-class retrieval model (arXiv:2506.05176, Apache-2.0, ungated).
+# 0.6B params, lasttoken pooling + normalize (inside the checkpoint), 1024 dims.
+#
+# query_prefix is the model card's reference format -- `Instruct: {task}\nQuery:`
+# with NO space after the colon -- with the task instruction specialized to
+# conversational-memory retrieval (the card recommends tailoring it; leaving it
+# out costs 1-5% retrieval, per the card's own note). It is a config field, so
+# any wording change re-hashes the config and correctly invalidates results.
+#
+# Documents are embedded BARE (no instruction) -- per the card.
+name: Qwen/Qwen3-Embedding-0.6B
+query_prefix: "Instruct: Given a question about a long conversation between two people, retrieve the dialogue turns that help answer it.\nQuery:"
+passage_prefix: ""
+passage_template: "{text}"
+batch_size: 32
+trust_remote_code: false

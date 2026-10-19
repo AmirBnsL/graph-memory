@@ -1,0 +1,31 @@
+# Recall-only probe: retrieval quality with ZERO LLM calls.
+#
+# Runs the retriever over every gold-evidence question and reports
+# recall@k (any / all), overall and per category. No generation, so it runs on
+# a laptop CPU and is the cheap way to choose a retriever BEFORE paying for an
+# end-to-end sweep.
+#
+#   python src/recall_probe.py                       # default retriever (minilm)
+#   python src/recall_probe.py retriever=qwen3-06b   # one of conf/retriever/*
+#   python src/recall_probe.py --multirun 'retriever=glob(*)' k_grid=[2,10]
+#
+# Regression rule: minilm must reproduce recall_any@10 = 0.346 (the k=10 run of
+# 2026-10-18). If it does not, this probe or the cache is broken and nothing
+# above it is trustworthy.
+defaults:
+  - retriever: minilm
+  - _self_
+
+benchmark: locomo
+k_grid: [2, 5, 10, 25, 50]
+
+limits:
+  n_conv: null
+  n_qa: null
+  categories: null
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: /tmp/opencode/hydra/${now:%Y%m%d-%H%M%S}
