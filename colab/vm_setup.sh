@@ -97,6 +97,9 @@ echo "      --env EVAL_ARGS=\"limits.n_conv=1 limits.n_qa=50\" \\"
 echo "      -f colab/run_remote.py"
 echo
 echo "  sweep:  colab exec -s gm-dev --env DETACH=1 --env SWEEP=2,5,10,25,50 \\"
+echo "            --env RETRIEVER=qwen3-06b --env EXTRA_ARGS=\"retriever.query_prefix=\" \\"
 echo "            -f colab/run_sweep.py"
+echo "          keep the VM alive while it runs (free tier reclaims an unattended"
+echo "          VM in ~90 min):  colab/keepalive.sh gm-dev"
 echo
 echo "  stop the meter:  colab stop -s gm-dev"
