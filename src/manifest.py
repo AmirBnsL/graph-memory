@@ -73,6 +73,7 @@ def git_state() -> dict:
         spec = ["--", ".", *(f":(exclude){d}" for d in _OUTPUT_DIRS)]
         _GIT = {
             "commit": _sh(["git", "rev-parse", "HEAD"]) or "unknown",
+            "code_commit": _sh(["git", "log", "-1", "--format=%H", *spec]) or "unknown",
             "branch": _sh(["git", "branch", "--show-current"]) or "unknown",
             "dirty": bool(_sh(["git", "status", "--porcelain", *spec])),
             "dirty_excludes": list(_OUTPUT_DIRS),

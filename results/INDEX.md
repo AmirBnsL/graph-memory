@@ -110,7 +110,22 @@ step. Re-run it in the post-swap sweep, where the knee should sit much earlier.)
 Every answer-side metric rises monotonically with k and `refusal_accuracy` falls
 monotonically -- the H1 trade-off in the data: more context means fewer false
 refusals (answerable F1 0.098 → 0.270) and more false accepts on adversarial
-questions (refusal 0.919 → 0.726). Retrieval recall by category (paper §4.1):
+questions (refusal 0.919 → 0.726).
+
+### Retrieval-to-Response Gap & Silent Grounding (MERIT & LoCoMo-Conv Decomposition)
+
+| k | recall_any | F1_answerable | F1 | hit | ignore_rate (MERIT) | F1 | miss (silent grounding) |
+|---|---|---|---|---|---|
+| 2 | 0.150 | 0.098 | 0.524 | 0.300 | 0.022 |
+| 5 | 0.239 | 0.153 | **0.537** | 0.281 | 0.031 |
+| 10 | 0.328 | 0.203 | 0.533 | **0.256** | 0.042 |
+| 25 | 0.471 | 0.270 | 0.503 | 0.276 | **0.061** |
+
+Findings:
+1. **Reader Ceiling & Ignore Rate:** Even when gold evidence is in context (`recall_any == 1`), `Qwen2.5-7B` fails to answer (`F1 == 0`) 25.6%–30.0% of the time, and conditional F1 peaks at k=5 (0.537) before degrading at k=25 (0.503) from context dilution.
+2. **Silent Grounding:** When gold evidence is missed (`recall_any == 0`), F1 still nearly triples from 0.022 to 0.061 as broader context provides indirect clues.
+
+Retrieval recall by category (paper §4.1):
 
 | label | n | k=2 | k=5 | k=10 | k=25 |
 |---|---|---|---|---|---|
@@ -224,10 +239,10 @@ below every memory system. Two readings, and both push the same way:
 
 ## Known gaps in this run
 
-- **Retriever is weak; k is now being swept.** `all-MiniLM-L6-v2` at k=10 recovers
-  34.6% of gold evidence; the paper sweeps k ∈ {2,5,10,25,50} and its optimum is
-  **k=25 (dialog) / k=5 (observation)**, not 10. The sweep is in flight (k=2 and 5
-  are in, see above). The **retriever swap is the real fix and is still outstanding.**
+- **Retriever swap in flight on A100:** `all-MiniLM-L6-v2` at k=10 recovers
+  34.6% of gold evidence; the recall probe settled `Qwen3-Embedding-0.6B` (no instruction)
+  as the superior retriever (recall@50 = 0.647). The end-to-end answering sweep
+  (k=2,5,10,25,50) is being executed on A100.
 - **We evaluate 10 conversations, not 50.** `locomo10.json` holds 10 convs at 588.2
   turns/conv and 13,377 tokens/conv, vs the paper's 304.9 turns and 9,209 tokens
   across 50. Our numbers are a *denser* subset; state this in every write-up.

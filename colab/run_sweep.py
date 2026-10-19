@@ -81,17 +81,20 @@ def main() -> int:
         say("NOTE: no retriever= override -- using conf/config.yaml's default (minilm)")
 
     env = dict(os.environ, EVAL_ARGS=" ".join(OVERRIDES))
-    r = subprocess.run([PY, DRIVER], env=env, cwd=REPO,
-                       capture_output=True, text=True)
-    out = (r.stdout or "") + (r.stderr or "")
-    log.write("----- raw driver output -----\n" + out + "\n")
-    say(f"DRIVER_EXIT={r.returncode}")
+    proc = subprocess.Popen([PY, DRIVER], env=env, cwd=REPO,
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            text=True, bufsize=1)
+    for line in proc.stdout:
+        print(line, end="", flush=True)
+        log.write(line)
+    rc = proc.wait()
+    say(f"DRIVER_EXIT={rc}")
     # The marker must reflect the outcome: the local watcher greps for
     # "sweep done", and a failure that prints "done" would false-trigger it.
     say(f"\nsweep done {time.strftime('%Y-%m-%d %H:%M:%S')}"
-        if r.returncode == 0 else
-        f"\nsweep FAILED (DRIVER_EXIT={r.returncode}) {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    return r.returncode
+        if rc == 0 else
+        f"\nsweep FAILED (DRIVER_EXIT={rc}) {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    return rc
 
 
 if __name__ == "__main__":

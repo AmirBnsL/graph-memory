@@ -237,6 +237,19 @@ def summarize(rows: list[dict], mode: str, k: int, t_start: float = 0.0,
             sum(r["evidence_coverage"] for r in retr) / len(retr)
         ) if retr else None,
         "n_with_evidence": len(retr),
+        # Retrieval-to-response decomposition (MERIT Ignore Rate & LoCoMo-Conv Silent Grounding)
+        "F1_given_hit": (
+            sum(r["F1"] for r in ans if r.get("recall_any") == 1.0)
+            / len([r for r in ans if r.get("recall_any") == 1.0])
+        ) if any(r.get("recall_any") == 1.0 for r in ans) else None,
+        "ignore_rate": (
+            sum(1 for r in ans if r.get("recall_any") == 1.0 and r["F1"] == 0.0)
+            / len([r for r in ans if r.get("recall_any") == 1.0])
+        ) if any(r.get("recall_any") == 1.0 for r in ans) else None,
+        "F1_given_miss": (
+            sum(r["F1"] for r in ans if r.get("recall_any") == 0.0)
+            / len([r for r in ans if r.get("recall_any") == 0.0])
+        ) if any(r.get("recall_any") == 0.0 for r in ans) else None,
         "recall_any_by_category": {c: sum(v) / len(v) for c, v in sorted(recap.items())},
         "F1_by_category": {c: sum(v) / len(v) for c, v in sorted(by_cat.items())},
         "n_by_category": {c: len(v) for c, v in sorted(by_cat.items())},
@@ -271,6 +284,10 @@ def report(s: dict) -> None:
     if s.get("recall_any") is not None:
         print(f"  recall@k      any={s['recall_any']:.3f}  all={s['recall_all']:.3f}  "
               f"coverage={s['evidence_coverage']:.3f}  (n={s['n_with_evidence']})")
+    if s.get("F1_given_hit") is not None:
+        print(f"  retr->resp    F1|hit={s['F1_given_hit']:.3f}  "
+              f"ignore_rate={s['ignore_rate']:.3f} (MERIT)  "
+              f"F1|miss={s.get('F1_given_miss', 0.0):.3f} (silent grounding)")
     print("  by category (verified mapping):")
     recap = s.get("recall_any_by_category", {})
     for c, v in s["F1_by_category"].items():
@@ -293,6 +310,7 @@ def find_existing(cfg_values: dict) -> Path | None:
     """
     want = config_mod.hash_dict({k: v for k, v in cfg_values.items() if k != "hydra"})
     code = manifest.git_state()
+    cur_code = code.get("code_commit") or code["commit"]
     env = manifest.env_freeze()["sha256"]
     for mf in sorted(RESULTS.glob("*.manifest.json")):
         try:
@@ -302,7 +320,8 @@ def find_existing(cfg_values: dict) -> Path | None:
         if m.get("config", {}).get("sha256") != want:
             continue
         c = m.get("code", {})
-        if c.get("commit") != code["commit"] or bool(c.get("dirty")) != bool(code["dirty"]):
+        prev_code = c.get("code_commit") or c.get("commit")
+        if prev_code != cur_code or bool(c.get("dirty")) != bool(code["dirty"]):
             continue
         if m.get("env", {}).get("sha256") != env:
             continue

@@ -56,12 +56,15 @@ def main() -> int:
     ap.add_argument("--local-dir", default="results")
     ap.add_argument("--fresh", action="store_true",
                     help="re-download results too, not just logs")
+    ap.add_argument("--push", action="store_true",
+                    help="git commit and push new results to origin/master")
     args = ap.parse_args()
 
     local = Path(args.local_dir)
     local.mkdir(parents=True, exist_ok=True)
 
     pulled, skipped, failed = 0, 0, []
+    pulled_results: list[str] = []
     for name in remote_ls(args.session, args.remote_dir):
         if name in NEVER:
             skipped += 1
@@ -77,6 +80,8 @@ def main() -> int:
         )
         if p.returncode == 0:
             pulled += 1
+            if name.endswith(".json"):
+                pulled_results.append(name)
             print(f"  pulled  {name}")
         else:
             failed.append(name)
@@ -85,6 +90,19 @@ def main() -> int:
     print(f"\npulled={pulled}  skipped={skipped}  failed={len(failed)}  -> {local}/")
     for f in failed:
         print(f"  still on the VM only: {f}")
+
+    if args.push and pulled_results:
+        # Checkpoint finished results to GitHub
+        subprocess.run(["git", "add", "results/"], check=False)
+        msg = f"results: checkpoint {len(pulled_results)} file(s) from {args.session}"
+        c = subprocess.run(["git", "commit", "-m", msg], capture_output=True, text=True)
+        if c.returncode == 0:
+            print(f"committed: {msg}")
+            p = subprocess.run(["git", "push", "origin", "master"], capture_output=True, text=True)
+            if p.returncode == 0:
+                print("pushed to origin/master successfully")
+            else:
+                print(f"git push warning: {p.stderr.strip()[:200]}")
     return 1 if failed else 0
 
 

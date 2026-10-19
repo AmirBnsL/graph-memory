@@ -201,10 +201,30 @@ def embed(texts: list[str], s: dict | None = None) -> np.ndarray:
     return emb
 
 
+_QUERY_CACHE: dict[tuple, np.ndarray] = {}
+
+
 def encode_query(query: str, s: dict | None = None) -> np.ndarray:
-    """Query embedding (d,). Never cached -- each query is seen once."""
+    """Query embedding (d,). Cached in-memory and on-disk across k-sweeps."""
     s = spec(s)
-    return encode([s["query_prefix"] + query], s)[0]
+    key = (s["name"], s["query_prefix"], bool(s["trust_remote_code"]), query)
+    if key in _QUERY_CACHE:
+        return _QUERY_CACHE[key]
+
+    EMB_CACHE.mkdir(parents=True, exist_ok=True)
+    h = hashlib.sha256()
+    h.update(f"{s['name']}|{s['query_prefix']}|{bool(s['trust_remote_code'])}".encode())
+    h.update(query.encode("utf-8", "ignore"))
+    qpath = EMB_CACHE / f"q_{h.hexdigest()[:24]}.npz"
+    if qpath.exists():
+        vec = np.load(qpath)["vec"]
+        _QUERY_CACHE[key] = vec
+        return vec
+
+    vec = encode([s["query_prefix"] + query], s)[0]
+    np.savez_compressed(qpath, vec=vec)
+    _QUERY_CACHE[key] = vec
+    return vec
 
 
 def top_k(query: str, texts: list[str], k: int = 10,
