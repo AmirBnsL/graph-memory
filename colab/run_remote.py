@@ -31,8 +31,30 @@ REPO = os.environ.get("REPO_DIR", "/content/graph-memory")
 PY = sys.executable or "python3"
 
 
-def git(*args: str) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", "-C", REPO, *args], capture_output=True, text=True)
+def git(*args: str, timeout: int | None = None) -> subprocess.CompletedProcess:
+    """Run git non-interactively, and never block on a prompt.
+
+    A fresh runtime has no ~/.ssh/known_hosts, so an SSH remote makes git ask
+    for the host key -- and a non-interactive process that asks hangs forever.
+    That is exactly how the first sweep launch died: hours of silence on a
+    `git fetch origin`, no result, no error, until the session was reclaimed.
+    BatchMode refuses to prompt at all, accept-new trusts first contact,
+    ConnectTimeout bounds an unreachable host, and `timeout` bounds git itself.
+    colab/bootstrap.sh:56 uses the same SSH options for the same reason.
+    """
+    env = dict(os.environ)
+    env.setdefault(
+        "GIT_SSH_COMMAND",
+        "ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -o BatchMode=yes",
+    )
+    try:
+        return subprocess.run(["git", "-C", REPO, *args], capture_output=True,
+                              text=True, env=env, timeout=timeout)
+    except subprocess.TimeoutExpired as e:
+        return subprocess.CompletedProcess(
+            ["git", "-C", REPO, *args], 124, e.stdout or "",
+            f"git {' '.join(args)} timed out after {timeout}s",
+        )
 
 
 def reader_from_config(repo: str) -> dict:
@@ -61,7 +83,16 @@ def main() -> int:
         print(f"ERROR: no git checkout at {REPO}. Run colab/vm_setup.sh first.")
         return 2
 
-    print(git("fetch", "--quiet", "origin").returncode, "fetch")
+    # Best-effort, and NOT fatal: run_setup.py already fast-forwarded this
+    # checkout from the uploaded bundle, which is the source of truth. A fetch
+    # that fails (no SSH key on the VM, no network) must warn and continue --
+    # never hang (see git() above), never abort the run.
+    fetch_rc = git("fetch", "--quiet", "origin", timeout=90).returncode
+    if fetch_rc != 0:
+        print(f"WARNING: git fetch origin failed (rc={fetch_rc}) -- "
+              f"continuing on the bundle checkout")
+    else:
+        print("git fetch: ok")
     git("checkout", "--quiet", "master")
     ff = git("merge", "--ff-only", "--quiet", "origin/master")
     if ff.returncode != 0:

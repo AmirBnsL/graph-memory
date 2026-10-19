@@ -16,8 +16,11 @@
 #   python src/eval.py k=25                               # one override
 #   python src/eval.py --multirun k=2,5,10,25,50          # the k grid
 #
-# Sweep + resume on the VM:
-#   colab exec -s gm-dev --env DETACH=1 --env SWEEP=2,5,10,25,50 -f colab/run_sweep.py
+# Sweep + resume on the VM. Name the retriever explicitly -- conf/config.yaml's
+# default is minilm, so an override-less sweep is a MiniLM sweep:
+#   colab exec -s gm-dev --env DETACH=1 --env SWEEP=2,5,10,25,50 \
+#     --env RETRIEVER=qwen3-06b --env EXTRA_ARGS="retriever.query_prefix=" \
+#     -f colab/run_sweep.py
 # (a relaunch skips any k whose manifest matches on config+code+env)
 defaults:
   - benchmark: locomo
