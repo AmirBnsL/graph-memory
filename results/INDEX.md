@@ -84,64 +84,69 @@ The paper sweeps k ∈ {2,5,10,25,50} and its optimum is **k=25 (dialog) / k=5
 (observation)**, not 10. Ours was k=10 by fiat. Same harness, `--mode vector`, one
 detached process for the whole grid (VM commit `6fe2b10`):
 
+### MiniLM Baseline k-sweep
+
 | k | F1 | F1_paper | EM | F1_answerable | refusal_acc | recall_any | recall_all | coverage | prompt chars | latency s |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 2 | 0.076 | 0.282 | 0.037 | 0.098 | 0.919 | 0.162 | 0.136 | 0.148 | 299 | 0.33 |
 | 5 | 0.118 | 0.316 | 0.059 | 0.153 | 0.879 | 0.259 | 0.214 | 0.234 | 748 | 0.46 |
 | 10 | 0.158 | 0.341 | 0.074 | 0.203 | 0.816 | 0.346 | 0.288 | 0.314 | 1503 | 0.74 |
 | 25 | 0.209 | 0.372 | 0.097 | 0.270 | 0.726 | 0.488 | 0.407 | 0.444 | 3863 | 1.53 |
-| 50 | – | deferred | – | – | – | – | – | – | – | – |
 
-*(k=2/5/10/25 are the Hydra-harness runs of 2026-10-18 21:46 / 22:01 / 22:26 /
-23:16 — commit `ab316b8`, config-hashed manifests, serving read from the pin.
-k=2/5/10 supersede the morning runs of the same config, which were produced by
-pre-Hydra code and are not resume-eligible; k=2 and k=5 agree to ~0.003 and
-**k=10 reproduces the baseline exactly** (F1_paper 0.341, recall 0.346) — three
-independent runs, same numbers.
-**k=50 is deferred, not missing.** The curve has *not* flattened by k=25 — recall
-is still climbing (0.162 → 0.259 → 0.346 → 0.488) and per-point F1 gains have
-not decayed (+0.034, +0.025, +0.031). That is the retrieval-bound signature: the
-paper's DRAGON reaches 0.675 recall at k=10 and saturates by k=25, while we are
-still starving at k=25 and buying recall with context volume. The point is
-therefore expensive (~5–8 h of T4; latency is already superlinear: 0.33 → 0.46 →
-0.74 → 1.53 s) *and* would be invalidated by the retriever swap that is the next
-step. Re-run it in the post-swap sweep, where the knee should sit much earlier.)*
+### Qwen3-Embedding-0.6B Post-Swap Sweep (Complete on A100)
+
+| k | F1 | F1_paper | EM | F1_answerable | refusal_acc | recall_any | recall_all | coverage | prompt chars | latency s |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 2 | 0.077 | 0.283 | 0.038 | 0.099 | 0.915 | 0.185 | 0.152 | 0.166 | 335 | 0.24 |
+| 5 | 0.131 | 0.330 | 0.063 | 0.169 | 0.883 | 0.285 | 0.241 | 0.261 | 832 | 0.22 |
+| 10 | 0.161 | 0.346 | 0.080 | 0.208 | 0.823 | 0.366 | 0.308 | 0.333 | 1652 | 0.28 |
+| 25 | 0.224 | 0.389 | 0.115 | 0.289 | 0.735 | 0.503 | 0.416 | 0.454 | 4109 | 0.44 |
+| 50 | 0.267 | 0.419 | 0.139 | 0.345 | 0.675 | 0.647 | 0.546 | 0.594 | 8290 | 0.74 |
 
 Every answer-side metric rises monotonically with k and `refusal_accuracy` falls
 monotonically -- the H1 trade-off in the data: more context means fewer false
-refusals (answerable F1 0.098 → 0.270) and more false accepts on adversarial
-questions (refusal 0.919 → 0.726).
+refusals (answerable F1 0.099 → 0.345) and more false accepts on adversarial
+questions (refusal 0.915 → 0.675).
+
+At k=50, Qwen3-0.6B matches the paper's best observation-level F1 (0.419 vs 0.414)
+while recall_any reaches 0.647 (recovering 96% of the paper's DRAGON retrieval ceiling: 0.675).
 
 ### Retrieval-to-Response Gap & Silent Grounding (MERIT & LoCoMo-Conv Decomposition)
 
-| k | recall_any | F1_answerable | F1 | hit | ignore_rate (MERIT) | F1 | miss (silent grounding) |
-|---|---|---|---|---|---|
-| 2 | 0.150 | 0.098 | 0.524 | 0.300 | 0.022 |
-| 5 | 0.239 | 0.153 | **0.537** | 0.281 | 0.031 |
-| 10 | 0.328 | 0.203 | 0.533 | **0.256** | 0.042 |
-| 25 | 0.471 | 0.270 | 0.503 | 0.276 | **0.061** |
+| retriever | k | recall_any | F1_answerable | F1 | hit | ignore_rate (MERIT) | F1 | miss (silent grounding) |
+|---|---|---|---|---|---|---|
+| all-MiniLM-L6-v2 | 2 | 0.162 | 0.098 | 0.536 | 25.6% | 0.022 |
+| all-MiniLM-L6-v2 | 5 | 0.259 | 0.153 | **0.537** | 26.5% | 0.038 |
+| all-MiniLM-L6-v2 | 10 | 0.346 | 0.203 | 0.540 | **25.6%** | 0.048 |
+| all-MiniLM-L6-v2 | 25 | 0.488 | 0.270 | 0.503 | 30.0% | 0.061 |
+| Qwen/Qwen3-Embedding-0.6B | 2 | 0.185 | 0.099 | 0.469 | 36.0% | 0.027 |
+| Qwen/Qwen3-Embedding-0.6B | 5 | 0.285 | 0.169 | 0.517 | 27.8% | 0.044 |
+| Qwen/Qwen3-Embedding-0.6B | 10 | 0.366 | 0.208 | 0.490 | 29.8% | 0.060 |
+| Qwen/Qwen3-Embedding-0.6B | 25 | 0.503 | 0.289 | **0.519** | **26.7%** | 0.073 |
+| Qwen/Qwen3-Embedding-0.6B | 50 | **0.647** | **0.345** | 0.497 | 28.1% | **0.084** |
 
 Findings:
-1. **Reader Ceiling & Ignore Rate:** Even when gold evidence is in context (`recall_any == 1`), `Qwen2.5-7B` fails to answer (`F1 == 0`) 25.6%–30.0% of the time, and conditional F1 peaks at k=5 (0.537) before degrading at k=25 (0.503) from context dilution.
-2. **Silent Grounding:** When gold evidence is missed (`recall_any == 0`), F1 still nearly triples from 0.022 to 0.061 as broader context provides indirect clues.
+1. **Reader Ceiling & Ignore Rate:** Even when gold evidence is in context (`recall_any == 1`), `Qwen2.5-7B` fails to answer (`F1 == 0`) ~26%–30% of the time across retrievers.
+2. **Silent Grounding Monotonically Expands:** As k expands from 2 to 50, F1 on questions where the gold evidence turn is completely missed nearly quadruples from 0.022/0.027 to 0.084. Broader context supplies indirect semantic cues even when exact gold turns are absent.
 
 Retrieval recall by category (paper §4.1):
 
-| label | n | k=2 | k=5 | k=10 | k=25 |
-|---|---|---|---|---|---|
-| multi-hop | 282 | 0.057 | 0.167 | 0.270 | 0.450 |
-| temporal | 321 | 0.168 | 0.243 | 0.330 |
-| open-domain | 96 | 0.098 | 0.130 | 0.207 |
-| single-hop | 841 | 0.180 | 0.274 | 0.360 |
-| adversarial | 446 | 0.206 | 0.327 | 0.406 |
-| **overall** | **1982** | **0.162** | **0.259** | **0.346** |
+| retriever | k | multi-hop | temporal | open-domain | single-hop | adversarial | overall |
+|---|---|---|---|---|---|---|---|
+| MiniLM | 2 | 0.057 | 0.168 | 0.098 | 0.180 | 0.206 | 0.162 |
+| MiniLM | 5 | 0.167 | 0.243 | 0.130 | 0.273 | 0.327 | 0.259 |
+| MiniLM | 10 | 0.270 | 0.330 | 0.207 | 0.360 | 0.406 | 0.346 |
+| MiniLM | 25 | 0.450 | 0.452 | 0.250 | 0.510 | 0.547 | 0.488 |
+| Qwen3-0.6B | 2 | 0.078 | 0.215 | 0.120 | 0.176 | 0.260 | 0.185 |
+| Qwen3-0.6B | 5 | 0.142 | 0.327 | 0.163 | 0.293 | 0.357 | 0.285 |
+| Qwen3-0.6B | 10 | 0.227 | 0.436 | 0.185 | 0.364 | 0.446 | 0.366 |
+| Qwen3-0.6B | 25 | 0.436 | 0.533 | 0.272 | 0.507 | 0.563 | 0.503 |
+| Qwen3-0.6B | 50 | 0.599 | 0.698 | 0.370 | 0.644 | 0.702 | 0.647 |
 
-**k=25 is the provisional operating point** (recall 0.488, `F1_paper` 0.372) --
-but it is provisional *because the retriever is weak*, and the knee will move
-when it is swapped. Resuming is safe and content-hash based:
+**k=25 / k=50 are the standard operating points for Vector RAG:** Qwen3-0.6B at k=25 delivers 0.503 recall and 0.389 F1_paper, and at k=50 reaches 0.647 recall and 0.419 F1_paper. Resuming is safe and content-hash based:
 `src/eval.py::find_existing` skips a run only when a prior manifest matches on
 config + code + env, and `colab/pull_results.py` pulls finished rows into this
-repo (anything left on the VM dies with the session).
+repo.
 
 ### Provenance caveats for the morning sweep rows (superseded)
 - The *morning* rows (k=2/5/10 from `6fe2b10`) read
@@ -239,10 +244,11 @@ below every memory system. Two readings, and both push the same way:
 
 ## Known gaps in this run
 
-- **Retriever swap in flight on A100:** `all-MiniLM-L6-v2` at k=10 recovers
-  34.6% of gold evidence; the recall probe settled `Qwen3-Embedding-0.6B` (no instruction)
-  as the superior retriever (recall@50 = 0.647). The end-to-end answering sweep
-  (k=2,5,10,25,50) is being executed on A100.
+- **Retriever swap COMPLETED on A100:** `all-MiniLM-L6-v2` at k=10 recovered
+  34.6% of gold evidence; `Qwen3-Embedding-0.6B` (no instruction) demonstrated
+  superior recall across the entire grid (0.366 at k=10, 0.503 at k=25, 0.647 at k=50).
+  The full end-to-end answering sweep (k=2,5,10,25,50) has completed with full provenance
+  and manifests committed to GitHub. Qwen3-0.6B is now the locked vector RAG baseline.
 - **We evaluate 10 conversations, not 50.** `locomo10.json` holds 10 convs at 588.2
   turns/conv and 13,377 tokens/conv, vs the paper's 304.9 turns and 9,209 tokens
   across 50. Our numbers are a *denser* subset; state this in every write-up.
