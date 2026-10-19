@@ -88,45 +88,56 @@ detached process for the whole grid (VM commit `6fe2b10`):
 |---|---|---|---|---|---|---|---|---|---|---|
 | 2 | 0.076 | 0.282 | 0.037 | 0.098 | 0.919 | 0.162 | 0.136 | 0.148 | 299 | 0.33 |
 | 5 | 0.118 | 0.316 | 0.059 | 0.153 | 0.879 | 0.259 | 0.214 | 0.234 | 748 | 0.46 |
-| 10 | 0.158 | 0.341 | 0.074 | 0.203 | 0.816 | 0.346 | 0.288 | 0.314 | 1503 | 0.63 |
-| 25 | – | – | – | – | – | – | – | – | – | – |
-| 50 | – | – | – | – | – | – | – | – | – | – |
+| 10 | 0.158 | 0.341 | 0.074 | 0.203 | 0.816 | 0.346 | 0.288 | 0.314 | 1503 | 0.74 |
+| 25 | 0.209 | 0.372 | 0.097 | 0.270 | 0.726 | 0.488 | 0.407 | 0.444 | 3863 | 1.53 |
+| 50 | – | deferred | – | – | – | – | – | – | – | – |
 
-*(k=2, 5 and 10 are the Hydra-harness runs of 2026-10-18 21:46 / 22:01 / 22:26 —
-commit `ab316b8`, config-hashed manifests, serving read from the pin. They
-supersede the morning runs of the same config, which were produced by pre-Hydra
-code and are not resume-eligible. k=2 and k=5 agree to ~0.003; **k=10 reproduces
-the baseline exactly** (F1_paper 0.341, recall 0.346) — three points, three
-independent runs, same numbers.)*
+*(k=2/5/10/25 are the Hydra-harness runs of 2026-10-18 21:46 / 22:01 / 22:26 /
+23:16 — commit `ab316b8`, config-hashed manifests, serving read from the pin.
+k=2/5/10 supersede the morning runs of the same config, which were produced by
+pre-Hydra code and are not resume-eligible; k=2 and k=5 agree to ~0.003 and
+**k=10 reproduces the baseline exactly** (F1_paper 0.341, recall 0.346) — three
+independent runs, same numbers.
+**k=50 is deferred, not missing.** The curve has *not* flattened by k=25 — recall
+is still climbing (0.162 → 0.259 → 0.346 → 0.488) and per-point F1 gains have
+not decayed (+0.034, +0.025, +0.031). That is the retrieval-bound signature: the
+paper's DRAGON reaches 0.675 recall at k=10 and saturates by k=25, while we are
+still starving at k=25 and buying recall with context volume. The point is
+therefore expensive (~5–8 h of T4; latency is already superlinear: 0.33 → 0.46 →
+0.74 → 1.53 s) *and* would be invalidated by the retriever swap that is the next
+step. Re-run it in the post-swap sweep, where the knee should sit much earlier.)*
 
 Every answer-side metric rises monotonically with k and `refusal_accuracy` falls
 monotonically -- the H1 trade-off in the data: more context means fewer false
-refusals (answerable F1 0.098 → 0.203) and more false accepts on adversarial
-questions (refusal 0.922 → 0.816). Retrieval recall by category (paper §4.1):
+refusals (answerable F1 0.098 → 0.270) and more false accepts on adversarial
+questions (refusal 0.919 → 0.726). Retrieval recall by category (paper §4.1):
 
-| label | n | k=2 | k=5 | k=10 |
-|---|---|---|---|---|
-| multi-hop | 282 | 0.057 | 0.167 | 0.270 |
+| label | n | k=2 | k=5 | k=10 | k=25 |
+|---|---|---|---|---|---|
+| multi-hop | 282 | 0.057 | 0.167 | 0.270 | 0.450 |
 | temporal | 321 | 0.168 | 0.243 | 0.330 |
 | open-domain | 96 | 0.098 | 0.130 | 0.207 |
 | single-hop | 841 | 0.180 | 0.274 | 0.360 |
 | adversarial | 446 | 0.206 | 0.327 | 0.406 |
 | **overall** | **1982** | **0.162** | **0.259** | **0.346** |
 
-k=10 stays the canonical baseline until the grid completes; 25 and 50 are in flight.
-Resuming is safe: `colab/run_sweep.py` skips any k whose result **and** manifest
-already exist, and `colab/pull_results.py` pulls finished rows into this repo
-(anything left on the VM dies with the session).
+**k=25 is the provisional operating point** (recall 0.488, `F1_paper` 0.372) --
+but it is provisional *because the retriever is weak*, and the knee will move
+when it is swapped. Resuming is safe and content-hash based:
+`src/eval.py::find_existing` skips a run only when a prior manifest matches on
+config + code + env, and `colab/pull_results.py` pulls finished rows into this
+repo (anything left on the VM dies with the session).
 
-### Provenance caveats for every sweep row
-- **`serving.served_by` / `serving.quantization` read `"unknown"`.** The sweep was
-  launched without `LLM_SERVED_BY`/`LLM_QUANTIZATION` exported, so those manifest
-  fields cannot name them. `provenance/serving.json` pins the same facts
-  independently (ollama 0.40.6, Q4_K_M) -- reconcile the two when quoting.
-- **Every row is from VM commit `6fe2b10`**, the bundle commit. `run_remote.py`'s
-  per-k `git fetch` fails by design (no key on the VM), so a sweep cannot advance
-  past what the uploaded bundle carried.
-- **The manifests embed the pre-correction `datasets.json`** (still carrying the
+### Provenance caveats for the morning sweep rows (superseded)
+- The *morning* rows (k=2/5/10 from `6fe2b10`) read
+  **`serving.served_by` / `serving.quantization` as `"unknown"`** -- launched
+  without those env vars. `provenance/serving.json` pins the same facts, and the
+  **current** rows (21:46 onwards) read them from the pin directly, so this
+  caveat no longer applies to them.
+- The morning rows are from VM commit `6fe2b10`, the bundle commit; the current
+  rows are from `ab316b8`. `run_remote.py`'s per-k `git fetch` fails by design
+  (no key on the VM), so a sweep cannot advance past what the bundle carried.
+- **The morning manifests embed the pre-correction `datasets.json`** (still carrying the
   stale "category mapping TODO-verify" line). The corrected copy is at local
   `provenance/datasets.json` (commit `29ad6e3`). Same facts, version skew -- the
   manifests are historical records and are deliberately not rewritten.
