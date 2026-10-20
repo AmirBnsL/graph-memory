@@ -13,7 +13,13 @@
       "conversations": 10,
       "turns": 5882,
       "qa": 1986,
-      "qa_by_category": { "1": 282, "2": 321, "3": 96, "4": 841, "5": 446 }
+      "qa_by_category": {
+        "1": 282,
+        "2": 321,
+        "3": 96,
+        "4": 841,
+        "5": 446
+      }
     },
     "restore": "git clone https://github.com/snap-research/locomo data/locomo && git -C data/locomo checkout 3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
     "known_issues": [
@@ -26,9 +32,41 @@
     ]
   },
   "longmemeval": {
-    "status": "pending",
-    "local_path": null,
-    "sha256": null,
-    "note": "Primary benchmark, not yet fetched. Must come from the official release, not an HF re-upload. Community reports of ground-truth arithmetic errors and mislabeled evidence are still unverified."
+    "status": "verified",
+    "source": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned",
+    "verified": "2026-10-20",
+    "primary_split": "oracle",
+    "local_path": "data/longmemeval/longmemeval_oracle.json",
+    "sha256": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c",
+    "bytes": 15388478,
+    "splits": {
+      "oracle": {
+        "local_path": "data/longmemeval/longmemeval_oracle.json",
+        "sha256": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c",
+        "bytes": 15388478
+      }
+    },
+    "expected_shape": {
+      "questions": 500,
+      "abilities": {
+        "extraction": 150,
+        "multi-session": 121,
+        "temporal": 127,
+        "update": 72,
+        "abstention": 30
+      }
+    },
+    "categories": {
+      "1": "extraction",
+      "2": "multi-session",
+      "3": "temporal",
+      "4": "update",
+      "5": "abstention"
+    },
+    "restore": "python3 src/download_longmemeval.py --target oracle",
+    "known_issues": [
+      "Category 5 represents Abstention (_abs instances with false premises or unanswerable queries); scored as refusal accuracy matching LoCoMo Cat 5.",
+      "Community reports noted potential arithmetic discrepancies in a subset of temporal questions; see issue tracker."
+    ]
   }
 }
