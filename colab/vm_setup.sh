@@ -89,6 +89,9 @@ if ! ollama list 2>/dev/null | grep -q "${MODEL%%:*}"; then
   say "pulling $MODEL (several GB, first time only)"
   ollama pull "$MODEL"
 fi
+say "ensuring 32k context window on $MODEL"
+printf "FROM %s\nPARAMETER num_ctx 32768\n" "$MODEL" > /tmp/Modelfile.32k
+ollama create "$MODEL" -f /tmp/Modelfile.32k
 say "model ready:"
 ollama list
 

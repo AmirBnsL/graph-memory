@@ -72,7 +72,7 @@ class TestEvalLongMemEval(unittest.TestCase):
         self.assertEqual(cfg_bench.split, "oracle")
 
         cfg_reader = OmegaConf.load(ROOT / "conf" / "reader" / "qwen25-7b.yaml")
-        self.assertEqual(cfg_reader.num_ctx, 8192)
+        self.assertEqual(cfg_reader.num_ctx, 32768)
 
 
 if __name__ == "__main__":
