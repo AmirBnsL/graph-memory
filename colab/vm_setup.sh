@@ -54,6 +54,14 @@ if [ "$GOT_SHA" != "$LOCOMO_SHA" ]; then
 fi
 say "LoCoMo pinned OK (sha256 ${GOT_SHA:0:16}...)"
 
+# 2.2 LongMemEval -------------------------------------------------------------
+LONGMEMEVAL_FILE="$REPO_DIR/data/longmemeval/longmemeval_oracle.json"
+if [ ! -f "$LONGMEMEVAL_FILE" ]; then
+  say "fetching LongMemEval oracle dataset"
+  python3 "$REPO_DIR/src/download_longmemeval.py" --target oracle
+fi
+say "LongMemEval dataset ready"
+
 # 3. extras the stock image lacks ---------------------------------------------
 # hydra-core: the config layer (conf/). Not in requirements.txt's install path
 # here because that file pins torch==+cpu and must never be installed on the VM.
