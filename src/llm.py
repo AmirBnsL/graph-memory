@@ -79,7 +79,10 @@ def resolve_config(overrides: dict | None = None) -> dict:
             "Set it in the experiment config (reader.model) or:\n"
             "  export LLM_PROVIDER=ollama LLM_MODEL=qwen2.5:7b-instruct"
         )
-    return {"provider": provider, "base_url": base_url, "api_key": key, "model": model}
+    cfg = {"provider": provider, "base_url": base_url, "api_key": key, "model": model}
+    if "num_ctx" in ov:
+        cfg["num_ctx"] = int(ov["num_ctx"])
+    return cfg
 
 
 def resolve_identity(overrides: dict | None = None) -> tuple[str | None, str | None]:
@@ -92,8 +95,12 @@ def resolve_identity(overrides: dict | None = None) -> tuple[str | None, str | N
         return None, None
 
 
-def _cache_path(cfg: dict[str, str], payload: str) -> Path:
-    h = hashlib.sha256(f"{cfg['provider']}|{cfg['model']}|{payload}".encode()).hexdigest()[:24]
+def _cache_path(cfg: dict, payload: str) -> Path:
+    key_parts = [cfg["provider"], cfg["model"]]
+    if cfg.get("num_ctx"):
+        key_parts.append(f"ctx{cfg['num_ctx']}")
+    key_parts.append(payload)
+    h = hashlib.sha256("|".join(key_parts).encode()).hexdigest()[:24]
     return CACHE_DIR / f"{h}.json"
 
 
@@ -124,10 +131,15 @@ def complete(prompt: str, system: str | None = None, temperature: float = 0.0,
     last_err: Exception | None = None
     for attempt in range(retries):
         try:
-            resp = client.chat.completions.create(
-                model=cfg["model"], messages=messages,
-                temperature=temperature, max_tokens=max_tokens,
-            )
+            kwargs = {
+                "model": cfg["model"],
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            }
+            if cfg.get("num_ctx"):
+                kwargs["extra_body"] = {"options": {"num_ctx": int(cfg["num_ctx"])}}
+            resp = client.chat.completions.create(**kwargs)
             text = (resp.choices[0].message.content or "").strip()
             CACHE_DIR.mkdir(parents=True, exist_ok=True)
             cpath.write_text(json.dumps({

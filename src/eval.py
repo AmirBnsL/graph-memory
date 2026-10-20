@@ -59,8 +59,8 @@ import embed
 import hydra
 import llm
 import manifest
-from load import (ADVERSARIAL_CATEGORY, CATEGORY_NAMES, load_loco,
-                  load_longmemeval)
+from load import (ADVERSARIAL_CATEGORY, CATEGORY_NAMES, LONGMEMEVAL_CATEGORIES,
+                  load_loco, load_longmemeval)
 
 ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "results"
@@ -173,7 +173,8 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
         if n_qa and len(rows) >= n_qa:
             break
 
-    summary = summarize(rows, mode=mode, k=k, t_start=t_start, identity=identity)
+    summary = summarize(rows, mode=mode, k=k, t_start=t_start, identity=identity,
+                        benchmark=benchmark)
     # The retriever MUST be recorded: make_tables keys rows on (mode, retriever,
     # k), so a missing key would make runs from different retrievers collide and
     # silently overwrite each other in the ledger -- exactly the comparison we
@@ -190,7 +191,8 @@ def _identity() -> tuple[str | None, str | None]:
 
 
 def summarize(rows: list[dict], mode: str, k: int, t_start: float = 0.0,
-              identity: tuple[str | None, str | None] | None = None) -> dict:
+              identity: tuple[str | None, str | None] | None = None,
+              benchmark: str = "locomo") -> dict:
     """Metrics for one run. Always reports every convention, never just one."""
     by_cat = defaultdict(list)
     for r in rows:
@@ -211,7 +213,10 @@ def summarize(rows: list[dict], mode: str, k: int, t_start: float = 0.0,
     for r in retr:
         recap[r["category"]].append(r["recall_any"])
 
+    cat_mapping = LONGMEMEVAL_CATEGORIES if benchmark == "longmemeval" else CATEGORY_NAMES
+
     return {
+        "benchmark": benchmark,
         "mode": mode,
         "k": k,
         "provider": provider,
@@ -253,7 +258,7 @@ def summarize(rows: list[dict], mode: str, k: int, t_start: float = 0.0,
         "recall_any_by_category": {c: sum(v) / len(v) for c, v in sorted(recap.items())},
         "F1_by_category": {c: sum(v) / len(v) for c, v in sorted(by_cat.items())},
         "n_by_category": {c: len(v) for c, v in sorted(by_cat.items())},
-        "category_names": {str(c): CATEGORY_NAMES.get(c, "?") for c in sorted(by_cat)},
+        "category_names": {str(c): cat_mapping.get(c, "?") for c in sorted(by_cat)},
         "mean_latency_s": sum(r["latency_s"] for r in rows) / len(rows) if rows else 0.0,
         "total_latency_s": time.time() - t_start,
         "mean_prompt_chars": sum(r["prompt_chars"] for r in rows) / len(rows) if rows else 0.0,
@@ -265,17 +270,21 @@ def save(summary: dict, suffix: str = "") -> Path:
     RESULTS.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     model = (summary.get("model") or "unknown").replace("/", "-")
-    p = RESULTS / f"{stamp}_{summary['mode']}_k{summary['k']}_{model}{suffix}.json"
+    benchmark = summary.get("benchmark", "locomo")
+    prefix = f"{stamp}_{benchmark}_" if benchmark != "locomo" else f"{stamp}_"
+    p = RESULTS / f"{prefix}{summary['mode']}_k{summary['k']}_{model}{suffix}.json"
     p.write_text(json.dumps(summary, indent=2, ensure_ascii=False))
     return p
 
 
 def report(s: dict) -> None:
     print("\n" + "=" * 60)
-    print(f"mode={s['mode']} k={s['k']} model={s['provider']}/{s['model']} n={s['n']}")
+    b_name = s.get("benchmark", "locomo")
+    print(f"benchmark={b_name} mode={s['mode']} k={s['k']} model={s['provider']}/{s['model']} n={s['n']}")
     print(f"  F1            (adversarial scored 0 -- floor)     = {s['F1']:.3f}")
     if s.get("F1_paper") is not None:
-        print(f"  F1_paper      (LoCoMo convention, c5=refusal)    = {s['F1_paper']:.3f}")
+        c5_label = "c5=refusal" if b_name == "longmemeval" else "LoCoMo convention, c5=refusal"
+        print(f"  F1_paper      ({c5_label})    = {s['F1_paper']:.3f}")
     print(f"  EM                                                = {s['EM']:.3f}")
     if s.get("F1_answerable") is not None:
         print(f"  F1_answerable (cat 1-4, n={s['n_answerable']})              = {s['F1_answerable']:.3f}")
@@ -289,11 +298,12 @@ def report(s: dict) -> None:
               f"ignore_rate={s['ignore_rate']:.3f} (MERIT)  "
               f"F1|miss={s.get('F1_given_miss', 0.0):.3f} (silent grounding)")
     print("  by category (verified mapping):")
+    cat_mapping = LONGMEMEVAL_CATEGORIES if b_name == "longmemeval" else CATEGORY_NAMES
     recap = s.get("recall_any_by_category", {})
     for c, v in s["F1_by_category"].items():
-        name = CATEGORY_NAMES.get(int(c), "?")
+        name = cat_mapping.get(int(c), "?")
         r = f"  recall_any={recap[c]:.3f}" if c in recap else ""
-        print(f"    cat{c} {name:<11} F1={v:.3f}  (n={s['n_by_category'][c]}){r}")
+        print(f"    cat{c} {name:<14} F1={v:.3f}  (n={s['n_by_category'][c]}){r}")
     print(f"  mean latency = {s['mean_latency_s']:.2f}s | mean prompt = {s['mean_prompt_chars']:.0f} chars")
     print("=" * 60)
 

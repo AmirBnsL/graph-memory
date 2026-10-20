@@ -1,5 +1,4 @@
 name: longmemeval
-# NOT IMPLEMENTED YET: src/load.py::load_longmemeval raises NotImplementedError.
-# Listed as a config group so the H1 matrix (`--multirun benchmark=locomo,longmemeval`)
-# is already expressible; selecting it fails loudly at load time until the loader lands.
 loader: longmemeval
+split: oracle
+categories: null
