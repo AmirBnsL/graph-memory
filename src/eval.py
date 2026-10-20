@@ -294,9 +294,10 @@ def report(s: dict) -> None:
         print(f"  recall@k      any={s['recall_any']:.3f}  all={s['recall_all']:.3f}  "
               f"coverage={s['evidence_coverage']:.3f}  (n={s['n_with_evidence']})")
     if s.get("F1_given_hit") is not None:
+        f1_miss_str = f"{s['F1_given_miss']:.3f}" if s.get("F1_given_miss") is not None else "–"
         print(f"  retr->resp    F1|hit={s['F1_given_hit']:.3f}  "
               f"ignore_rate={s['ignore_rate']:.3f} (MERIT)  "
-              f"F1|miss={s.get('F1_given_miss', 0.0):.3f} (silent grounding)")
+              f"F1|miss={f1_miss_str} (silent grounding)")
     print("  by category (verified mapping):")
     cat_mapping = LONGMEMEVAL_CATEGORIES if b_name == "longmemeval" else CATEGORY_NAMES
     recap = s.get("recall_any_by_category", {})
