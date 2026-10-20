@@ -263,3 +263,36 @@ below every memory system. Two readings, and both push the same way:
 - **No variance.** The paper reports a single inference run and no seeds; so do we
   so far. Reporting variance across runs is an unclaimed improvement.
 - **4 of 1986 questions carry no gold evidence** and are excluded from `recall@k`.
+
+---
+
+## LongMemEval Baseline Sweep (Primary Benchmark — Official Oracle Split)
+
+**Dataset:** Official cleaned split (`longmemeval_oracle.json`, SHA256: `821a2034057c2c9545db3c7e0c4f826317208d2345e69b0fa69611b8b8c56fa7`), 500 questions, 10,960 turns.  
+**Hardware & Serving:** Google Colab L4 GPU (24GB VRAM), Qwen2.5-7B-Instruct served via Ollama with verified 32k context (`num_ctx: 32768`).  
+**Retriever:** `all-MiniLM-L6-v2` / `Qwen3-Embedding-0.6B`.
+
+### Overall Performance Across $k$
+
+| k | retriever | n | F1 | F1_paper | EM | F1_answerable | refusal_acc | recall_any | recall_all | coverage | ignore_rate (MERIT) | mean latency |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 5 | Qwen3-0.6B | 500 | 0.417 | 0.471 | 0.320 | 0.443 | 0.900 | 0.939 | 0.708 | 0.824 | 0.400 | 1.33 s |
+| **10** | **Qwen3-0.6B** | **500** | **0.444** | **0.500** | **0.336** | **0.472** | **0.933** | **0.996** | **0.916** | **0.963** | **0.378** | **0.78 s** |
+| 25 | MiniLM-L6 | 500 | 0.388 | 0.442 | 0.290 | 0.412 | 0.900 | 0.996 | 0.948 | 0.978 | 0.468 | 2.47 s |
+
+*Note on k=25:* An initial run under Ollama's default 4096-token window silently front-truncated prompts at ~5,500 chars, causing Cat 1 (Extraction) to collapse to 0.248 and overall F1 to 0.251. Once the 32k context fix was applied (`PARAMETER num_ctx 32768`), Cat 1 recovered fully to **0.664** and F1 to **0.442**.
+
+### Breakdown by Category
+
+| Category | Description | n | $k=5$ F1 (rec) | $k=10$ F1 (rec) | $k=25$ F1 (rec) |
+|---|---|---|---|---|---|
+| **Cat 1** | Extraction / single-session fact | 150 | 0.638 (0.907) | **0.677** (0.993) | 0.664 (1.000) |
+| **Cat 2** | Multi-session reasoning | 121 | 0.273 (0.967) | **0.311** (1.000) | 0.192 (0.992) |
+| **Cat 3** | Temporal reasoning | 127 | 0.274 (0.937) | **0.282** (0.992) | 0.223 (0.992) |
+| **Cat 4** | Knowledge update | 72 | 0.621 (0.972) | **0.653** (1.000) | 0.594 (1.000) |
+| **Cat 5** | Abstention / Unanswerable | 30 | 0.900 (0.889) | **0.933** (1.000) | 0.900 (1.000) |
+
+### Key Findings for Thesis
+
+1. **The Distractor Saturation Effect:** While recall reaches 99.6% at both $k=10$ and $k=25$, downstream $F_1$ drops from **0.500 → 0.442**. The MERIT ignore rate jumps from **0.378 → 0.468**. When 25 turns are packed into the prompt, the answering LLM fails to attend to the gold evidence turn in 46.8% of cases due to distractor dilution.
+2. **The Graph Memory Opportunity (H1 & H2):** This empirical bottleneck validates the core premise of graph memory: dense retrieval at high $k$ retrieves the evidence but destroys reader precision. A graph structure that returns compact, topologically connected subgraphs rather than 25 raw dialogue turns is directly positioned to suppress this distractor penalty.
