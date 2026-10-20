@@ -35,8 +35,11 @@ NEVER = {"INDEX.md", "eval.log"}
 
 def remote_ls(session: str, remote_dir: str) -> list[str]:
     """Filenames in a remote dir. `colab ls` prints bare names, one per line."""
-    p = subprocess.run(["colab", "ls", "-s", session, remote_dir],
-                       capture_output=True, text=True)
+    try:
+        p = subprocess.run(["colab", "ls", "-s", session, remote_dir],
+                           capture_output=True, text=True, timeout=60)
+    except subprocess.TimeoutExpired:
+        raise SystemExit(f"colab ls timed out after 60s for session {session}")
     if p.returncode != 0:
         raise SystemExit(f"colab ls failed: {p.stderr.strip() or p.stdout.strip()}")
     names = []
@@ -73,11 +76,16 @@ def main() -> int:
         if dest.exists() and not (args.fresh or name in ALWAYS):
             skipped += 1
             continue
-        p = subprocess.run(
-            ["colab", "download", "-s", args.session,
-             f"{args.remote_dir}/{name}", str(dest)],
-            capture_output=True, text=True,
-        )
+        try:
+            p = subprocess.run(
+                ["colab", "download", "-s", args.session,
+                 f"{args.remote_dir}/{name}", str(dest)],
+                capture_output=True, text=True, timeout=120,
+            )
+        except subprocess.TimeoutExpired:
+            failed.append(name)
+            print(f"  FAILED  {name}: timed out after 120s")
+            continue
         if p.returncode == 0:
             pulled += 1
             if name.endswith(".json"):
