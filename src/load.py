@@ -50,8 +50,18 @@ CATEGORY_NAMES = {
     5: "adversarial",
 }
 
-# Cat 5: false-premise questions whose `answer` is empty BY DESIGN. Single source
-# of truth -- eval.py imports this rather than re-declaring it.
+# LongMemEval 5 core abilities (ICLR 2025):
+LONGMEMEVAL_CATEGORIES = {
+    1: "extraction",
+    2: "multi-session",
+    3: "temporal",
+    4: "update",
+    5: "abstention",
+}
+LONGMEMEVAL_PATH = ROOT / "data" / "longmemeval" / "longmemeval_oracle.json"
+
+# Cat 5: false-premise / abstention questions whose premise is missing or unanswerable.
+# Single source of truth -- eval.py imports this rather than re-declaring it.
 ADVERSARIAL_CATEGORY = 5
 
 
@@ -165,31 +175,125 @@ def load_loco(limit: int | None = None, path: Path | None = None) -> list[Conver
 # (NOT a random HF re-upload), and validate against the paper's own numbers.
 # Verify the ground-truth arithmetic/mislabeling GitHub issues before trusting it.
 # --------------------------------------------------------------------------
-def load_longmemeval(*_args, **_kwargs):
-    raise NotImplementedError(
-        "LongMemEval loader pending: download the official release, then implement "
-        "the same Conversation/QA normalization as load_loco()."
-    )
+def load_longmemeval(
+    limit: int | None = None,
+    split: str = "oracle",
+    path: Path | None = None,
+) -> list[Conversation]:
+    """Load LongMemEval conversations.
+
+    split: 'oracle' (default, evidence sessions only) or 's' (full ~115k haystack).
+    limit: caps the number of questions.
+    """
+    if path is not None:
+        p = Path(path)
+    elif split == "s":
+        p = ROOT / "data" / "longmemeval" / "longmemeval_s_cleaned.json"
+    else:
+        p = ROOT / "data" / "longmemeval" / "longmemeval_oracle.json"
+
+    if not p.exists():
+        raise FileNotFoundError(
+            f"LongMemEval ({split}) not found at {p}\n"
+            f"Run: python3 src/download_longmemeval.py --target {split}"
+        )
+
+    data = json.loads(p.read_text())
+    convs: list[Conversation] = []
+
+    for d in data:
+        qid = d["question_id"]
+        qtype = d.get("question_type", "")
+        is_abs = qid.endswith("_abs") or qtype == "abstention"
+
+        # 5 core abilities:
+        if is_abs:
+            cat = 5  # Abstention / Refusal
+        elif qtype == "temporal-reasoning":
+            cat = 3  # Temporal Reasoning
+        elif qtype == "knowledge-update":
+            cat = 4  # Knowledge Updates
+        elif qtype == "multi-session":
+            cat = 2  # Multi-Session Reasoning
+        else:
+            cat = 1  # Information Extraction (single-session-user/assistant/preference)
+
+        turns: list[Turn] = []
+        dates: dict[int, str] = {}
+        evidence: list[str] = []
+
+        haystack_sessions = d.get("haystack_sessions", [])
+        haystack_dates = d.get("haystack_dates", [])
+        haystack_sids = d.get("haystack_session_ids", [])
+
+        for s_idx, session in enumerate(haystack_sessions):
+            dt = haystack_dates[s_idx] if s_idx < len(haystack_dates) else d.get("question_date", "")
+            dates[s_idx] = dt
+            sid_str = haystack_sids[s_idx] if s_idx < len(haystack_sids) else f"s{s_idx}"
+            for t_idx, turn in enumerate(session):
+                dia_id = f"{sid_str}_t{t_idx}"
+                role = turn.get("role", "user")
+                text = turn.get("content", "")
+                turns.append(
+                    Turn(
+                        dia_id=dia_id,
+                        speaker=role,
+                        text=text,
+                        session_id=s_idx,
+                        date_time=dt,
+                    )
+                )
+                if turn.get("has_answer"):
+                    evidence.append(dia_id)
+
+        raw_ans = str(d.get("answer", ""))
+        qa = QA(
+            question=d.get("question", ""),
+            answer=raw_ans,
+            evidence=evidence,
+            category=cat,
+            adversarial_answer=raw_ans if is_abs else "",
+        )
+
+        convs.append(
+            Conversation(
+                sample_id=qid,
+                speaker_a="user",
+                speaker_b="assistant",
+                turns=turns,
+                qa=[qa],
+                date_times=dates,
+            )
+        )
+
+        if limit is not None and len(convs) >= limit:
+            break
+
+    return convs
 
 
-def _stats() -> None:
-    convs = load_loco()
-    print(f"conversations: {len(convs)}")
+def _stats(benchmark: str = "locomo") -> None:
+    if benchmark == "longmemeval":
+        convs = load_longmemeval()
+        cat_names = LONGMEMEVAL_CATEGORIES
+    else:
+        convs = load_loco()
+        cat_names = CATEGORY_NAMES
+
+    print(f"[{benchmark}] conversations/instances: {len(convs)}")
     total_turns = sum(len(c.turns) for c in convs)
     total_qa = sum(len(c.qa) for c in convs)
     print(f"turns: {total_turns} | qa: {total_qa}")
     cats: Counter[int] = Counter()
     for c in convs:
         cats.update(q.category for q in c.qa)
-    print("qa by category:", dict(sorted(cats.items())))
-    for c in convs:
-        print(
-            f"  {c.sample_id}: {c.speaker_a}/{c.speaker_b} "
-            f"sessions={len(c.date_times)} turns={len(c.turns)} qa={len(c.qa)}"
-        )
+    print("qa by category:")
+    for k, v in sorted(cats.items()):
+        print(f"  cat{k} ({cat_names.get(k, '?')}): {v}")
     first = convs[0]
-    print("\nexample:", first.qa[0])
-    print("evidence turn:", first.turn_by_id(first.qa[0].evidence[0]) if first.qa[0].evidence else None)
+    print("\nexample qa:", first.qa[0])
+    if first.qa[0].evidence:
+        print("evidence turn:", first.turn_by_id(first.qa[0].evidence[0]))
 
 
 if __name__ == "__main__":
@@ -197,8 +301,9 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--stats", action="store_true")
+    ap.add_argument("--benchmark", choices=["locomo", "longmemeval"], default="locomo")
     args = ap.parse_args()
     if args.stats:
-        _stats()
+        _stats(benchmark=args.benchmark)
     else:
         ap.print_help()
