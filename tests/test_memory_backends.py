@@ -7,9 +7,9 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from extract import MemoryRecord
 from memory.base import BaseMemory
-from memory.flat import FlatMemory
-from memory.hipporag import HippoRAGMemory
-from memory.temporal_bteg import BiTemporalMemory
+from memory import FlatMemory, HippoRAGMemory, BiTemporalMemory
+from memory.vector import FlatMemory as FlatMemoryFromVector
+from memory.graph import HippoRAGMemory as HippoRAGMemoryFromGraph, BiTemporalMemory as BiTemporalMemoryFromGraph
 
 
 class MockEmbedder:
@@ -58,6 +58,11 @@ class TestMemoryBackends(unittest.TestCase):
                 triples=[("Alice", "moved to", "Berlin")],
             ),
         ]
+
+    def test_subpackage_exports(self):
+        self.assertIs(FlatMemory, FlatMemoryFromVector)
+        self.assertIs(HippoRAGMemory, HippoRAGMemoryFromGraph)
+        self.assertIs(BiTemporalMemory, BiTemporalMemoryFromGraph)
 
     def test_flat_memory(self):
         flat = FlatMemory(embedder=self.mock_embedder)
