@@ -34,20 +34,20 @@
 ## Proposed Changes
 
 ### Task 1: Author New Obsidian Vault Notes
-- [ ] Create `02-primary-papers/A-MEM (2502.12110).md`
-- [ ] Create `02-primary-papers/LangMem and Engineering Frameworks.md`
-- [ ] Create `01-surveys/Memory Systems Landscape — Flat Banks vs Graphs (2026).md`
-- [ ] Update `00-START-HERE.md` and `00-dashboard.md` with pointers to these notes
+- [x] Create `02-primary-papers/A-MEM (2502.12110).md`
+- [x] Create `02-primary-papers/LangMem and Engineering Frameworks.md`
+- [x] Create `01-surveys/Memory Systems Landscape — Flat Banks vs Graphs (2026).md`
+- [x] Update `00-START-HERE.md` and `00-dashboard.md` with pointers to these notes
 
 ### Task 2: Configure 32k Context Window in Codebase & Remote VM
-- [ ] Update `conf/reader/qwen25-7b.yaml` with `num_ctx: 32768`
-- [ ] Create Modelfile with `PARAMETER num_ctx 32768` on Colab VM (`gm-dev`)
-- [ ] Build model: `ollama create qwen2.5:7b-instruct-32k -f Modelfile`
-- [ ] Run preflight context needle test with >5,000 tokens on VM
+- [x] Update `conf/reader/qwen25-7b.yaml` with `num_ctx: 32768`
+- [x] Create Modelfile with `PARAMETER num_ctx 32768` on Colab VM (`gm-dev`)
+- [x] Build model: `ollama create qwen2.5:7b-instruct -f Modelfile`
+- [x] Run preflight context needle test with >5,000 tokens on VM
 
 ### Task 3: Execute LongMemEval $k=25$ & Update Ledger
-- [ ] Run `colab exec -s gm-dev` with LongMemEval $k=25$
-- [ ] Monitor evaluation to completion
-- [ ] Pull results via `python3 colab/pull_results.py --session gm-dev --fresh`
-- [ ] Run `python3 src/make_tables.py` and update `results/INDEX.md`
-- [ ] Commit and push changes to GitHub `origin/master`
+- [x] Run `colab exec -s gm-dev` with LongMemEval $k=25$
+- [x] Monitor evaluation to completion
+- [x] Pull results via `python3 colab/pull_results.py --session gm-dev`
+- [x] Run `python3 src/make_tables.py` and update `results/INDEX.md`
+- [x] Commit and push changes to GitHub `origin/master` (commit `380fa9d`)

@@ -83,6 +83,7 @@ class QA:
     # Category 5 only: the reply a system gives if it falls for the false
     # premise. `answer` is empty for these BY DESIGN -- see eval.py.
     adversarial_answer: str = ""
+    timestamp: str = ""
 
 
 @dataclass
@@ -253,6 +254,7 @@ def load_longmemeval(
             evidence=evidence,
             category=cat,
             adversarial_answer=raw_ans if is_abs else "",
+            timestamp=d.get("question_date", ""),
         )
 
         convs.append(

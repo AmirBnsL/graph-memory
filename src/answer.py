@@ -78,13 +78,61 @@ def answer_vector(conv: Conversation, qa: QA, k: int = 10,
     return AnswerResult(out, [t.dia_id for t in picked], len(ctx), time.time() - t0)
 
 
-MODES = {"full": answer_full, "vector": answer_vector}
+_CONV_MEMORY_CACHE: dict[tuple[str, str, bool, float], Any] = {}
+
+
+def answer_memory(conv: Conversation, qa: QA, k: int = 10,
+                  reader: dict | None = None,
+                  retriever: dict | str | None = None,
+                  mode_cfg: dict | None = None) -> AnswerResult:
+    """Answer using one of the pluggable memory backends (H1 decomposition)."""
+    import extract
+    from memory import FlatMemory, HippoRAGMemory, BiTemporalMemory
+
+    t0 = time.time()
+    mcfg = mode_cfg or {}
+    backend = mcfg.get("backend", "flat")
+    flatten = bool(mcfg.get("flatten_structure", False))
+    syn_thresh = float(mcfg.get("synonym_threshold", 0.85))
+
+    cache_key = (conv.sample_id, backend, flatten, syn_thresh)
+    if cache_key in _CONV_MEMORY_CACHE:
+        mem = _CONV_MEMORY_CACHE[cache_key]
+    else:
+        s = embed.spec(retriever)
+        emb = embed.Embedder(s)
+        if backend == "flat":
+            mem = FlatMemory(embedder=emb)
+        elif backend == "hipporag":
+            mem = HippoRAGMemory(embedder=emb, synonym_threshold=syn_thresh, flatten_structure=flatten)
+        elif backend in ("temporal", "temporal_bteg"):
+            mem = BiTemporalMemory(embedder=emb)
+        else:
+            raise ValueError(f"unknown memory backend {backend!r}; choose flat | hipporag | temporal_bteg")
+
+        records = extract.extract_conversation(conv, overrides=reader)
+        mem.add_records(records)
+        _CONV_MEMORY_CACHE[cache_key] = mem
+
+    query_ts = getattr(qa, "timestamp", None) or (conv.turns[-1].date_time if conv.turns else None)
+    retrieved = mem.retrieve(query=qa.question, k=k, timestamp=query_ts)
+    ctx = "\n".join(f"[{item.id}] {item.text}" for item in retrieved)
+    context_ids = [str(item.turn_id) for item in retrieved if item.turn_id is not None]
+
+    out = _ask(qa.question, ctx, reader)
+    return AnswerResult(out, context_ids, len(ctx), time.time() - t0)
+
+
+MODES = {"full": answer_full, "vector": answer_vector, "memory": answer_memory}
 
 
 def answer(conv: Conversation, qa: QA, mode: str = "vector", k: int = 10,
            reader: dict | None = None,
-           retriever: dict | str | None = None) -> AnswerResult:
+           retriever: dict | str | None = None,
+           mode_cfg: dict | None = None) -> AnswerResult:
     fn = MODES.get(mode)
     if fn is None:
         raise ValueError(f"unknown mode {mode!r}; have {sorted(MODES)}")
+    if mode == "memory":
+        return fn(conv, qa, k=k, reader=reader, retriever=retriever, mode_cfg=mode_cfg)
     return fn(conv, qa, k=k, reader=reader, retriever=retriever)

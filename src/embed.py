@@ -54,7 +54,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
+
+# Prevent HF hub network retry hangs when running offline/sandboxed with cached models
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 import numpy as np
 
@@ -238,3 +243,17 @@ def top_k(query: str, texts: list[str], k: int = 10,
     sims = emb @ q
     order = np.argsort(-sims)[:k]
     return [(int(i), float(sims[i])) for i in order]
+
+
+class Embedder:
+    """Wrapper class providing object-oriented access to embedding models."""
+
+    def __init__(self, retriever: dict | str | None = None):
+        self.s = spec(retriever)
+
+    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
+        arr = encode(texts, self.s)
+        return arr.tolist()
+

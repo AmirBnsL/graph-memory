@@ -133,7 +133,8 @@ def recall(evidence: list[str], context_ids: list[str]) -> dict:
 
 def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
         categories: set[int] | None, reader: dict | None = None,
-        retriever: str | None = None, benchmark: str = "locomo") -> dict:
+        retriever: str | None = None, benchmark: str = "locomo",
+        mode_cfg: dict | None = None) -> dict:
     loaders = {"locomo": load_loco, "longmemeval": load_longmemeval}
     if benchmark not in loaders:
         raise ValueError(f"unknown benchmark {benchmark!r}; have {sorted(loaders)}")
@@ -146,7 +147,8 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
             if categories and qa.category not in categories:
                 continue
             res = answer_mod.answer(conv, qa, mode=mode, k=k,
-                                    reader=reader, retriever=retriever)
+                                    reader=reader, retriever=retriever,
+                                    mode_cfg=mode_cfg)
             adv = qa.category == ADVERSARIAL_CATEGORY
             rows.append({
                 "sample_id": conv.sample_id,
@@ -173,7 +175,14 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
         if n_qa and len(rows) >= n_qa:
             break
 
-    summary = summarize(rows, mode=mode, k=k, t_start=t_start, identity=identity,
+    run_mode_name = mode
+    if mode == "memory" and mode_cfg:
+        b_name = mode_cfg.get("backend", "flat")
+        if mode_cfg.get("flatten_structure"):
+            b_name += "_flattened"
+        run_mode_name = f"memory_{b_name}"
+
+    summary = summarize(rows, mode=run_mode_name, k=k, t_start=t_start, identity=identity,
                         benchmark=benchmark)
     # The retriever MUST be recorded: make_tables keys rows on (mode, retriever,
     # k), so a missing key would make runs from different retrievers collide and
@@ -358,11 +367,12 @@ def main(cfg) -> None:
 
     cats = limits.get("categories")
     mode = config_mod.group_name(values["mode"])
+    mode_cfg = values.get("mode") if isinstance(values.get("mode"), dict) else {}
     benchmark = config_mod.group_name(values["benchmark"])
     s = run(mode, values["k"], limits.get("n_conv"), limits.get("n_qa"),
             set(cats) if cats else None,
             reader=values.get("reader"), retriever=values.get("retriever"),
-            benchmark=benchmark)
+            benchmark=benchmark, mode_cfg=mode_cfg)
     path = save(s)
     mpath = manifest.write(
         manifest.build(values, path,
