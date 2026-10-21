@@ -81,6 +81,15 @@ def answer_vector(conv: Conversation, qa: QA, k: int = 10,
 _CONV_MEMORY_CACHE: dict[tuple[str, str, bool, float], Any] = {}
 
 
+def get_cached_memories() -> dict[tuple[str, str, bool, float], Any]:
+    return dict(_CONV_MEMORY_CACHE)
+
+
+def clear_memory_cache() -> None:
+    _CONV_MEMORY_CACHE.clear()
+
+
+
 def answer_memory(conv: Conversation, qa: QA, k: int = 10,
                   reader: dict | None = None,
                   retriever: dict | str | None = None,

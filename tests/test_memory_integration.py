@@ -66,6 +66,7 @@ class TestMemoryIntegration(unittest.TestCase):
         self.assertEqual(s_flat["mode"], "memory_flat")
         self.assertEqual(len(s_flat["rows"]), 2)
         self.assertGreater(s_flat["F1_answerable"], 0.0)
+        self.assertIsNone(s_flat.get("graph_metrics"))
 
         # Test HippoRAG Memory
         s_hippo = eval_mod.run(
@@ -80,6 +81,8 @@ class TestMemoryIntegration(unittest.TestCase):
         )
         self.assertEqual(s_hippo["mode"], "memory_hipporag")
         self.assertEqual(len(s_hippo["rows"]), 2)
+        self.assertIsNotNone(s_hippo.get("graph_metrics"))
+        self.assertIn("largest_component_ratio", s_hippo["graph_metrics"])
 
         # Test HippoRAG Flattened (Structure Ablation)
         s_hippo_flat = eval_mod.run(
@@ -108,6 +111,8 @@ class TestMemoryIntegration(unittest.TestCase):
         )
         self.assertEqual(s_temp["mode"], "memory_temporal_bteg")
         self.assertEqual(len(s_temp["rows"]), 2)
+        self.assertIsNotNone(s_temp.get("graph_metrics"))
+        self.assertIn("temporal_edge_ratio", s_temp["graph_metrics"])
 
 
 if __name__ == "__main__":

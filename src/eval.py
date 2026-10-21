@@ -142,6 +142,8 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
     rows = []
     t_start = time.time()
     identity = llm.resolve_identity(reader)
+    if mode == "memory":
+        answer_mod.clear_memory_cache()
     for conv in convs:
         for qa in conv.qa:
             if categories and qa.category not in categories:
@@ -190,6 +192,22 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
     # need to keep. group_name() unwraps the config group to its name; the
     # fallback is the built-in default for pre-config results.
     summary["retriever"] = config_mod.group_name(retriever) or embed.MODEL_NAME
+
+    if mode == "memory":
+        import graph_metrics
+        cached = answer_mod.get_cached_memories()
+        graphs = [
+            mem.export_graph()
+            for mem in cached.values()
+            if hasattr(mem, "export_graph") and mem.export_graph() is not None
+        ]
+        if graphs:
+            metrics_list = [graph_metrics.compute_graph_metrics(g) for g in graphs]
+            avg_metrics = {}
+            for k_m in metrics_list[0]:
+                avg_metrics[k_m] = sum(m[k_m] for m in metrics_list) / len(metrics_list)
+            summary["graph_metrics"] = avg_metrics
+
     return summary
 
 

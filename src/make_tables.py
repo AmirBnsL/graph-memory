@@ -61,6 +61,59 @@ def fmt(v, nd=3) -> str:
     return "–" if v is None else f"{v:.{nd}f}"
 
 
+def print_h1_decomposition(runs: list[dict]) -> None:
+    """Print H1 (Structure vs Extraction) decomposition tables."""
+    # Group by (benchmark, retriever, k)
+    groups: dict[tuple, dict[str, dict]] = {}
+    for d in runs:
+        b = d.get("benchmark", "locomo")
+        retr = d.get("retriever") or "all-MiniLM-L6-v2"
+        k = int(d.get("k") or 0)
+        mode = d.get("mode", "")
+        key = (b, retr, k)
+        if key not in groups:
+            groups[key] = {}
+        groups[key][mode] = d
+
+    # Only print if any memory backends exist
+    has_memory = any(
+        any(m.startswith("memory_") for m in mode_map)
+        for mode_map in groups.values()
+    )
+    if not has_memory:
+        return
+
+    print("\n### Hypothesis 1: Structure vs. Extraction Decomposition (F1)\n")
+    print("| benchmark | retriever | k | Vector (Raw) | Flat (No Graph) | HippoRAG | Hippo Flattened | Bi-Temporal | Δ_extraction | Δ_structure | Δ_ablation | Δ_temporal |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|")
+
+    for (b, retr, k), mm in sorted(groups.items()):
+        if not any(m.startswith("memory_") for m in mm):
+            continue
+        v_run = mm.get("vector")
+        f_run = mm.get("memory_flat")
+        h_run = mm.get("memory_hipporag")
+        hf_run = mm.get("memory_hipporag_flattened")
+        t_run = mm.get("memory_temporal_bteg")
+
+        f1_metric = "F1_answerable"  # Honest comparison metric on answerable questions
+
+        v_val = v_run.get(f1_metric) if v_run else None
+        f_val = f_run.get(f1_metric) if f_run else None
+        h_val = h_run.get(f1_metric) if h_run else None
+        hf_val = hf_run.get(f1_metric) if hf_run else None
+        t_val = t_run.get(f1_metric) if t_run else None
+
+        # Deltas
+        d_ext = (f_val - v_val) if (f_val is not None and v_val is not None) else None
+        d_struct = (h_val - f_val) if (h_val is not None and f_val is not None) else None
+        d_ablate = (h_val - hf_val) if (h_val is not None and hf_val is not None) else None
+        d_temp = (t_val - f_val) if (t_val is not None and f_val is not None) else None
+
+        print(f"| {b} | {retr} | {k} | {fmt(v_val)} | {fmt(f_val)} | {fmt(h_val)} | {fmt(hf_val)} | {fmt(t_val)} "
+              f"| {fmt(d_ext)} | {fmt(d_struct)} | {fmt(d_ablate)} | {fmt(d_temp)} |")
+
+
 def main() -> None:
     runs = load_runs()
     if not runs:
@@ -81,6 +134,8 @@ def main() -> None:
               f"| {fmt(d.get('recall_all'))} | {fmt(d.get('evidence_coverage'))} "
               f"| {d.get('mean_prompt_chars', 0):.0f} "
               f"| {d.get('mean_latency_s', 0):.2f} |")
+
+    print_h1_decomposition(runs)
 
     for b in ("locomo", "longmemeval"):
         b_runs = [d for d in runs if d.get("benchmark", "locomo") == b and d.get("recall_any_by_category")]
