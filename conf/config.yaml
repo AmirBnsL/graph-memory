@@ -35,6 +35,7 @@ limits:
   n_conv: null       # cap conversations (smoke tests)
   n_qa: null         # cap questions
   categories: null   # e.g. [1, 4] -- the VERIFIED mapping lives in src/load.py
+  sample_per_category: null # e.g. 5 -- balanced sampling across abilities
 
 hydra:
   job:
