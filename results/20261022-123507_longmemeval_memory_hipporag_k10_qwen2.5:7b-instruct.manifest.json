@@ -1,0 +1,249 @@
+{
+  "created": "2026-10-22T12:35:07+0000",
+  "run": {
+    "mode": "memory",
+    "benchmark": "longmemeval",
+    "k": 10,
+    "n_conv": null,
+    "n_qa": null
+  },
+  "result_file": "20261022-123507_longmemeval_memory_hipporag_k10_qwen2.5:7b-instruct.json",
+  "code": {
+    "commit": "37e3aeea3c35a84bd2a2be311fbc8ca091651a22",
+    "code_commit": "37e3aeea3c35a84bd2a2be311fbc8ca091651a22",
+    "branch": "master",
+    "dirty": true,
+    "dirty_excludes": [
+      "results",
+      "cache",
+      "graphs"
+    ]
+  },
+  "config": {
+    "sha256": "4cff936a7d0c4e57bcf5b113cb0eea6a16e2a48c9500b1ab7e1d150c765100ad",
+    "values": {
+      "benchmark": {
+        "name": "longmemeval",
+        "loader": "longmemeval",
+        "split": "oracle",
+        "categories": null
+      },
+      "mode": {
+        "name": "memory",
+        "backend": "hipporag",
+        "flatten_structure": false,
+        "synonym_threshold": 0.85
+      },
+      "reader": {
+        "provider": "ollama",
+        "model": "qwen2.5:7b-instruct",
+        "max_tokens": 64,
+        "temperature": 0.0,
+        "num_ctx": 32768
+      },
+      "retriever": {
+        "name": "Qwen/Qwen3-Embedding-0.6B",
+        "query_prefix": "Instruct: Given a question about a long conversation between two people, retrieve the dialogue turns that help answer it.\nQuery:",
+        "passage_prefix": "",
+        "passage_template": "{text}",
+        "batch_size": 32,
+        "trust_remote_code": false
+      },
+      "k": 10,
+      "limits": {
+        "n_conv": null,
+        "n_qa": null,
+        "categories": null,
+        "sample_per_category": 5
+      }
+    }
+  },
+  "data": {
+    "_comment": "Pinned benchmark inputs. A number is only credible if the hash below matches what produced it. Changing any field invalidates every result already in results/.",
+    "locomo": {
+      "source": "https://github.com/snap-research/locomo",
+      "commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+      "commit_date": "2024-08-12",
+      "file_in_repo": "data/locomo10.json",
+      "local_path": "data/locomo/data/locomo10.json",
+      "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+      "bytes": 2805274,
+      "verified": "2026-10-17",
+      "expected_shape": {
+        "conversations": 10,
+        "turns": 5882,
+        "qa": 1986,
+        "qa_by_category": {
+          "1": 282,
+          "2": 321,
+          "3": 96,
+          "4": 841,
+          "5": 446
+        }
+      },
+      "restore": "git clone https://github.com/snap-research/locomo data/locomo && git -C data/locomo checkout 3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+      "known_issues": [
+        "Roughly 6.4% of gold answers are score-corrupting (benchmark audit, 2026). F1 is therefore a noisy ground truth, and single-run deltas below ~2 points are not interpretable.",
+        "A popular LoCoMo judge configuration accepted 62.8% of deliberately wrong answers (Penfield Labs, Apr 2026; non-peer-reviewed). This is why F1/EM is the headline metric here and judge scores are secondary.",
+        "The HuggingFace dataset 'adymaharana/locomo' is EMPTY. Always load from the GitHub repo.",
+        "VERIFIED 2026-10-18: the released locomo10.json does NOT use the paper's section 4.1 enumeration order. Real mapping: 1=multi-hop, 2=temporal, 3=open-domain, 4=single-hop, 5=adversarial -- from (a) evidence-turn structure (cat1 98% multi-evidence-turn, cat2 77% 'When ...', cat3 'Would ... likely' commonsense, cat4 95% single-turn, cat5 100% adversarial_answer) and (b) per-category proportions tracking paper Table 5 within a few points. See src/load.py CATEGORY_NAMES.",
+        "The paper scores the adversarial category with the same F1 and INCLUDES it in its Overall column, reporting Human=89.4 -- only possible if a correct refusal counts as a match. Its adversarial column is therefore refusal accuracy, and F1_paper (not F1) is the convention-matched number.",
+        "Table 3's Dialog k=10 multi-hop recall cell reads 247.4: impossible (>100%) and non-monotone against its neighbours (34.4 -> 247.4 -> 64.1 -> 75.5). Treat that cell as unusable."
+      ]
+    },
+    "longmemeval": {
+      "status": "verified",
+      "source": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned",
+      "verified": "2026-10-22",
+      "primary_split": "oracle",
+      "local_path": "data/longmemeval/longmemeval_oracle.json",
+      "sha256": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c",
+      "bytes": 15388478,
+      "splits": {
+        "oracle": {
+          "local_path": "data/longmemeval/longmemeval_oracle.json",
+          "sha256": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c",
+          "bytes": 15388478
+        }
+      },
+      "expected_shape": {
+        "questions": 500,
+        "abilities": {
+          "extraction": 150,
+          "multi-session": 121,
+          "temporal": 127,
+          "update": 72,
+          "abstention": 30
+        }
+      },
+      "categories": {
+        "1": "extraction",
+        "2": "multi-session",
+        "3": "temporal",
+        "4": "update",
+        "5": "abstention"
+      },
+      "restore": "python3 src/download_longmemeval.py --target oracle",
+      "known_issues": [
+        "Category 5 represents Abstention (_abs instances with false premises or unanswerable queries); scored as refusal accuracy matching LoCoMo Cat 5.",
+        "Community reports noted potential arithmetic discrepancies in a subset of temporal questions; see issue tracker."
+      ]
+    }
+  },
+  "model": {
+    "provider": "ollama",
+    "model": "qwen2.5:7b-instruct",
+    "base_url": "http://localhost:11434/v1"
+  },
+  "serving": {
+    "served_by": "ollama 0.40.6",
+    "quantization": "Q4_K_M (GGUF)",
+    "pinned": {
+      "_comment": "Measured properties of the serving stack, pinned like the dataset. These are not incidental: they bound which experiments are even valid, so they get the same treatment as provenance/datasets.json. Embedded whole into every manifest, which also means a run does not have to rely on env vars (LLM_SERVED_BY / LLM_QUANTIZATION) to record what served it.",
+      "answering_model": {
+        "provider": "ollama",
+        "model": "qwen2.5:7b-instruct",
+        "base_url": "http://localhost:11434/v1",
+        "served_by": "ollama 0.40.6",
+        "quantization": "Q4_K_M (GGUF)",
+        "declared_context_length": 32768,
+        "max_output_tokens_per_call": 64,
+        "recorded_from": "results/20261017-222247_vector_k10_qwen2.5:7b-instruct.manifest.json + `ollama show` on a T4, 2026-10-18"
+      },
+      "effective_context_tokens": {
+        "value": 4096,
+        "measured": "2026-10-18",
+        "method": "head/tail needle test. FIRST_MARKER=ALPHA7 at the very start of the prompt, LAST_MARKER=BETA9 at the very end, filler sized to ~2k / ~4k / ~8k tokens, asking the model to report both. At ~2000 and ~4000 tokens it returned FIRST=ALPHA7 LAST=BETA9. At ~8000 tokens it returned FIRST=<x> LAST=<BETA9>: the head was clipped, so the prompt was truncated from the front.",
+        "consequence": "k<=50 is safe (a k=50 context is ~2k tokens). `full` mode is NOT runnable: whole conversations are ~15k tokens and would be silently truncated from the front -- a `full` number would be an artifact. Do not report one until num_ctx is set explicitly and this test is re-run.",
+        "why_not_declared": "The model declares 32768, but ollama clamps the runtime num_ctx to its server default. Declared length is not effective length; only the test above settles it."
+      },
+      "known_notes": [
+        "Measured on a Colab free-tier Tesla T4. GPU model is recorded per run in the manifest's hardware block.",
+        "A fresh Colab runtime has no SSH key. Code is delivered as an uploaded git bundle, so no credential is ever placed on the VM. Do not reintroduce one."
+      ]
+    }
+  },
+  "prompts": {
+    "system_sha256": "626cc48943dddc59d23201a73a1d236f222f2ac885fb4ef02ad4c71169485ac1",
+    "template_sha256": "c75b00c3a7cc15eebfd108677bce059b45161f7ca288b95d5fab47b00ace27df"
+  },
+  "env": {
+    "sha256": "7abcd05d666358cfeb055c6cc8c1b2de969ab013386b95ca4fe0bc96acacc5b6",
+    "n_packages": 719
+  },
+  "hardware": {
+    "python": "3.13.15",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "gpu": "NVIDIA L4",
+    "gpu_count": 1
+  },
+  "summary": {
+    "benchmark": "longmemeval",
+    "mode": "memory_hipporag",
+    "k": 10,
+    "provider": "ollama",
+    "model": "qwen2.5:7b-instruct",
+    "n": 25,
+    "F1": 0.3272839931153185,
+    "EM": 0.28,
+    "F1_paper": 0.5272839931153185,
+    "F1_answerable": 0.4091049913941481,
+    "n_answerable": 20,
+    "refusal_accuracy": 1.0,
+    "n_adversarial": 5,
+    "recall_any": 0.9166666666666666,
+    "recall_all": 0.7083333333333334,
+    "evidence_coverage": 0.8201388888888889,
+    "n_with_evidence": 24,
+    "F1_given_hit": 0.43063683304647166,
+    "ignore_rate": 0.42105263157894735,
+    "F1_given_miss": 0.0,
+    "recall_any_by_category": {
+      "1": 1.0,
+      "2": 0.8,
+      "3": 1.0,
+      "4": 1.0,
+      "5": 0.75
+    },
+    "F1_by_category": {
+      "1": 0.019277108433734938,
+      "2": 0.08,
+      "3": 0.6571428571428571,
+      "4": 0.8800000000000001,
+      "5": 0.0
+    },
+    "n_by_category": {
+      "1": 5,
+      "2": 5,
+      "3": 5,
+      "4": 5,
+      "5": 5
+    },
+    "category_names": {
+      "1": "extraction",
+      "2": "multi-session",
+      "3": "temporal",
+      "4": "update",
+      "5": "abstention"
+    },
+    "mean_latency_s": 13.333013525009155,
+    "total_latency_s": 333.53382396698,
+    "mean_prompt_chars": 4119.52,
+    "retriever": "Qwen/Qwen3-Embedding-0.6B",
+    "graph_metrics": {
+      "num_nodes": 247.44,
+      "num_edges": 175.8,
+      "largest_component_ratio": 0.36064799999999997,
+      "num_connected_components": 113.36,
+      "degree_variance": 4.4731,
+      "degree_gini": 0.625636,
+      "max_degree_ratio": 10.305112,
+      "edge_density": 0.0073560000000000006,
+      "clustering_coefficient": 0.098416,
+      "temporal_edge_ratio": 0.0,
+      "invalidated_edge_ratio": 0.0
+    }
+  }
+}
