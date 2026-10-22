@@ -28,7 +28,8 @@ def _cosine(a: list[float], b: list[float]) -> float:
 
 
 def _norm(e: str) -> str:
-    return e.strip().lower()
+    cleaned = re.sub(r"[^a-z0-9 ]", " ", e.lower())
+    return " ".join(cleaned.split())
 
 
 STOP_NODES = {
@@ -36,11 +37,25 @@ STOP_NODES = {
     "you", "your", "he", "she", "they", "we", "it", "someone", "person",
 }
 
-# Predicates indicating mutually exclusive status or dynamic update
-MUTUALLY_EXCLUSIVE_PREDICATES = {
-    "lives in", "moved to", "located in", "works at", "employed by",
-    "has role", "status is", "state is", "current car is", "owns",
-}
+# Grouped predicates indicating mutually exclusive status or dynamic update.
+# Invalidation occurs only within the SAME semantic group (Zep/Graphiti §2.2.3).
+CONFLICT_PREDICATE_GROUPS = [
+    {"lives in", "moved to", "located in", "resides in", "relocated to", "living in"},
+    {"works at", "employed by", "worked at", "job at", "works for"},
+    {"has role", "role is", "position is", "title is", "promoted to"},
+    {"status is", "state is", "current status is"},
+    {"current car is", "drives", "owns car", "car is", "bought car"},
+]
+
+
+def _predicates_conflict(p1: str, p2: str) -> bool:
+    if p1 == p2:
+        return True
+    for group in CONFLICT_PREDICATE_GROUPS:
+        if p1 in group and p2 in group:
+            return True
+    return False
+
 
 HISTORICAL_QUERY_TERMS = {
     "first", "before", "previously", "used to", "originally",
@@ -68,7 +83,7 @@ class BiTemporalMemory(BaseMemory):
         self._ensure_embedder()
         self.records.extend(records)
 
-        # Track added triples per turn to avoid inflating duplicate edges across propositions
+        # Track added (s, p, o, rec.id) to prevent duplicate edge insertion
         seen_turn_triples: set[tuple[str, str, str, str]] = set()
         new_nodes: set[str] = set()
 
@@ -77,6 +92,7 @@ class BiTemporalMemory(BaseMemory):
             t_created = self._ingestion_tick
             t_valid = rec.timestamp or "present"
             t_id = str(rec.turn_id)
+            rec_text_lower = rec.fact_text.lower()
 
             # Register entities from rec
             for ent in rec.entities:
@@ -85,32 +101,43 @@ class BiTemporalMemory(BaseMemory):
                     new_nodes.add(en)
                     self.graph.add_node(en, type="entity")
 
+            candidate_triples = []
             for sub, pred, obj in rec.triples:
                 s_clean = _norm(sub)
                 p_clean = pred.strip().lower()
                 o_clean = _norm(obj)
                 if not s_clean or not o_clean or s_clean in STOP_NODES or o_clean in STOP_NODES:
                     continue
+                if s_clean in rec_text_lower or o_clean in rec_text_lower or len(rec.triples) <= 2:
+                    candidate_triples.append((sub, pred, obj, s_clean, p_clean, o_clean))
 
+            if not candidate_triples and rec.triples:
+                for sub, pred, obj in rec.triples:
+                    s_clean = _norm(sub)
+                    p_clean = pred.strip().lower()
+                    o_clean = _norm(obj)
+                    if s_clean and o_clean and s_clean not in STOP_NODES and o_clean not in STOP_NODES:
+                        candidate_triples.append((sub, pred, obj, s_clean, p_clean, o_clean))
+
+            for sub, pred, obj, s_clean, p_clean, o_clean in candidate_triples:
                 new_nodes.add(s_clean)
                 new_nodes.add(o_clean)
                 self.graph.add_node(s_clean, type="entity")
                 self.graph.add_node(o_clean, type="entity")
 
-                # Deduplicate identical triples within the same turn
-                triple_key = (s_clean, p_clean, o_clean, t_id)
+                triple_key = (s_clean, p_clean, o_clean, rec.id)
                 if triple_key in seen_turn_triples:
                     continue
                 seen_turn_triples.add(triple_key)
 
                 # Invalidation check (§2.2.3): Check existing edges from this subject
-                # If an edge shares a mutually exclusive predicate, invalidate the older edge
+                # If an edge shares a conflicting predicate, invalidate the older edge
                 if self.graph.has_node(s_clean):
                     for _, target, key, data in list(self.graph.out_edges(s_clean, keys=True, data=True)):
                         old_pred = data.get("predicate", "").lower()
-                        # Check contradiction / update condition
+                        # Check contradiction / update condition within same semantic group
                         if (
-                            (old_pred == p_clean or (old_pred in MUTUALLY_EXCLUSIVE_PREDICATES and p_clean in MUTUALLY_EXCLUSIVE_PREDICATES))
+                            _predicates_conflict(old_pred, p_clean)
                             and target != o_clean
                             and data.get("t_invalid") == "present"
                         ):
@@ -169,6 +196,7 @@ class BiTemporalMemory(BaseMemory):
         seed_nodes = [n for _, n in scored_seeds[:5]]
 
         candidate_edges: list[dict[str, Any]] = []
+        bfs_edge_rids: set[str] = set()
 
         if seed_nodes:
             # Step 2: BFS expansion up to bfs_depth from seed entities
@@ -180,19 +208,24 @@ class BiTemporalMemory(BaseMemory):
                 for node in current_frontier:
                     for u, v, data in self.graph.out_edges(node, data=True):
                         candidate_edges.append(data)
+                        if data.get("record_id"):
+                            bfs_edge_rids.add(data["record_id"])
                         if v not in visited_nodes:
                             visited_nodes.add(v)
                             next_frontier.add(v)
                     for u, v, data in self.graph.in_edges(node, data=True):
                         candidate_edges.append(data)
+                        if data.get("record_id"):
+                            bfs_edge_rids.add(data["record_id"])
                         if u not in visited_nodes:
                             visited_nodes.add(u)
                             next_frontier.add(u)
                 current_frontier = next_frontier
-        else:
-            # Fallback: all active edges
-            for _, _, data in self.graph.edges(data=True):
-                candidate_edges.append(data)
+
+        # Graphiti Hybrid Union (§3.1): always include all active graph edges as candidates
+        # so ego networks never starve candidate generation
+        for _, _, data in self.graph.edges(data=True):
+            candidate_edges.append(data)
 
         if not candidate_edges:
             return []
@@ -213,6 +246,8 @@ class BiTemporalMemory(BaseMemory):
         scored_items: list[tuple[float, dict[str, Any]]] = []
         for vec, (rid, edge_data) in zip(fact_vecs, unique_edges.items()):
             sim = _cosine(q_vec, vec)
+            if rid in bfs_edge_rids:
+                sim += 0.15  # Graph topological proximity boost from BFS (§3.1)
 
             if not is_historical:
                 # Normal queries prefer current active state

@@ -58,7 +58,26 @@ class FlatMemory(BaseMemory):
             scored.append((sim, rec))
 
         scored.sort(key=lambda x: x[0], reverse=True)
-        top = scored[:k]
+        # Turn diversification: max 2 propositions per turn in pass 1, backfill in pass 2
+        picked: list[tuple[float, MemoryRecord]] = []
+        turn_counts: dict[str, int] = {}
+        deferred: list[tuple[float, MemoryRecord]] = []
+
+        for score, rec in scored:
+            t_id = str(rec.turn_id)
+            if turn_counts.get(t_id, 0) < 2:
+                picked.append((score, rec))
+                turn_counts[t_id] = turn_counts.get(t_id, 0) + 1
+                if len(picked) == k:
+                    break
+            else:
+                deferred.append((score, rec))
+
+        if len(picked) < k:
+            for score, rec in deferred:
+                picked.append((score, rec))
+                if len(picked) == k:
+                    break
 
         return [
             RetrievedItem(
@@ -68,7 +87,7 @@ class FlatMemory(BaseMemory):
                 turn_id=rec.turn_id,
                 metadata={"timestamp": rec.timestamp, "speaker": rec.speaker, "sample_id": rec.sample_id},
             )
-            for score, rec in top
+            for score, rec in picked
         ]
 
     def export_graph(self) -> nx.Graph | None:

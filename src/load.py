@@ -176,6 +176,15 @@ def load_loco(limit: int | None = None, path: Path | None = None) -> list[Conver
 # (NOT a random HF re-upload), and validate against the paper's own numbers.
 # Verify the ground-truth arithmetic/mislabeling GitHub issues before trusting it.
 # --------------------------------------------------------------------------
+def _parse_date_sort_key(dt_str: str) -> str:
+    """Normalize date strings like '2023/04/10 (Mon) 17:50' to '2023/04/10 17:50'
+    for reliable chronological sorting."""
+    if not dt_str:
+        return ""
+    import re
+    return re.sub(r"\s*\([A-Za-z]+\)\s*", " ", dt_str).strip()
+
+
 def load_longmemeval(
     limit: int | None = None,
     split: str = "oracle",
@@ -251,10 +260,16 @@ def load_longmemeval(
         haystack_dates = d.get("haystack_dates", [])
         haystack_sids = d.get("haystack_session_ids", [])
 
+        # Match sessions with their dates and session IDs, and ensure strict chronological order
+        session_triples = []
         for s_idx, session in enumerate(haystack_sessions):
             dt = haystack_dates[s_idx] if s_idx < len(haystack_dates) else d.get("question_date", "")
-            dates[s_idx] = dt
             sid_str = haystack_sids[s_idx] if s_idx < len(haystack_sids) else f"s{s_idx}"
+            session_triples.append((session, dt, sid_str))
+        session_triples.sort(key=lambda x: _parse_date_sort_key(x[1]))
+
+        for s_idx, (session, dt, sid_str) in enumerate(session_triples):
+            dates[s_idx] = dt
             for t_idx, turn in enumerate(session):
                 dia_id = f"{sid_str}_t{t_idx}"
                 role = turn.get("role", "user")

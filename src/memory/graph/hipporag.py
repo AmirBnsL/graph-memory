@@ -30,7 +30,8 @@ def _cosine(a: list[float], b: list[float]) -> float:
 
 
 def _norm(e: str) -> str:
-    return e.strip().lower()
+    cleaned = re.sub(r"[^a-z0-9 ]", " ", e.lower())
+    return " ".join(cleaned.split())
 
 
 STOP_NODES = {
@@ -193,7 +194,9 @@ class HippoRAGMemory(BaseMemory):
             ppr_probs = personalization
 
         # Step 3: Passage score projection: p = n'^T P
-        record_scores: list[tuple[float, MemoryRecord]] = []
+        raw_ppr_list: list[float] = []
+        cos_prop_list: list[float] = []
+
         for idx, rec in enumerate(self.records):
             # Collect normalized entities belonging to this record
             rec_text_lower = rec.fact_text.lower()
@@ -209,17 +212,29 @@ class HippoRAGMemory(BaseMemory):
                 if o_norm in self.graph and o_norm in rec_text_lower:
                     matched_ents.add(o_norm)
 
-            ppr_sum = 0.0
-            for en in matched_ents:
-                specificity = 1.0 / (len(self.occurrence_map.get(en, set())) or 1)
-                ppr_sum += ppr_probs.get(en, 0.0) * specificity
+            # Node specificity s_i is already applied to personalization restart vector (HippoRAG §2.3)
+            # Sum raw stationary PPR probabilities without re-squaring specificity
+            ppr_sum = sum(ppr_probs.get(en, 0.0) for en in matched_ents)
+            raw_ppr_list.append(ppr_sum)
 
             # Proposition semantic similarity tie-breaker
             cos_prop = 0.0
             if idx < len(self._record_vectors):
                 cos_prop = max(0.0, _cosine(q_vec, self._record_vectors[idx]))
+            cos_prop_list.append(cos_prop)
 
-            final_score = ppr_sum + 0.25 * cos_prop
+        # Min-max normalize ppr_sum so graph topology is the primary signal (HippoRAG §F.2)
+        max_ppr = max(raw_ppr_list) if raw_ppr_list else 0.0
+        min_ppr = min(raw_ppr_list) if raw_ppr_list else 0.0
+        ppr_range = max_ppr - min_ppr
+
+        record_scores: list[tuple[float, MemoryRecord]] = []
+        for idx, rec in enumerate(self.records):
+            if ppr_range > 1e-9:
+                norm_ppr = (raw_ppr_list[idx] - min_ppr) / ppr_range
+            else:
+                norm_ppr = 1.0 if max_ppr > 0 else 0.0
+            final_score = norm_ppr + 0.05 * cos_prop_list[idx]
             record_scores.append((final_score, rec))
 
         record_scores.sort(key=lambda x: x[0], reverse=True)

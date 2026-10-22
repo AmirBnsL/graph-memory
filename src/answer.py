@@ -42,9 +42,44 @@ def _render(turns: list[Turn]) -> str:
     return "\n".join(f"[{t.dia_id}] {t.date_time} | {t.speaker}: {t.text}" for t in turns)
 
 
-def _ask(question: str, context: str, reader: dict | None = None) -> str:
+def _render_memory(items: list[Any]) -> str:
+    """Render memory records with timestamps and speaker attribution,
+    sorted chronologically (matching LongMemEval §5.1 and Graphiti §3)."""
+    import re
+
+    def _ts_key(it):
+        meta = getattr(it, "metadata", {}) or {}
+        ts = meta.get("timestamp") or meta.get("t_valid") or ""
+        return re.sub(r"\s*\([A-Za-z]+\)\s*", " ", str(ts)).strip()
+
+    has_ts = any(
+        (getattr(it, "metadata", {}) or {}).get("timestamp")
+        or (getattr(it, "metadata", {}) or {}).get("t_valid")
+        for it in items
+    )
+    sorted_items = sorted(items, key=_ts_key) if has_ts else items
+
+    lines = []
+    for item in sorted_items:
+        meta = getattr(item, "metadata", {}) or {}
+        ts = meta.get("timestamp") or meta.get("t_valid") or ""
+        t_inv = meta.get("t_invalid")
+        spk = meta.get("speaker") or ""
+        prefix = f"[{item.id}]"
+        if ts and t_inv and t_inv != "present":
+            prefix += f" {ts} to {t_inv} |"
+        elif ts:
+            prefix += f" {ts} |"
+        if spk:
+            prefix += f" {spk}:"
+        lines.append(f"{prefix} {item.text}")
+    return "\n".join(lines)
+
+
+def _ask(question: str, context: str, reader: dict | None = None, timestamp: str | None = None) -> str:
     r = reader or {}
-    prompt = PROMPT_TEMPLATE.format(context=context, question=question)
+    q_text = f"[Current Date: {timestamp}] {question}" if timestamp else question
+    prompt = PROMPT_TEMPLATE.format(context=context, question=q_text)
     return llm.complete(prompt, system=SYSTEM,
                         max_tokens=int(r.get("max_tokens", 64)),
                         temperature=float(r.get("temperature", 0.0)),
@@ -61,7 +96,8 @@ def answer_full(conv: Conversation, qa: QA, k: int = 10,
     mode registry stays uniform."""
     t0 = time.time()
     ctx = _render(conv.turns)
-    out = _ask(qa.question, ctx, reader)
+    q_ts = getattr(qa, "timestamp", None) or (conv.turns[-1].date_time if conv.turns else None)
+    out = _ask(qa.question, ctx, reader, timestamp=q_ts)
     return AnswerResult(out, [t.dia_id for t in conv.turns], len(ctx), time.time() - t0)
 
 
@@ -74,7 +110,8 @@ def answer_vector(conv: Conversation, qa: QA, k: int = 10,
     hits = embed.top_k(qa.question, texts, k=k, retriever=s)
     picked = [conv.turns[i] for i, _ in hits]
     ctx = _render(picked)
-    out = _ask(qa.question, ctx, reader)
+    q_ts = getattr(qa, "timestamp", None) or (conv.turns[-1].date_time if conv.turns else None)
+    out = _ask(qa.question, ctx, reader, timestamp=q_ts)
     return AnswerResult(out, [t.dia_id for t in picked], len(ctx), time.time() - t0)
 
 
@@ -125,10 +162,10 @@ def answer_memory(conv: Conversation, qa: QA, k: int = 10,
 
     query_ts = getattr(qa, "timestamp", None) or (conv.turns[-1].date_time if conv.turns else None)
     retrieved = mem.retrieve(query=qa.question, k=k, timestamp=query_ts)
-    ctx = "\n".join(f"[{item.id}] {item.text}" for item in retrieved)
+    ctx = _render_memory(retrieved)
     context_ids = [str(item.turn_id) for item in retrieved if item.turn_id is not None]
 
-    out = _ask(qa.question, ctx, reader)
+    out = _ask(qa.question, ctx, reader, timestamp=query_ts)
     return AnswerResult(out, context_ids, len(ctx), time.time() - t0)
 
 

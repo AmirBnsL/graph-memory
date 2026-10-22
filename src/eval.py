@@ -135,12 +135,13 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
         categories: set[int] | None, reader: dict | None = None,
         retriever: str | None = None, benchmark: str = "locomo",
         mode_cfg: dict | None = None,
-        sample_per_category: int | None = None) -> dict:
+        sample_per_category: int | None = None,
+        split: str = "oracle") -> dict:
     loaders = {"locomo": load_loco, "longmemeval": load_longmemeval}
     if benchmark not in loaders:
         raise ValueError(f"unknown benchmark {benchmark!r}; have {sorted(loaders)}")
-    if benchmark == "longmemeval" and sample_per_category is not None:
-        convs = loaders[benchmark](limit=n_conv, sample_per_category=sample_per_category)
+    if benchmark == "longmemeval":
+        convs = load_longmemeval(limit=n_conv, split=split, sample_per_category=sample_per_category)
     else:
         convs = loaders[benchmark](limit=n_conv)
     rows = []
@@ -200,17 +201,23 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
     if mode == "memory":
         import graph_metrics
         cached = answer_mod.get_cached_memories()
-        graphs = [
-            mem.export_graph()
-            for mem in cached.values()
-            if hasattr(mem, "export_graph") and mem.export_graph() is not None
-        ]
-        if graphs:
-            metrics_list = [graph_metrics.compute_graph_metrics(g) for g in graphs]
-            avg_metrics = {}
-            for k_m in metrics_list[0]:
-                avg_metrics[k_m] = sum(m[k_m] for m in metrics_list) / len(metrics_list)
-            summary["graph_metrics"] = avg_metrics
+        if cached:
+            by_sample: dict[str, dict] = {}
+            metrics_list: list[dict] = []
+            for cache_key, mem in cached.items():
+                if hasattr(mem, "export_graph"):
+                    g = mem.export_graph()
+                    if g is not None:
+                        m = graph_metrics.compute_graph_metrics(g)
+                        sample_id = cache_key[0] if isinstance(cache_key, tuple) else str(cache_key)
+                        by_sample[sample_id] = m
+                        metrics_list.append(m)
+            if metrics_list:
+                avg_metrics = {}
+                for k_m in metrics_list[0]:
+                    avg_metrics[k_m] = sum(m[k_m] for m in metrics_list) / len(metrics_list)
+                summary["graph_metrics"] = avg_metrics
+                summary["graph_metrics_by_sample"] = by_sample
 
     return summary
 
@@ -391,12 +398,15 @@ def main(cfg) -> None:
     mode = config_mod.group_name(values["mode"])
     mode_cfg = values.get("mode") if isinstance(values.get("mode"), dict) else {}
     benchmark = config_mod.group_name(values["benchmark"])
+    benchmark_cfg = values.get("benchmark") if isinstance(values.get("benchmark"), dict) else {}
+    split = benchmark_cfg.get("split", "oracle")
     sample_per_cat = limits.get("sample_per_category")
     s = run(mode, values["k"], limits.get("n_conv"), limits.get("n_qa"),
             set(cats) if cats else None,
             reader=values.get("reader"), retriever=values.get("retriever"),
             benchmark=benchmark, mode_cfg=mode_cfg,
-            sample_per_category=sample_per_cat)
+            sample_per_category=sample_per_cat,
+            split=split)
     path = save(s)
     mpath = manifest.write(
         manifest.build(values, path,

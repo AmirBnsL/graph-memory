@@ -77,17 +77,24 @@ def compute_graph_metrics(g: nx.Graph | nx.DiGraph | nx.MultiDiGraph | None) -> 
     else:
         undirected_g = g
 
+    m_simple = undirected_g.number_of_edges()
     edge_density = nx.density(undirected_g)
     try:
         clustering_coeff = nx.average_clustering(undirected_g)
     except Exception:
         clustering_coeff = 0.0
 
-    # Temporal edge attributes
+    try:
+        bridge_edges = len(list(nx.bridges(undirected_g)))
+        bridge_edge_ratio = bridge_edges / m_simple if m_simple > 0 else 0.0
+    except Exception:
+        bridge_edge_ratio = 0.0
+
+    # Temporal edge attributes (measuring non-default temporal validity coverage)
     temporal_edges = 0
     invalidated_edges = 0
     for _, _, data in g.edges(data=True):
-        if "t_valid" in data:
+        if data.get("t_valid") not in (None, "", "present"):
             temporal_edges += 1
         if data.get("status") == "superseded" or (data.get("t_invalid") and data.get("t_invalid") != "present"):
             invalidated_edges += 1
@@ -105,6 +112,7 @@ def compute_graph_metrics(g: nx.Graph | nx.DiGraph | nx.MultiDiGraph | None) -> 
         "max_degree_ratio": round(max_deg_ratio, 4),
         "edge_density": round(edge_density, 4),
         "clustering_coefficient": round(clustering_coeff, 4),
+        "bridge_edge_ratio": round(bridge_edge_ratio, 4),
         "temporal_edge_ratio": round(temp_edge_ratio, 4),
         "invalidated_edge_ratio": round(inval_edge_ratio, 4),
     }
