@@ -245,13 +245,15 @@ def extract_turn(
     return records
 
 
-def extract_conversation(conv: Any, overrides: dict | None = None) -> list[MemoryRecord]:
+def extract_conversation(conv: Any, overrides: dict | None = None, workers: int = 4) -> list[MemoryRecord]:
     """Extract all turns in a Conversation object."""
-    all_records: list[MemoryRecord] = []
-    for turn in conv.turns:
+    if not conv.turns:
+        return []
+
+    def _do_turn(turn):
         t_id = getattr(turn, "dia_id", getattr(turn, "turn_id", 0))
         ts = getattr(turn, "date_time", getattr(turn, "timestamp", None))
-        records = extract_turn(
+        return extract_turn(
             text=turn.text,
             speaker=turn.speaker,
             timestamp=ts,
@@ -259,26 +261,43 @@ def extract_conversation(conv: Any, overrides: dict | None = None) -> list[Memor
             turn_id=t_id,
             overrides=overrides,
         )
-        all_records.extend(records)
+
+    if workers <= 1 or len(conv.turns) == 1:
+        all_records: list[MemoryRecord] = []
+        for turn in conv.turns:
+            all_records.extend(_do_turn(turn))
+        return all_records
+
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        results = list(ex.map(_do_turn, conv.turns))
+
+    all_records = []
+    for turn_recs in results:
+        all_records.extend(turn_recs)
     return all_records
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Pre-extract conversation facts and triples")
     parser.add_argument("--benchmark", choices=["locomo", "longmemeval"], default="longmemeval")
-    parser.add_argument("--limit", type=int, default=1, help="Limit number of conversations")
+    parser.add_argument("--limit", type=int, default=None, help="Limit number of conversations")
+    parser.add_argument("--sample-per-cat", type=int, default=None, help="Balanced sample per category")
+    parser.add_argument("--workers", type=int, default=4, help="Concurrent worker threads per conversation")
     args = parser.parse_args()
 
     from load import load_loco, load_longmemeval
-    loader = load_longmemeval if args.benchmark == "longmemeval" else load_loco
-    convs = loader(limit=args.limit)
+    if args.benchmark == "longmemeval":
+        convs = load_longmemeval(limit=args.limit, sample_per_category=args.sample_per_cat)
+    else:
+        convs = load_loco(limit=args.limit)
 
-    print(f"Extracting {len(convs)} conversation(s) from {args.benchmark}...")
+    print(f"Extracting {len(convs)} conversation(s) from {args.benchmark} (workers={args.workers})...")
     total_records = 0
-    for conv in convs:
-        records = extract_conversation(conv)
+    for idx, conv in enumerate(convs, 1):
+        records = extract_conversation(conv, workers=args.workers)
         total_records += len(records)
-        print(f"Conversation {conv.sample_id}: {len(conv.turns)} turns -> {len(records)} memory records")
+        print(f"[{idx}/{len(convs)}] Conversation {conv.sample_id}: {len(conv.turns)} turns -> {len(records)} memory records")
 
     print(f"Done. Extracted {total_records} memory records total.")
 

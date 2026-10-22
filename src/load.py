@@ -180,11 +180,13 @@ def load_longmemeval(
     limit: int | None = None,
     split: str = "oracle",
     path: Path | None = None,
+    sample_per_category: int | None = None,
 ) -> list[Conversation]:
     """Load LongMemEval conversations.
 
     split: 'oracle' (default, evidence sessions only) or 's' (full ~115k haystack).
     limit: caps the number of questions.
+    sample_per_category: if set, selects a balanced sample across all 5 core abilities.
     """
     if path is not None:
         p = Path(path)
@@ -200,6 +202,28 @@ def load_longmemeval(
         )
 
     data = json.loads(p.read_text())
+    if sample_per_category is not None:
+        from collections import defaultdict
+        by_cat = defaultdict(list)
+        for d in data:
+            qid = d["question_id"]
+            qtype = d.get("question_type", "")
+            if qid.endswith("_abs") or qtype == "abstention":
+                c = 5
+            elif qtype == "temporal-reasoning":
+                c = 3
+            elif qtype == "knowledge-update":
+                c = 4
+            elif qtype == "multi-session":
+                c = 2
+            else:
+                c = 1
+            if len(by_cat[c]) < sample_per_category:
+                by_cat[c].append(d)
+        data = []
+        for c in [1, 2, 3, 4, 5]:
+            data.extend(by_cat[c])
+
     convs: list[Conversation] = []
 
     for d in data:

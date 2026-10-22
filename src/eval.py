@@ -134,11 +134,15 @@ def recall(evidence: list[str], context_ids: list[str]) -> dict:
 def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
         categories: set[int] | None, reader: dict | None = None,
         retriever: str | None = None, benchmark: str = "locomo",
-        mode_cfg: dict | None = None) -> dict:
+        mode_cfg: dict | None = None,
+        sample_per_category: int | None = None) -> dict:
     loaders = {"locomo": load_loco, "longmemeval": load_longmemeval}
     if benchmark not in loaders:
         raise ValueError(f"unknown benchmark {benchmark!r}; have {sorted(loaders)}")
-    convs = loaders[benchmark](limit=n_conv)
+    if benchmark == "longmemeval" and sample_per_category is not None:
+        convs = loaders[benchmark](limit=n_conv, sample_per_category=sample_per_category)
+    else:
+        convs = loaders[benchmark](limit=n_conv)
     rows = []
     t_start = time.time()
     identity = llm.resolve_identity(reader)
@@ -387,10 +391,12 @@ def main(cfg) -> None:
     mode = config_mod.group_name(values["mode"])
     mode_cfg = values.get("mode") if isinstance(values.get("mode"), dict) else {}
     benchmark = config_mod.group_name(values["benchmark"])
+    sample_per_cat = limits.get("sample_per_category")
     s = run(mode, values["k"], limits.get("n_conv"), limits.get("n_qa"),
             set(cats) if cats else None,
             reader=values.get("reader"), retriever=values.get("retriever"),
-            benchmark=benchmark, mode_cfg=mode_cfg)
+            benchmark=benchmark, mode_cfg=mode_cfg,
+            sample_per_category=sample_per_cat)
     path = save(s)
     mpath = manifest.write(
         manifest.build(values, path,
