@@ -9,6 +9,8 @@ Isolates the bi-temporal mechanics from Zep / Graphiti (Rasmussen et al., §2.2.
 from __future__ import annotations
 
 import math
+import re
+from collections import defaultdict
 from typing import Any
 import networkx as nx
 
@@ -25,10 +27,24 @@ def _cosine(a: list[float], b: list[float]) -> float:
     return dot / (norm_a * norm_b)
 
 
+def _norm(e: str) -> str:
+    return e.strip().lower()
+
+
+STOP_NODES = {
+    "user", "assistant", "ai", "speaker", "human", "i", "me", "my",
+    "you", "your", "he", "she", "they", "we", "it", "someone", "person",
+}
+
 # Predicates indicating mutually exclusive status or dynamic update
 MUTUALLY_EXCLUSIVE_PREDICATES = {
     "lives in", "moved to", "located in", "works at", "employed by",
     "has role", "status is", "state is", "current car is", "owns",
+}
+
+HISTORICAL_QUERY_TERMS = {
+    "first", "before", "previously", "used to", "originally",
+    "earlier", "prior", "initially", "former", "past",
 }
 
 
@@ -38,6 +54,7 @@ class BiTemporalMemory(BaseMemory):
         self.bfs_depth = bfs_depth
         self.records: list[MemoryRecord] = []
         self.graph = nx.MultiDiGraph()
+        self.entity_embeddings: dict[str, list[float]] = {}
         self._ingestion_tick = 0
 
     def _ensure_embedder(self) -> None:
@@ -51,18 +68,40 @@ class BiTemporalMemory(BaseMemory):
         self._ensure_embedder()
         self.records.extend(records)
 
+        # Track added triples per turn to avoid inflating duplicate edges across propositions
+        seen_turn_triples: set[tuple[str, str, str, str]] = set()
+        new_nodes: set[str] = set()
+
         for rec in records:
             self._ingestion_tick += 1
             t_created = self._ingestion_tick
             t_valid = rec.timestamp or "present"
+            t_id = str(rec.turn_id)
+
+            # Register entities from rec
+            for ent in rec.entities:
+                en = _norm(ent)
+                if en and en not in STOP_NODES:
+                    new_nodes.add(en)
+                    self.graph.add_node(en, type="entity")
 
             for sub, pred, obj in rec.triples:
-                s_clean, p_clean, o_clean = sub.strip(), pred.strip().lower(), obj.strip()
-                if not s_clean or not o_clean:
+                s_clean = _norm(sub)
+                p_clean = pred.strip().lower()
+                o_clean = _norm(obj)
+                if not s_clean or not o_clean or s_clean in STOP_NODES or o_clean in STOP_NODES:
                     continue
 
+                new_nodes.add(s_clean)
+                new_nodes.add(o_clean)
                 self.graph.add_node(s_clean, type="entity")
                 self.graph.add_node(o_clean, type="entity")
+
+                # Deduplicate identical triples within the same turn
+                triple_key = (s_clean, p_clean, o_clean, t_id)
+                if triple_key in seen_turn_triples:
+                    continue
+                seen_turn_triples.add(triple_key)
 
                 # Invalidation check (§2.2.3): Check existing edges from this subject
                 # If an edge shares a mutually exclusive predicate, invalidate the older edge
@@ -75,7 +114,6 @@ class BiTemporalMemory(BaseMemory):
                             and target != o_clean
                             and data.get("t_invalid") == "present"
                         ):
-                            # Invalidate old edge
                             data["t_invalid"] = t_valid
                             data["t_expired"] = t_created
                             data["status"] = "superseded"
@@ -97,14 +135,38 @@ class BiTemporalMemory(BaseMemory):
                     sample_id=rec.sample_id,
                 )
 
+        # Precompute embeddings for new nodes to enable semantic query seeding
+        nodes_to_embed = [n for n in new_nodes if n not in self.entity_embeddings]
+        if nodes_to_embed:
+            vecs = self.embedder.embed_texts(nodes_to_embed)
+            for n, v in zip(nodes_to_embed, vecs):
+                self.entity_embeddings[n] = v
+
     def retrieve(self, query: str, k: int, timestamp: str | None = None) -> list[RetrievedItem]:
         if self.graph.number_of_nodes() == 0:
             return []
         self._ensure_embedder()
 
-        # Step 1: Identify seed entities matching the query
+        # Step 1: Semantic + Lexical seed entity selection
+        if hasattr(self.embedder, "embed_query"):
+            q_vec = self.embedder.embed_query(query)
+        else:
+            q_vec = self.embedder.embed_texts([query])[0]
+
         q_lower = query.lower()
-        seed_nodes = [n for n in self.graph.nodes() if n.lower() in q_lower]
+        scored_seeds: list[tuple[float, str]] = []
+
+        for node in self.graph.nodes():
+            score = 0.0
+            if node in self.entity_embeddings:
+                score += max(0.0, _cosine(q_vec, self.entity_embeddings[node]))
+            if len(node) >= 3 and re.search(r"\b" + re.escape(node) + r"\b", q_lower):
+                score += 0.5
+            if score > 0.35:
+                scored_seeds.append((score, node))
+
+        scored_seeds.sort(key=lambda x: x[0], reverse=True)
+        seed_nodes = [n for _, n in scored_seeds[:5]]
 
         candidate_edges: list[dict[str, Any]] = []
 
@@ -142,8 +204,9 @@ class BiTemporalMemory(BaseMemory):
             if rid and rid not in unique_edges:
                 unique_edges[rid] = edge_data
 
-        # Step 3: Temporal filtering & Cosine ranking
-        q_vec = self.embedder.embed_texts([query])[0]
+        # Step 3: Query-aware temporal filtering & Cosine ranking
+        is_historical = any(re.search(r"\b" + w + r"\b", q_lower) for w in HISTORICAL_QUERY_TERMS)
+
         fact_texts = [d["fact_text"] for d in unique_edges.values()]
         fact_vecs = self.embedder.embed_texts(fact_texts)
 
@@ -151,16 +214,42 @@ class BiTemporalMemory(BaseMemory):
         for vec, (rid, edge_data) in zip(fact_vecs, unique_edges.items()):
             sim = _cosine(q_vec, vec)
 
-            # Prioritize active facts over superseded ones unless historical query
-            if edge_data.get("status") == "active":
-                sim += 0.2
-            if edge_data.get("t_invalid") != "present":
-                sim -= 0.1
+            if not is_historical:
+                # Normal queries prefer current active state
+                if edge_data.get("status") == "active":
+                    sim += 0.2
+                if edge_data.get("t_invalid") != "present":
+                    sim -= 0.1
+            else:
+                # Historical queries ("what was first", "where did she live before")
+                # give fair weight to superseded historical facts
+                if edge_data.get("t_invalid") != "present":
+                    sim += 0.15
 
             scored_items.append((sim, edge_data))
 
         scored_items.sort(key=lambda x: x[0], reverse=True)
-        top = scored_items[:k]
+
+        # Step 4: Turn diversification
+        diversified: list[tuple[float, dict[str, Any]]] = []
+        turn_counts: dict[str, int] = defaultdict(int)
+        remaining: list[tuple[float, dict[str, Any]]] = []
+
+        for sim, edge_data in scored_items:
+            t_id = str(edge_data.get("turn_id", ""))
+            if turn_counts[t_id] < 2:
+                diversified.append((sim, edge_data))
+                turn_counts[t_id] += 1
+                if len(diversified) >= k:
+                    break
+            else:
+                remaining.append((sim, edge_data))
+
+        if len(diversified) < k:
+            for sim, edge_data in remaining:
+                diversified.append((sim, edge_data))
+                if len(diversified) >= k:
+                    break
 
         return [
             RetrievedItem(
@@ -176,7 +265,7 @@ class BiTemporalMemory(BaseMemory):
                     "sample_id": edge_data.get("sample_id"),
                 },
             )
-            for score, edge_data in top
+            for score, edge_data in diversified
         ]
 
     def export_graph(self) -> nx.MultiDiGraph:
@@ -185,4 +274,5 @@ class BiTemporalMemory(BaseMemory):
     def clear(self) -> None:
         self.records.clear()
         self.graph.clear()
+        self.entity_embeddings.clear()
         self._ingestion_tick = 0

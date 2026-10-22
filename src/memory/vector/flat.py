@@ -47,7 +47,10 @@ class FlatMemory(BaseMemory):
         if not self.records or not self._vectors:
             return []
         self._ensure_embedder()
-        q_vec = self.embedder.embed_texts([query])[0]
+        if hasattr(self.embedder, "embed_query"):
+            q_vec = self.embedder.embed_query(query)
+        else:
+            q_vec = self.embedder.embed_texts([query])[0]
         
         scored: list[tuple[float, MemoryRecord]] = []
         for vec, rec in zip(self._vectors, self.records):

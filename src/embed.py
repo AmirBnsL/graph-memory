@@ -249,6 +249,12 @@ class Embedder:
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
-        arr = encode(texts, self.s)
+        arr = embed(texts, self.s)
         return arr.tolist()
+
+    def embed_query(self, query: str) -> list[float]:
+        if not query:
+            return []
+        vec = encode_query(query, self.s)
+        return vec.tolist()
 

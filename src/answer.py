@@ -104,11 +104,11 @@ def answer_memory(conv: Conversation, qa: QA, k: int = 10,
     flatten = bool(mcfg.get("flatten_structure", False))
     syn_thresh = float(mcfg.get("synonym_threshold", 0.85))
 
-    cache_key = (conv.sample_id, backend, flatten, syn_thresh)
+    s = embed.spec(retriever)
+    cache_key = (conv.sample_id, backend, flatten, syn_thresh, s["name"], s.get("query_prefix", ""))
     if cache_key in _CONV_MEMORY_CACHE:
         mem = _CONV_MEMORY_CACHE[cache_key]
     else:
-        s = embed.spec(retriever)
         emb = embed.Embedder(s)
         if backend == "flat":
             mem = FlatMemory(embedder=emb)

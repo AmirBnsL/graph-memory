@@ -81,10 +81,10 @@ class TestMemoryBackends(unittest.TestCase):
 
         g = hippo.export_graph()
         self.assertIsNotNone(g)
-        self.assertIn("Alice", g.nodes)
-        self.assertIn("Paris", g.nodes)
-        self.assertIn("BMW", g.nodes)
-        self.assertTrue(g.has_edge("Alice", "Paris"))
+        self.assertIn("alice", g.nodes)
+        self.assertIn("paris", g.nodes)
+        self.assertIn("bmw", g.nodes)
+        self.assertTrue(g.has_edge("alice", "paris"))
 
         # PPR retrieval
         res = hippo.retrieve(query="What car did Alice buy? BMW", k=2)
@@ -96,7 +96,7 @@ class TestMemoryBackends(unittest.TestCase):
 
         g = bteg.export_graph()
         self.assertIsNotNone(g)
-        self.assertIn("Alice", g.nodes)
+        self.assertIn("alice", g.nodes)
 
         # Check edge invalidation: "lives in Paris" should be superseded by "moved to Berlin"
         edges = list(g.edges(data=True))
@@ -105,6 +105,58 @@ class TestMemoryBackends(unittest.TestCase):
         # Retrieval
         res = bteg.retrieve(query="Where does Alice live?", k=2, timestamp="2023-07-01")
         self.assertGreaterEqual(len(res), 1)
+
+    def test_hipporag_turn_diversification_and_stop_nodes(self):
+        # Create 10 propositions from the same turn t1, and 2 propositions from t2
+        recs = [
+            MemoryRecord(
+                id=f"t1_{i}", sample_id="c1", turn_id=1, speaker="User",
+                timestamp="2023-01-01", fact_text=f"User bought item {i} in Paris.",
+                entities=["User", "Paris", f"item {i}"],
+                triples=[("User", "bought", f"item {i}"), ("User", "in", "Paris")],
+            )
+            for i in range(10)
+        ] + [
+            MemoryRecord(
+                id=f"t2_{i}", sample_id="c1", turn_id=2, speaker="User",
+                timestamp="2023-01-02", fact_text=f"User visited Berlin museum {i}.",
+                entities=["User", "Berlin", f"museum {i}"],
+                triples=[("User", "visited", f"museum {i}"), ("User", "in", "Berlin")],
+            )
+            for i in range(2)
+        ]
+
+        hippo = HippoRAGMemory(embedder=self.mock_embedder)
+        hippo.add_records(recs)
+        g = hippo.export_graph()
+
+        # Stop-nodes like "user" must be filtered from graph nodes
+        self.assertNotIn("user", g.nodes)
+        self.assertIn("paris", g.nodes)
+        self.assertIn("berlin", g.nodes)
+
+        # Retrieve k=5: must NOT be 5 copies of t1; must contain both t1 and t2
+        res = hippo.retrieve(query="What places did User visit or buy items in?", k=5)
+        retrieved_turns = {r.turn_id for r in res}
+        self.assertIn(1, retrieved_turns)
+        self.assertIn(2, retrieved_turns)
+
+    def test_bteg_triple_deduplication(self):
+        # 5 propositions from turn 1 with identical triples
+        recs = [
+            MemoryRecord(
+                id=f"t1_{i}", sample_id="c1", turn_id=1, speaker="User",
+                timestamp="2023-01-01", fact_text=f"Fact {i}",
+                entities=["Alice", "Paris"],
+                triples=[("Alice", "lives in", "Paris")],
+            )
+            for i in range(5)
+        ]
+        bteg = BiTemporalMemory(embedder=self.mock_embedder)
+        bteg.add_records(recs)
+        g = bteg.export_graph()
+        # Should only have 1 edge between alice and paris, not 5
+        self.assertEqual(g.number_of_edges("alice", "paris"), 1)
 
 
 if __name__ == "__main__":
