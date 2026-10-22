@@ -1,0 +1,103 @@
+{
+  "benchmark": "longmemeval",
+  "mode": "memory_temporal_bteg",
+  "k": 10,
+  "provider": "ollama",
+  "model": "qwen2.5:7b-instruct",
+  "n": 1,
+  "F1": 0.0,
+  "EM": 0.0,
+  "F1_paper": 0.0,
+  "F1_answerable": 0.0,
+  "n_answerable": 1,
+  "refusal_accuracy": null,
+  "n_adversarial": 0,
+  "recall_any": 0.0,
+  "recall_all": 0.0,
+  "evidence_coverage": 0.0,
+  "n_with_evidence": 1,
+  "F1_given_hit": null,
+  "ignore_rate": null,
+  "F1_given_miss": 0.0,
+  "recall_any_by_category": {
+    "3": 0.0
+  },
+  "F1_by_category": {
+    "3": 0.0
+  },
+  "n_by_category": {
+    "3": 1
+  },
+  "category_names": {
+    "3": "temporal"
+  },
+  "mean_latency_s": 19.998680591583252,
+  "total_latency_s": 20.20187211036682,
+  "mean_prompt_chars": 1605.0,
+  "rows": [
+    {
+      "sample_id": "gpt4_2655b836",
+      "category": 3,
+      "adversarial": false,
+      "question": "What was the first issue I had with my new car after its first service?",
+      "gold": "GPS system not functioning correctly",
+      "adversarial_answer": "",
+      "pred": "No information available.",
+      "F1": 0.0,
+      "EM": 0.0,
+      "refusal_correct": null,
+      "latency_s": 19.998680591583252,
+      "prompt_chars": 1605,
+      "evidence": [
+        "answer_4be1b6b4_3_t2",
+        "answer_4be1b6b4_2_t0"
+      ],
+      "context_ids": [
+        "answer_4be1b6b4_2_t1",
+        "answer_4be1b6b4_2_t10",
+        "answer_4be1b6b4_2_t10",
+        "answer_4be1b6b4_3_t4",
+        "answer_4be1b6b4_3_t4",
+        "answer_4be1b6b4_2_t1",
+        "answer_4be1b6b4_2_t3",
+        "answer_4be1b6b4_2_t3",
+        "answer_4be1b6b4_2_t5",
+        "answer_4be1b6b4_3_t1"
+      ],
+      "recall_any": 0.0,
+      "recall_all": 0.0,
+      "evidence_coverage": 0.0
+    }
+  ],
+  "retriever": "Qwen/Qwen3-Embedding-0.6B",
+  "graph_metrics": {
+    "num_nodes": 383.0,
+    "num_edges": 710.0,
+    "largest_component_ratio": 0.0836,
+    "num_connected_components": 215.0,
+    "degree_variance": 95.0999,
+    "degree_gini": 0.735,
+    "max_degree_ratio": 40.188,
+    "edge_density": 0.0023,
+    "clustering_coefficient": 0.0067,
+    "bridge_edge_ratio": 0.9415,
+    "temporal_edge_ratio": 1.0,
+    "invalidated_edge_ratio": 0.4662
+  },
+  "graph_metrics_by_sample": {
+    "gpt4_2655b836": {
+      "num_nodes": 383,
+      "num_edges": 710,
+      "largest_component_ratio": 0.0836,
+      "num_connected_components": 215,
+      "degree_variance": 95.0999,
+      "degree_gini": 0.735,
+      "max_degree_ratio": 40.188,
+      "edge_density": 0.0023,
+      "clustering_coefficient": 0.0067,
+      "bridge_edge_ratio": 0.9415,
+      "temporal_edge_ratio": 1.0,
+      "invalidated_edge_ratio": 0.4662
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "benchmark": "longmemeval",
+  "mode": "vector",
+  "k": 10,
+  "provider": "ollama",
+  "model": "qwen2.5:7b-instruct",
+  "n": 1,
+  "F1": 0.5,
+  "EM": 0.0,
+  "F1_paper": 0.5,
+  "F1_answerable": 0.5,
+  "n_answerable": 1,
+  "refusal_accuracy": null,
+  "n_adversarial": 0,
+  "recall_any": 1.0,
+  "recall_all": 1.0,
+  "evidence_coverage": 1.0,
+  "n_with_evidence": 1,
+  "F1_given_hit": 0.5,
+  "ignore_rate": 0.0,
+  "F1_given_miss": null,
+  "recall_any_by_category": {
+    "3": 1.0
+  },
+  "F1_by_category": {
+    "3": 0.5
+  },
+  "n_by_category": {
+    "3": 1
+  },
+  "category_names": {
+    "3": "temporal"
+  },
+  "mean_latency_s": 48.22744035720825,
+  "total_latency_s": 48.22777462005615,
+  "mean_prompt_chars": 3680.0,
+  "rows": [
+    {
+      "sample_id": "gpt4_2655b836",
+      "category": 3,
+      "adversarial": false,
+      "question": "What was the first issue I had with my new car after its first service?",
+      "gold": "GPS system not functioning correctly",
+      "adversarial_answer": "",
+      "pred": "GPS system issue",
+      "F1": 0.5,
+      "EM": 0.0,
+      "refusal_correct": null,
+      "latency_s": 48.22744035720825,
+      "prompt_chars": 3680,
+      "evidence": [
+        "answer_4be1b6b4_3_t2",
+        "answer_4be1b6b4_2_t0"
+      ],
+      "context_ids": [
+        "answer_4be1b6b4_3_t4",
+        "answer_4be1b6b4_3_t8",
+        "answer_4be1b6b4_2_t0",
+        "answer_4be1b6b4_2_t2",
+        "answer_4be1b6b4_3_t6",
+        "answer_4be1b6b4_3_t2",
+        "answer_4be1b6b4_2_t10",
+        "answer_4be1b6b4_2_t4",
+        "answer_4be1b6b4_1_t0",
+        "answer_4be1b6b4_3_t10"
+      ],
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "evidence_coverage": 1.0
+    }
+  ],
+  "retriever": "Qwen/Qwen3-Embedding-0.6B"
+}
