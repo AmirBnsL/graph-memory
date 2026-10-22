@@ -54,12 +54,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 from pathlib import Path
-
-# Prevent HF hub network retry hangs when running offline/sandboxed with cached models
-os.environ.setdefault("HF_HUB_OFFLINE", "1")
-os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 import numpy as np
 

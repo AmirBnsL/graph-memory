@@ -1,7 +1,11 @@
+import os
 import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
