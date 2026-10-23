@@ -125,19 +125,21 @@ class BiTemporalMemory(BaseMemory):
                 self.graph.add_node(s_clean, type="entity")
                 self.graph.add_node(o_clean, type="entity")
 
-                triple_key = (s_clean, p_clean, o_clean, rec.id)
+                # Deduplicate triples strictly per turn (prevent intra-turn proposition inflation)
+                triple_key = (s_clean, p_clean, o_clean, str(rec.turn_id))
                 if triple_key in seen_turn_triples:
                     continue
                 seen_turn_triples.add(triple_key)
 
                 # Invalidation check (§2.2.3): Check existing edges from this subject
                 # If an edge shares a conflicting predicate, invalidate the older edge
+                # Require different turn_id so intra-turn propositions do not invalidate each other
                 if self.graph.has_node(s_clean):
                     for _, target, key, data in list(self.graph.out_edges(s_clean, keys=True, data=True)):
                         old_pred = data.get("predicate", "").lower()
-                        # Check contradiction / update condition within same semantic group
                         if (
-                            _predicates_conflict(old_pred, p_clean)
+                            str(data.get("turn_id")) != str(rec.turn_id)
+                            and _predicates_conflict(old_pred, p_clean)
                             and target != o_clean
                             and data.get("t_invalid") == "present"
                         ):
@@ -146,6 +148,7 @@ class BiTemporalMemory(BaseMemory):
                             data["status"] = "superseded"
 
                 # Add the new edge
+                edge_id = f"{rec.sample_id}_{rec.turn_id}_{s_clean}_{p_clean}_{o_clean}"
                 self.graph.add_edge(
                     s_clean,
                     o_clean,
@@ -157,6 +160,7 @@ class BiTemporalMemory(BaseMemory):
                     status="active",
                     fact_text=rec.fact_text,
                     record_id=rec.id,
+                    edge_id=edge_id,
                     turn_id=rec.turn_id,
                     speaker=rec.speaker,
                     sample_id=rec.sample_id,
@@ -230,12 +234,12 @@ class BiTemporalMemory(BaseMemory):
         if not candidate_edges:
             return []
 
-        # Deduplicate edges by record_id
+        # Deduplicate edges by edge_id (or record_id fallback)
         unique_edges: dict[str, dict[str, Any]] = {}
         for edge_data in candidate_edges:
-            rid = edge_data.get("record_id", "")
-            if rid and rid not in unique_edges:
-                unique_edges[rid] = edge_data
+            ekey = edge_data.get("edge_id") or edge_data.get("record_id", "")
+            if ekey and ekey not in unique_edges:
+                unique_edges[ekey] = edge_data
 
         # Step 3: Query-aware temporal filtering & Cosine ranking
         is_historical = any(re.search(r"\b" + w + r"\b", q_lower) for w in HISTORICAL_QUERY_TERMS)

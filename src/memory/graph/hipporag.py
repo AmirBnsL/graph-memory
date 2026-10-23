@@ -212,9 +212,12 @@ class HippoRAGMemory(BaseMemory):
                 if o_norm in self.graph and o_norm in rec_text_lower:
                     matched_ents.add(o_norm)
 
-            # Node specificity s_i is already applied to personalization restart vector (HippoRAG §2.3)
-            # Sum raw stationary PPR probabilities without re-squaring specificity
-            ppr_sum = sum(ppr_probs.get(en, 0.0) for en in matched_ents)
+            # Weight stationary PPR probability by entity node specificity s_i = 1/|turns(i)| (HippoRAG Eq 6)
+            # This ensures that rare, informative entities carry higher weight than ubiquitous hubs
+            ppr_sum = sum(
+                ppr_probs.get(en, 0.0) / max(1, len(self.occurrence_map.get(en, [1])))
+                for en in matched_ents
+            )
             raw_ppr_list.append(ppr_sum)
 
             # Proposition semantic similarity tie-breaker
@@ -234,7 +237,7 @@ class HippoRAGMemory(BaseMemory):
                 norm_ppr = (raw_ppr_list[idx] - min_ppr) / ppr_range
             else:
                 norm_ppr = 1.0 if max_ppr > 0 else 0.0
-            final_score = norm_ppr + 0.05 * cos_prop_list[idx]
+            final_score = norm_ppr + 0.25 * cos_prop_list[idx]
             record_scores.append((final_score, rec))
 
         record_scores.sort(key=lambda x: x[0], reverse=True)

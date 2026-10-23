@@ -225,8 +225,11 @@ def load_longmemeval(
                 c = 4
             elif qtype == "multi-session":
                 c = 2
-            else:
+            elif qtype in ("single-session-user", "single-session-assistant"):
+                # Factual extraction questions with exact answers (skipping open-ended preferences for token-F1)
                 c = 1
+            else:
+                continue
             if len(by_cat[c]) < sample_per_category:
                 by_cat[c].append(d)
         data = []

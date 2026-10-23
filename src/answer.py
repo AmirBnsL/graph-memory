@@ -108,7 +108,9 @@ def answer_vector(conv: Conversation, qa: QA, k: int = 10,
     s = embed.spec(retriever)
     texts = embed.passage_texts(conv.turns, s)
     hits = embed.top_k(qa.question, texts, k=k, retriever=s)
-    picked = [conv.turns[i] for i, _ in hits]
+    # Sort picked turns in chronological order so dialogue sequence is preserved
+    indices = sorted([i for i, _ in hits])
+    picked = [conv.turns[i] for i in indices]
     ctx = _render(picked)
     q_ts = getattr(qa, "timestamp", None) or (conv.turns[-1].date_time if conv.turns else None)
     out = _ask(qa.question, ctx, reader, timestamp=q_ts)
