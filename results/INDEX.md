@@ -13,16 +13,16 @@
 | locomo | vector | 10 | Qwen/Qwen3-Embedding-0.6B | 1986 | 0.161 | 0.346 | 0.080 | 0.208 | 0.823 | 0.366 | 0.308 | 0.333 | 1652 | 0.28 |
 | locomo | vector | 25 | Qwen/Qwen3-Embedding-0.6B | 1986 | 0.224 | 0.389 | 0.115 | 0.289 | 0.735 | 0.503 | 0.416 | 0.454 | 4109 | 0.44 |
 | locomo | vector | 50 | Qwen/Qwen3-Embedding-0.6B | 1986 | 0.267 | 0.419 | 0.139 | 0.345 | 0.675 | 0.647 | 0.546 | 0.594 | 8290 | 0.74 |
-| longmemeval | memory_flat | 10 | Qwen/Qwen3-Embedding-0.6B | 25 | 0.352 | 0.552 | 0.320 | 0.440 | 1.000 | 1.000 | 0.792 | 0.921 | 2376 | 2.62 |
+| longmemeval | memory_flat | 10 | Qwen/Qwen3-Embedding-0.6B | 25 | 0.418 | 0.618 | 0.360 | 0.523 | 1.000 | 0.917 | 0.750 | 0.851 | 2281 | 2.52 |
 | longmemeval | memory_flat | 10 | all-MiniLM-L6-v2 | 25 | 0.243 | 0.443 | 0.200 | 0.303 | 1.000 | 0.917 | 0.583 | 0.761 | 2959 | 1.20 |
-| longmemeval | memory_hipporag | 10 | Qwen/Qwen3-Embedding-0.6B | 25 | 0.271 | 0.431 | 0.240 | 0.339 | 0.800 | 0.875 | 0.583 | 0.722 | 5340 | 13.40 |
+| longmemeval | memory_hipporag | 10 | Qwen/Qwen3-Embedding-0.6B | 25 | 0.344 | 0.544 | 0.280 | 0.429 | 1.000 | 0.875 | 0.667 | 0.763 | 4018 | 13.04 |
 | longmemeval | memory_hipporag | 10 | all-MiniLM-L6-v2 | 25 | 0.072 | 0.232 | 0.040 | 0.090 | 0.800 | 0.458 | 0.042 | 0.246 | 3468 | 3.99 |
-| longmemeval | memory_hipporag_flattened | 10 | Qwen/Qwen3-Embedding-0.6B | 25 | 0.309 | 0.509 | 0.280 | 0.387 | 1.000 | 1.000 | 0.708 | 0.857 | 4250 | 2.03 |
+| longmemeval | memory_hipporag_flattened | 10 | Qwen/Qwen3-Embedding-0.6B | 25 | 0.345 | 0.545 | 0.320 | 0.432 | 1.000 | 0.958 | 0.708 | 0.829 | 3516 | 1.89 |
 | longmemeval | memory_hipporag_flattened | 10 | all-MiniLM-L6-v2 | 25 | 0.161 | 0.361 | 0.120 | 0.202 | 1.000 | 0.750 | 0.292 | 0.524 | 6221 | 1.30 |
-| longmemeval | memory_temporal_bteg | 10 | Qwen/Qwen3-Embedding-0.6B | 25 | 0.302 | 0.502 | 0.280 | 0.377 | 1.000 | 0.708 | 0.333 | 0.520 | 1372 | 1.96 |
+| longmemeval | memory_temporal_bteg | 10 | Qwen/Qwen3-Embedding-0.6B | 25 | 0.160 | 0.360 | 0.160 | 0.200 | 1.000 | 0.750 | 0.292 | 0.511 | 1347 | 1.90 |
 | longmemeval | memory_temporal_bteg | 10 | all-MiniLM-L6-v2 | 25 | 0.193 | 0.353 | 0.160 | 0.241 | 0.800 | 0.792 | 0.417 | 0.583 | 916 | 0.93 |
 | longmemeval | vector | 5 | Qwen/Qwen3-Embedding-0.6B | 500 | 0.417 | 0.471 | 0.320 | 0.443 | 0.900 | 0.939 | 0.708 | 0.824 | 2386 | 1.33 |
-| longmemeval | vector | 10 | Qwen/Qwen3-Embedding-0.6B | 25 | 0.156 | 0.356 | 0.080 | 0.195 | 1.000 | 1.000 | 0.833 | 0.933 | 7386 | 2.58 |
+| longmemeval | vector | 10 | Qwen/Qwen3-Embedding-0.6B | 25 | 0.393 | 0.553 | 0.320 | 0.491 | 0.800 | 1.000 | 0.875 | 0.947 | 6293 | 3.59 |
 | longmemeval | vector | 10 | all-MiniLM-L6-v2 | 25 | 0.214 | 0.414 | 0.160 | 0.268 | 1.000 | 0.917 | 0.667 | 0.796 | 12060 | 2.94 |
 | longmemeval | vector | 25 | all-MiniLM-L6-v2 | 500 | 0.388 | 0.442 | 0.290 | 0.412 | 0.900 | 0.996 | 0.948 | 0.978 | 23845 | 2.47 |
 
@@ -30,7 +30,7 @@
 
 | benchmark | retriever | k | Vector (Raw) | Flat (No Graph) | HippoRAG | Hippo Flattened | Bi-Temporal | Δ_extraction | Δ_structure | Δ_ablation | Δ_temporal |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| longmemeval | Qwen/Qwen3-Embedding-0.6B | 10 | 0.195 | 0.440 | 0.339 | 0.387 | 0.377 | 0.245 | -0.101 | -0.047 | -0.063 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | 10 | 0.491 | 0.523 | 0.429 | 0.432 | 0.200 | 0.032 | -0.093 | -0.002 | -0.323 |
 | longmemeval | all-MiniLM-L6-v2 | 10 | 0.268 | 0.303 | 0.090 | 0.202 | 0.241 | 0.035 | -0.213 | -0.112 | -0.062 |
 
 ### Retrieval recall by category: locomo
@@ -51,13 +51,13 @@
 
 | mode | k | extraction | multi-session | temporal | update | abstention | overall |
 |---|---|---|---|---|---|---|---|
-| memory_flat | 10 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+| memory_flat | 10 | 0.600 | 1.000 | 1.000 | 1.000 | 1.000 | 0.917 |
 | memory_flat | 10 | 1.000 | 0.800 | 1.000 | 1.000 | 0.750 | 0.917 |
 | memory_hipporag | 10 | 0.800 | 0.800 | 1.000 | 1.000 | 0.750 | 0.875 |
 | memory_hipporag | 10 | 0.400 | 0.600 | 0.800 | 0.200 | 0.250 | 0.458 |
-| memory_hipporag_flattened | 10 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+| memory_hipporag_flattened | 10 | 0.800 | 1.000 | 1.000 | 1.000 | 1.000 | 0.958 |
 | memory_hipporag_flattened | 10 | 0.800 | 0.600 | 0.800 | 0.800 | 0.750 | 0.750 |
-| memory_temporal_bteg | 10 | 0.400 | 0.800 | 0.800 | 0.800 | 0.750 | 0.708 |
+| memory_temporal_bteg | 10 | 0.400 | 1.000 | 1.000 | 0.600 | 0.750 | 0.750 |
 | memory_temporal_bteg | 10 | 0.400 | 1.000 | 1.000 | 0.800 | 0.750 | 0.792 |
 | vector | 5 | 0.907 | 0.967 | 0.937 | 0.972 | 0.889 | 0.939 |
 | vector | 10 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
