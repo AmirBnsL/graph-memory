@@ -21,6 +21,8 @@ results/*.log
 # python
 __pycache__/
 *.pyc
+*.egg-info/
+src/*.egg-info/
 
 # secrets -- never commit
 .env
