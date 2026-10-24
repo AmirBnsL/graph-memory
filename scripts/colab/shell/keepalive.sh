@@ -20,9 +20,9 @@ cd "$(dirname "$0")/.." || exit 1
 
 echo "keepalive: session=$SESSION, every ${INTERVAL}s -- Ctrl-C to stop"
 while true; do
-    python3 colab/pull_results.py --session "$SESSION" --push | tail -1
-    if grep -aqE "sweep (done|FAILED)" results/sweep.log 2>/dev/null; then
-        echo "keepalive: terminal marker in results/sweep.log -- stopping"
+    python3 pull_results.py --session "$SESSION" --push | tail -1
+    if grep -aqE "(sweep|run) (done|FAILED)|eval exit=" ../../results/eval.log ../../results/sweep.log 2>/dev/null; then
+        echo "keepalive: terminal marker in results/eval.log -- stopping"
         break
     fi
     sleep "$INTERVAL"

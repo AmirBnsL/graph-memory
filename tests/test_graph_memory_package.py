@@ -54,8 +54,11 @@ class TestGraphMemoryPackage(unittest.TestCase):
         self.assertIn("metrics", p.stdout)
 
     def test_colab_mgr_help(self):
+        from pathlib import Path
+        root = Path(__file__).resolve().parent.parent
+        cli_script = root / "scripts" / "colab" / "cli.py"
         p = subprocess.run(
-            [sys.executable, "-m", "graph_memory.colab_mgr", "--help"],
+            [sys.executable, str(cli_script), "--help"],
             capture_output=True,
             text=True,
         )

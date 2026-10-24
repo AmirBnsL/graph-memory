@@ -41,16 +41,14 @@ graph-memory/
 │   ├── reader/                    # qwen25-7b.yaml
 │   └── retriever/                 # minilm.yaml, gemma-300m.yaml, qwen3-06b.yaml
 ├── src/
-│   ├── graph_memory/              # Core installable Python package
-│   │   ├── cli.py                 # Unified CLI (graph-memory)
-│   │   ├── colab_mgr.py           # Remote Colab lifecycle manager (colab-mgr)
-│   │   ├── core/                  # Engine primitives: config, manifest, llm, embed
-│   │   ├── memory/                # Memory backends: Flat, HippoRAG, Temporal BTEG
-│   │   ├── pipeline/              # Ingestion, extraction, answering, and evaluation
-│   │   └── analysis/              # Post-hoc rescoring, graph metrics, table generators
-│   └── *.py                       # Backward-compatibility shims for legacy scripts
+│   └── graph_memory/              # Core installable Python package
+│       ├── cli.py                 # Unified CLI (graph-memory)
+│       ├── core/                  # Engine primitives: config, manifest, llm, embed
+│       ├── memory/                # Memory backends: Flat, HippoRAG, Temporal BTEG
+│       ├── pipeline/              # Ingestion, extraction, answering, and evaluation
+│       └── analysis/              # Post-hoc rescoring, graph metrics, table generators
 ├── scripts/
-│   └── colab/                     # Colab automation scripts, remote drivers, keepalive
+│   └── colab/                     # Colab operations: cli.py, remote drivers, keepalive
 ├── tests/                         # Full pytest verification suite
 ├── results/                       # Partitioned experiment runs and summary tables
 │   ├── paper/                     # Canonical baseline and paper experiments (90+ runs)
@@ -116,30 +114,30 @@ uv run graph-memory metrics
 
 ---
 
-## Reproducible Colab Workflow (`colab-mgr`)
+## Reproducible Colab Workflow (`scripts/colab/cli.py`)
 
-For GPU-accelerated runs on Google Colab (with Google Drive persistent storage caching Ollama models, HuggingFace weights, and extraction triples), use `colab-mgr`:
+For GPU-accelerated runs on Google Colab (with Google Drive persistent storage caching Ollama models, HuggingFace weights, and extraction triples), use the unified Colab CLI:
 
 ```bash
 # 1. Mount Google Drive once per session (persistent Ollama model & cache storage)
-uv run colab-mgr mount -s gm-dev
+python3 scripts/colab/cli.py mount -s gm-dev
 
 # 2. Bundle and upload workspace to Colab VM (clones and fast-provisions environment)
-uv run colab-mgr setup -s gm-dev
+python3 scripts/colab/cli.py setup -s gm-dev
 
 # 3. (Optional) Run fast extraction pipeline on remote VM
-uv run colab-mgr extract -s gm-dev --benchmark longmemeval
+python3 scripts/colab/cli.py extract -s gm-dev --benchmark longmemeval
 
 # 4. Launch declarative experiment profiles (foreground or detached background)
-uv run colab-mgr run smoke -s gm-dev
-uv run colab-mgr run h1_balanced vector_grid -s gm-dev --detach
+python3 scripts/colab/cli.py run smoke -s gm-dev
+python3 scripts/colab/cli.py run h1_balanced vector_grid -s gm-dev --detach
 
 # 5. Monitor logs and pull results
-uv run colab-mgr tail -s gm-dev -n 50
-uv run colab-mgr pull -s gm-dev
+python3 scripts/colab/cli.py tail -s gm-dev -n 50
+python3 scripts/colab/cli.py pull -s gm-dev
 
 # 6. Keep VM alive during execution
-uv run colab-mgr keepalive -s gm-dev
+python3 scripts/colab/cli.py keepalive -s gm-dev
 ```
 
 ---

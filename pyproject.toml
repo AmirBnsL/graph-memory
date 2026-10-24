@@ -38,7 +38,6 @@ eval = [
 
 [project.scripts]
 graph-memory = "graph_memory.cli:main"
-colab-mgr = "graph_memory.colab_mgr:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
