@@ -134,7 +134,7 @@ def main() -> int:
     if reader.get("provider"):
         pf_env["LLM_PROVIDER"] = str(reader["provider"])
     pf = subprocess.run(
-        [PY, os.path.join(REPO, "src", "llm.py")], cwd=REPO, env=pf_env,
+        [PY, "-m", "graph_memory.core.llm"], cwd=REPO, env=pf_env,
         capture_output=True, text=True, timeout=600,
     )
     print((pf.stdout or pf.stderr).strip()[:400])
@@ -142,7 +142,7 @@ def main() -> int:
         print("preflight FAILED -- not starting the run", file=sys.stderr)
         return 5
 
-    cmd = [PY, os.path.join(REPO, "src", "eval.py"), *argv]
+    cmd = [PY, "-m", "graph_memory.cli", "eval", *argv]
     print("$", " ".join(cmd), flush=True)
     logf = os.path.join(REPO, "results", "eval.log")
 

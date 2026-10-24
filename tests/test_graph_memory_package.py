@@ -18,7 +18,7 @@ class TestGraphMemoryPackage(unittest.TestCase):
         self.assertTrue(callable(group_name))
         self.assertTrue(callable(to_plain))
         self.assertTrue(callable(complete))
-        self.assertTrue(callable(embed))
+        self.assertTrue(hasattr(embed, "embed"))
         self.assertTrue(callable(build_manifest))
 
     def test_pipeline_package_exports(self):
@@ -34,7 +34,7 @@ class TestGraphMemoryPackage(unittest.TestCase):
         )
         self.assertTrue(callable(load_longmemeval))
         self.assertTrue(callable(load_loco))
-        self.assertTrue(callable(answer))
+        self.assertTrue(hasattr(answer, "answer"))
 
     def test_analysis_package_exports(self):
         from graph_memory.analysis import compute_graph_metrics

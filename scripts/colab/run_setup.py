@@ -29,7 +29,7 @@ import sys
 REPO = os.environ.get("REPO_DIR", "/content/graph-memory")
 REPO_SSH = os.environ.get("REPO_SSH", "git@github.com:AmirBnsL/graph-memory.git")
 BUNDLE = os.environ.get("BUNDLE", "/content/gm.bundle")
-SETUP = os.path.join(REPO, "colab", "vm_setup.sh")
+SETUP = os.path.join(REPO, "scripts", "colab", "shell", "vm_setup.sh")
 
 
 def run(cmd: list[str], cwd: str | None = None) -> int:

@@ -6,7 +6,7 @@ import networkx as nx
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from graph_metrics import compute_graph_metrics
+from graph_memory.analysis.graph_metrics import compute_graph_metrics
 
 
 class TestGraphMetrics(unittest.TestCase):

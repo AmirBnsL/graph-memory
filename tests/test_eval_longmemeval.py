@@ -6,9 +6,9 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from load import load_longmemeval, LONGMEMEVAL_CATEGORIES
-from eval import summarize, run, find_existing
-from answer import AnswerResult
+from graph_memory.pipeline.load import load_longmemeval, LONGMEMEVAL_CATEGORIES
+from graph_memory.pipeline.eval import summarize, run, find_existing
+from graph_memory.pipeline.answer import AnswerResult
 
 
 class TestEvalLongMemEval(unittest.TestCase):
@@ -46,7 +46,7 @@ class TestEvalLongMemEval(unittest.TestCase):
             expected = LONGMEMEVAL_CATEGORIES.get(int(cat_id_str))
             self.assertEqual(name, expected)
 
-    @patch("eval.answer_mod.answer")
+    @patch("graph_memory.pipeline.eval.answer_mod.answer")
     def test_eval_longmemeval_run_dry(self, mock_answer):
         mock_answer.return_value = AnswerResult("mock answer", ["loc_0"], 100, 0.1)
         summary = run(

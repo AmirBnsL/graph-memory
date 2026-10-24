@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-import predict_utility
+from graph_memory.analysis import predict_utility
 
 
 class TestPredictUtility(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestPredictUtility(unittest.TestCase):
         self.assertLess(res["p_value"], 0.05)
 
     def test_collect_and_analyze_observations(self):
-        import make_tables
+        from graph_memory.analysis import make_tables
         runs = make_tables.load_runs()
         obs = predict_utility.collect_sample_observations(runs)
         self.assertGreaterEqual(len(obs), 20)

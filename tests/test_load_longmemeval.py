@@ -7,7 +7,7 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from load import load_longmemeval, Conversation, Turn, QA, LONGMEMEVAL_CATEGORIES
+from graph_memory.pipeline.load import load_longmemeval, Conversation, Turn, QA, LONGMEMEVAL_CATEGORIES
 
 class TestLoadLongMemEval(unittest.TestCase):
     def test_load_longmemeval_oracle_sample(self):

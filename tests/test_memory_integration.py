@@ -10,8 +10,8 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-import eval as eval_mod
-from load import Conversation, QA, Turn
+from graph_memory.pipeline import eval as eval_mod
+from graph_memory.pipeline.load import Conversation, QA, Turn
 
 
 class TestMemoryIntegration(unittest.TestCase):
@@ -41,8 +41,8 @@ class TestMemoryIntegration(unittest.TestCase):
             ],
         )
 
-    @patch("eval.load_longmemeval")
-    @patch("llm.complete")
+    @patch("graph_memory.pipeline.eval.load_longmemeval")
+    @patch("graph_memory.core.llm.complete")
     def test_memory_modes_smoke(self, mock_complete, mock_loader):
         mock_loader.return_value = [self.conv]
 

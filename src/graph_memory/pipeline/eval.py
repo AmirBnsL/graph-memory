@@ -57,9 +57,9 @@ import hydra
 from pathlib import Path
 
 try:
+    import graph_memory.pipeline.answer as answer_mod
     from graph_memory.core import config as config_mod
     from graph_memory.core import embed, llm, manifest
-    from graph_memory.pipeline import answer as answer_mod
     from graph_memory.pipeline.load import (
         ADVERSARIAL_CATEGORY, CATEGORY_NAMES, LONGMEMEVAL_CATEGORIES,
         load_loco, load_longmemeval
@@ -223,7 +223,10 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
     summary["retriever"] = config_mod.group_name(retriever) or embed.MODEL_NAME
 
     if mode == "memory":
-        import graph_metrics
+        try:
+            from graph_memory.analysis import graph_metrics
+        except ImportError:
+            import graph_metrics
         cached = answer_mod.get_cached_memories()
         if cached:
             by_sample: dict[str, dict] = {}

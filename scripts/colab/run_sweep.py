@@ -44,7 +44,7 @@ import time
 
 REPO = os.environ.get("REPO_DIR", "/content/graph-memory")
 PY = sys.executable or "python3"
-DRIVER = os.path.join(REPO, "colab", "run_remote.py")
+DRIVER = os.path.join(REPO, "scripts", "colab", "run_remote.py")
 RESULTS = os.path.join(REPO, "results")
 LOG = os.path.join(RESULTS, "sweep.log")
 

@@ -1,6 +1,6 @@
 """Memory backends package."""
-from memory.base import BaseMemory, RetrievedItem
-from memory.vector import FlatMemory
-from memory.graph import HippoRAGMemory, BiTemporalMemory
+from graph_memory.memory.base import BaseMemory, RetrievedItem
+from graph_memory.memory.vector import FlatMemory
+from graph_memory.memory.graph import HippoRAGMemory, BiTemporalMemory
 
 __all__ = ["BaseMemory", "RetrievedItem", "FlatMemory", "HippoRAGMemory", "BiTemporalMemory"]

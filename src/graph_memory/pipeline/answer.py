@@ -138,8 +138,12 @@ def answer_memory(conv: Conversation, qa: QA, k: int = 10,
                   retriever: dict | str | None = None,
                   mode_cfg: dict | None = None) -> AnswerResult:
     """Answer using one of the pluggable memory backends (H1 decomposition)."""
-    import extract
-    from memory import FlatMemory, HippoRAGMemory, BiTemporalMemory
+    try:
+        from graph_memory.pipeline import extract
+        from graph_memory import FlatMemory, HippoRAGMemory, BiTemporalMemory
+    except ImportError:
+        import extract
+        from memory import FlatMemory, HippoRAGMemory, BiTemporalMemory
 
     t0 = time.time()
     mcfg = mode_cfg or {}

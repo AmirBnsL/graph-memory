@@ -5,11 +5,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from extract import MemoryRecord
-from memory.base import BaseMemory
-from memory import FlatMemory, HippoRAGMemory, BiTemporalMemory
-from memory.vector import FlatMemory as FlatMemoryFromVector
-from memory.graph import HippoRAGMemory as HippoRAGMemoryFromGraph, BiTemporalMemory as BiTemporalMemoryFromGraph
+from graph_memory.pipeline.extract import MemoryRecord
+from graph_memory.memory.base import BaseMemory
+from graph_memory import FlatMemory, HippoRAGMemory, BiTemporalMemory
+from graph_memory.memory.vector import FlatMemory as FlatMemoryFromVector
+from graph_memory.memory.graph import HippoRAGMemory as HippoRAGMemoryFromGraph, BiTemporalMemory as BiTemporalMemoryFromGraph
 
 
 class MockEmbedder:
@@ -159,7 +159,7 @@ class TestMemoryBackends(unittest.TestCase):
         self.assertEqual(g.number_of_edges("alice", "paris"), 1)
 
     def test_hipporag_rewire_structure_preserves_degrees(self):
-        import graph_metrics
+        from graph_memory.analysis import graph_metrics
 
         recs = [
             MemoryRecord(

@@ -304,7 +304,10 @@ def main() -> None:
     if args.provider:
         overrides["provider"] = args.provider
 
-    from load import load_loco, load_longmemeval
+    try:
+        from graph_memory.pipeline.load import load_loco, load_longmemeval
+    except ImportError:
+        from load import load_loco, load_longmemeval
     if args.benchmark == "longmemeval":
         convs = load_longmemeval(limit=args.limit, sample_per_category=args.sample_per_cat)
     else:

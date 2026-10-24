@@ -42,7 +42,7 @@ def do_setup(args: argparse.Namespace) -> None:
     print("Executing remote VM setup script...")
     run_cmd([
         "colab", "exec", "-s", session, "--timeout", "1800",
-        "-f", str(ROOT / "colab" / "run_setup.py"),
+        "-f", str(SCRIPTS_DIR / "run_setup.py"),
     ])
 
 
@@ -58,7 +58,7 @@ def do_run(args: argparse.Namespace) -> None:
     run_cmd([
         "colab", "exec", "-s", session, "--timeout", str(args.timeout),
         "--env", f"EVAL_ARGS={eval_args}",
-        "-f", str(ROOT / "colab" / "run_remote.py"),
+        "-f", str(SCRIPTS_DIR / "run_remote.py"),
     ])
 
 
@@ -73,7 +73,7 @@ def do_sweep(args: argparse.Namespace) -> None:
         env_args.extend(["--env", f"EXTRA_ARGS={' '.join(args.extra)}"])
 
     print(f"Launching detached sweep on Colab session {session} (values: {args.sweep})...")
-    cmd = ["colab", "exec", "-s", session] + env_args + ["-f", str(ROOT / "colab" / "run_sweep.py")]
+    cmd = ["colab", "exec", "-s", session] + env_args + ["-f", str(SCRIPTS_DIR / "run_sweep.py")]
     run_cmd(cmd)
     print("\nSweep launched! Remember to keep alive or pull results:")
     print(f"  uv run colab-mgr pull --session {session}")
@@ -85,13 +85,16 @@ def do_tail(args: argparse.Namespace) -> None:
     cmd = [
         "colab", "exec", "-s", session,
         "--env", f"TAIL={args.lines * 100}",
-        "-f", str(ROOT / "colab" / "tail_log.py"),
+        "-f", str(SCRIPTS_DIR / "tail_log.py"),
     ]
     run_cmd(cmd)
 
 
 def do_pull(args: argparse.Namespace) -> None:
-    from colab.pull_results import pull
+    # Ensure root is in sys.path
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from scripts.colab.pull_results import pull
     print(f"Pulling results from Colab session {args.session}...")
     pull(args.session, args.remote_dir, fresh=args.fresh)
 
@@ -99,8 +102,6 @@ def do_pull(args: argparse.Namespace) -> None:
 def do_keepalive(args: argparse.Namespace) -> None:
     session = args.session
     keepalive_sh = SCRIPTS_DIR / "shell" / "keepalive.sh"
-    if not keepalive_sh.exists():
-        keepalive_sh = ROOT / "colab" / "keepalive.sh"
     print(f"Starting keepalive loop for session {session}...")
     run_cmd(["bash", str(keepalive_sh), session])
 

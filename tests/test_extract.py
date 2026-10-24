@@ -6,7 +6,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from extract import MemoryRecord, extract_turn, parse_ner_response, parse_openie_response, hash_extraction_key
+from graph_memory.pipeline.extract import (
+    MemoryRecord,
+    extract_turn,
+    parse_ner_response,
+    parse_openie_response,
+    hash_extraction_key,
+)
 from unittest.mock import patch
 
 
@@ -50,7 +56,7 @@ class TestExtract(unittest.TestCase):
         self.assertNotEqual(k1, k3)
         self.assertEqual(len(k1), 32)
 
-    @patch("extract.llm.complete")
+    @patch("graph_memory.pipeline.extract.llm.complete")
     def test_extract_turn_cached(self, mock_complete):
         # Mock responses for NER and OpenIE
         mock_complete.side_effect = [
