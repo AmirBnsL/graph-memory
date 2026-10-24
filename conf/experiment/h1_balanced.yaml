@@ -1,0 +1,14 @@
+name: h1_balanced
+category: paper
+benchmark: longmemeval
+reader: qwen25-7b
+retriever: qwen3-06b
+limits:
+  sample_per_category: 5
+modes:
+  - vector
+  - memory/flat
+  - memory/hipporag
+  - memory/hipporag_flattened
+  - memory/temporal_bteg
+k: [10]

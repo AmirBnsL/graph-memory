@@ -1,0 +1,8 @@
+name: temporal_bteg_k10
+category: experiments
+benchmark: longmemeval
+reader: qwen25-7b
+retriever: qwen3-06b
+modes:
+  - memory/temporal_bteg
+k: [10]

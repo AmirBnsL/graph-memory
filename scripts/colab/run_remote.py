@@ -123,6 +123,32 @@ def main() -> int:
     # The kernel's own sys.argv is IPython's launch flags, NOT ours. Never read it.
     argv = shlex.split(os.environ.get("EVAL_ARGS", ""))
     print(f"EVAL_ARGS={os.environ.get('EVAL_ARGS')!r} -> {argv or '(none)'}")
+
+    # Special 'mount' action: initialize Drive storage folders and symlinks
+    if argv and argv[0] == "mount":
+        drive_storage = "/content/drive/MyDrive/graph-memory-storage"
+        if not os.path.isdir("/content/drive/MyDrive"):
+            print("ERROR: /content/drive/MyDrive is not mounted. Run `colab drivemount` first.")
+            return 1
+        for d in ["ollama", "huggingface", "cache/extract"]:
+            os.makedirs(os.path.join(drive_storage, d), exist_ok=True)
+
+        def _ensure_symlink(src: str, dst: str) -> None:
+            if os.path.islink(dst):
+                return
+            if os.path.exists(dst):
+                print(f"Destination {dst} exists and is not a symlink. Skipping.")
+                return
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            os.symlink(src, dst)
+            print(f"Symlinked {dst} -> {src}")
+
+        _ensure_symlink(os.path.join(drive_storage, "ollama"), "/root/.ollama")
+        _ensure_symlink(os.path.join(drive_storage, "huggingface"), "/root/.cache/huggingface")
+        _ensure_symlink(os.path.join(drive_storage, "cache", "extract"), os.path.join(REPO, "cache", "extract"))
+        print("Drive persistent cache initialized successfully.")
+        return 0
+
     if not argv:
         print("WARNING: no eval args; eval.py will use its own defaults")
 
@@ -142,7 +168,12 @@ def main() -> int:
         print("preflight FAILED -- not starting the run", file=sys.stderr)
         return 5
 
-    cmd = [PY, "-m", "graph_memory.cli", "eval", *argv]
+    if argv and argv[0] == "extract":
+        cmd = [PY, "-m", "graph_memory.pipeline.extract", *argv[1:]]
+    elif argv and argv[0] in ("run", "eval", "tables", "metrics"):
+        cmd = [PY, "-m", "graph_memory.cli", *argv]
+    else:
+        cmd = [PY, "-m", "graph_memory.cli", "run", *argv]
     print("$", " ".join(cmd), flush=True)
     logf = os.path.join(REPO, "results", "eval.log")
 

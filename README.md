@@ -35,6 +35,7 @@ graph-memory/
 ├── pyproject.toml                 # Package definition & uv / pytest configuration
 ├── README.md                      # Project documentation and quickstart
 ├── conf/                          # Composable Hydra configurations
+│   ├── experiment/                # Declarative profiles: smoke.yaml, h1_balanced.yaml, etc.
 │   ├── benchmark/                 # longmemeval.yaml, locomo.yaml
 │   ├── mode/                      # vector.yaml, memory.yaml, full.yaml
 │   ├── reader/                    # qwen25-7b.yaml
@@ -49,9 +50,13 @@ graph-memory/
 │   │   └── analysis/              # Post-hoc rescoring, graph metrics, table generators
 │   └── *.py                       # Backward-compatibility shims for legacy scripts
 ├── scripts/
-│   └── colab/                     # Colab automation scripts and keepalive daemons
+│   └── colab/                     # Colab automation scripts, remote drivers, keepalive
 ├── tests/                         # Full pytest verification suite
-├── results/                       # Canonical experiment outputs and summary tables
+├── results/                       # Partitioned experiment runs and summary tables
+│   ├── paper/                     # Canonical baseline and paper experiments (90+ runs)
+│   ├── experiments/               # Custom and exploratory experiment runs
+│   ├── scratch/                   # Smoke tests and temporary evaluations
+│   └── INDEX.md                   # Auto-generated aggregate leaderboard table
 └── cache/                         # Deterministic, content-hashed disk caches
 ```
 
@@ -90,53 +95,50 @@ OLLAMA_BASE_URL=http://localhost:11434
 
 ### Unified CLI (`graph-memory`)
 
-The unified CLI provides declarative access to evaluations, metrics, and leaderboards:
+The unified CLI provides declarative access to experiment profiles, evaluation conditions, metrics, and leaderboards:
 
 ```bash
-# Quick dry run on LongMemEval (5 conversations)
-uv run graph-memory run --benchmark longmemeval --mode memory/hipporag --k 10 --limit 5
+# Run a declarative YAML profile (e.g. conf/experiment/smoke.yaml)
+uv run graph-memory run smoke
 
-# Full evaluation with HippoRAG
-uv run graph-memory run --benchmark longmemeval --mode memory/hipporag -k 10
+# Run multiple experiment profiles in sequence
+uv run graph-memory run h1_balanced vector_grid
 
-# Bi-Temporal Event Graph (BTEG) evaluation
-uv run graph-memory run --benchmark longmemeval --mode memory/temporal_bteg -k 10
+# Run single condition via direct Hydra pass-through
+uv run graph-memory eval benchmark=longmemeval mode=memory/hipporag retriever=qwen3-06b k=10
 
-# Generate summary Markdown/LaTeX leaderboard tables
+# Generate summary Markdown/LaTeX leaderboard tables across results/
 uv run graph-memory tables
 
 # Compute graph topology metrics
 uv run graph-memory metrics
 ```
 
-### Advanced Hydra Overrides
-
-Pass fine-grained Hydra configuration parameters directly:
-
-```bash
-uv run graph-memory eval benchmark=longmemeval mode=memory/hipporag retriever=qwen3-06b k=10
-```
-
 ---
 
 ## Reproducible Colab Workflow (`colab-mgr`)
 
-For GPU-accelerated sweeps on Google Colab, use the built-in lifecycle manager:
+For GPU-accelerated runs on Google Colab (with Google Drive persistent storage caching Ollama models, HuggingFace weights, and extraction triples), use `colab-mgr`:
 
 ```bash
-# 1. Bundle and upload workspace to Colab VM
+# 1. Mount Google Drive once per session (persistent Ollama model & cache storage)
+uv run colab-mgr mount -s gm-dev
+
+# 2. Bundle and upload workspace to Colab VM (clones and fast-provisions environment)
 uv run colab-mgr setup -s gm-dev
 
-# 2. Launch background parameter sweep (detached)
-uv run colab-mgr sweep -s gm-dev --sweep 2,5,10,25,50 --retriever qwen3-06b
+# 3. (Optional) Run fast extraction pipeline on remote VM
+uv run colab-mgr extract -s gm-dev --benchmark longmemeval
 
-# 3. Monitor live log
+# 4. Launch declarative experiment profiles (foreground or detached background)
+uv run colab-mgr run smoke -s gm-dev
+uv run colab-mgr run h1_balanced vector_grid -s gm-dev --detach
+
+# 5. Monitor logs and pull results
 uv run colab-mgr tail -s gm-dev -n 50
-
-# 4. Safely pull completed results and manifests
 uv run colab-mgr pull -s gm-dev
 
-# 5. Keep VM alive during execution
+# 6. Keep VM alive during execution
 uv run colab-mgr keepalive -s gm-dev
 ```
 

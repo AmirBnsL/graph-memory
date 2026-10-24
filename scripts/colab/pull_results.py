@@ -33,6 +33,34 @@ ALWAYS = {"sweep.log", "sweep.stdout.log"}
 NEVER = {"INDEX.md", "eval.log"}
 
 
+def remote_find(session: str, remote_dir: str) -> list[str]:
+    """Recursively list all result files on the VM using list_results.py."""
+    helper = Path(__file__).resolve().parent / "list_results.py"
+    try:
+        p = subprocess.run(
+            [
+                "colab", "exec", "-s", session,
+                "--env", f"REMOTE_DIR={remote_dir}",
+                "-f", str(helper),
+            ],
+            capture_output=True, text=True, timeout=60,
+        )
+    except Exception:
+        return remote_ls(session, remote_dir)
+
+    if p.returncode != 0:
+        return remote_ls(session, remote_dir)
+
+    names = []
+    for line in p.stdout.splitlines():
+        n = line.strip()
+        if not n or n.startswith("[colab]") or " " in n:
+            continue
+        if n.endswith(".json") or n.endswith(".log") or n == "INDEX.md":
+            names.append(n)
+    return names or remote_ls(session, remote_dir)
+
+
 def remote_ls(session: str, remote_dir: str) -> list[str]:
     """Filenames in a remote dir. `colab ls` prints bare names, one per line."""
     try:
@@ -52,34 +80,27 @@ def remote_ls(session: str, remote_dir: str) -> list[str]:
     return names
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--session", default="gm-dev")
-    ap.add_argument("--remote-dir", default="/content/graph-memory/results")
-    ap.add_argument("--local-dir", default="results")
-    ap.add_argument("--fresh", action="store_true",
-                    help="re-download results too, not just logs")
-    ap.add_argument("--push", action="store_true",
-                    help="git commit and push new results to origin/master")
-    args = ap.parse_args()
-
-    local = Path(args.local_dir)
+def pull(session: str = "gm-dev", remote_dir: str = "/content/graph-memory/results",
+         local_dir: str = "results", fresh: bool = False, push: bool = False) -> None:
+    local = Path(local_dir)
     local.mkdir(parents=True, exist_ok=True)
 
     pulled, skipped, failed = 0, 0, []
     pulled_results: list[str] = []
-    for name in remote_ls(args.session, args.remote_dir):
-        if name in NEVER:
+    for name in remote_find(session, remote_dir):
+        base_name = Path(name).name
+        if base_name in NEVER:
             skipped += 1
             continue
         dest = local / name
-        if dest.exists() and not (args.fresh or name in ALWAYS):
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if dest.exists() and not (fresh or base_name in ALWAYS):
             skipped += 1
             continue
         try:
             p = subprocess.run(
-                ["colab", "download", "-s", args.session,
-                 f"{args.remote_dir}/{name}", str(dest)],
+                ["colab", "download", "-s", session,
+                 f"{remote_dir}/{name}", str(dest)],
                 capture_output=True, text=True, timeout=120,
             )
         except subprocess.TimeoutExpired:
@@ -99,10 +120,9 @@ def main() -> int:
     for f in failed:
         print(f"  still on the VM only: {f}")
 
-    if args.push and pulled_results:
-        # Checkpoint finished results to GitHub
+    if push and pulled_results:
         subprocess.run(["git", "add", "results/"], check=False)
-        msg = f"results: checkpoint {len(pulled_results)} file(s) from {args.session}"
+        msg = f"results: checkpoint {len(pulled_results)} file(s) from {session}"
         c = subprocess.run(["git", "commit", "-m", msg], capture_output=True, text=True)
         if c.returncode == 0:
             print(f"committed: {msg}")
@@ -111,7 +131,21 @@ def main() -> int:
                 print("pushed to origin/master successfully")
             else:
                 print(f"git push warning: {p.stderr.strip()[:200]}")
-    return 1 if failed else 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--session", default="gm-dev")
+    ap.add_argument("--remote-dir", default="/content/graph-memory/results")
+    ap.add_argument("--local-dir", default="results")
+    ap.add_argument("--fresh", action="store_true",
+                    help="re-download results too, not just logs")
+    ap.add_argument("--push", action="store_true",
+                    help="git commit and push new results to origin/master")
+    args = ap.parse_args()
+
+    pull(args.session, args.remote_dir, args.local_dir, args.fresh, args.push)
+    return 0
 
 
 if __name__ == "__main__":

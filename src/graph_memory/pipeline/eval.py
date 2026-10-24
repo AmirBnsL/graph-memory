@@ -331,8 +331,9 @@ def summarize(rows: list[dict], mode: str, k: int, t_start: float = 0.0,
     }
 
 
-def save(summary: dict, suffix: str = "") -> Path:
-    RESULTS.mkdir(parents=True, exist_ok=True)
+def save(summary: dict, suffix: str = "", out_dir: Path | str | None = None) -> Path:
+    target_dir = Path(out_dir) if out_dir else RESULTS
+    target_dir.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     model = (summary.get("model") or "unknown").replace("/", "-")
     ext_model = summary.get("extractor_model")
@@ -341,7 +342,7 @@ def save(summary: dict, suffix: str = "") -> Path:
         ext_tag = f"_ext-{str(ext_model).replace('/', '-')}"
     benchmark = summary.get("benchmark", "locomo")
     prefix = f"{stamp}_{benchmark}_" if benchmark != "locomo" else f"{stamp}_"
-    p = RESULTS / f"{prefix}{summary['mode']}_k{summary['k']}_{model}{ext_tag}{suffix}.json"
+    p = target_dir / f"{prefix}{summary['mode']}_k{summary['k']}_{model}{ext_tag}{suffix}.json"
     p.write_text(json.dumps(summary, indent=2, ensure_ascii=False))
     return p
 
@@ -379,21 +380,14 @@ def report(s: dict) -> None:
     print("=" * 60)
 
 
-def find_existing(cfg_values: dict) -> Path | None:
-    """A prior result this run would exactly reproduce, or None.
-
-    Resume is a CONTENT-HASH decision, not a filename-pattern one: a run is
-    skippable only when a prior manifest matches on config + code commit + env.
-    Checking existence alone would silently return stale results after a prompt
-    or retriever change -- which is the failure class this harness exists to
-    prevent. Pre-refactor manifests carry no config hash, so they are never
-    resume-eligible: they were produced by different code.
-    """
+def find_existing(cfg_values: dict, search_dir: Path | None = None) -> Path | None:
+    """A prior result this run would exactly reproduce, or None."""
+    base_dir = search_dir or RESULTS
     want = config_mod.hash_dict({k: v for k, v in cfg_values.items() if k != "hydra"})
     code = manifest.git_state()
     cur_code = code.get("code_commit") or code["commit"]
     env = manifest.env_freeze()["sha256"]
-    for mf in sorted(RESULTS.glob("*.manifest.json")):
+    for mf in sorted(base_dir.glob("**/*.manifest.json")):
         try:
             m = json.loads(mf.read_text())
         except json.JSONDecodeError:
@@ -406,16 +400,35 @@ def find_existing(cfg_values: dict) -> Path | None:
             continue
         if m.get("env", {}).get("sha256") != env:
             continue
-        rf = RESULTS / m.get("result_file", "")
-        if rf.exists():
-            return rf
+        rname = m.get("result_file", "")
+        for candidate in (mf.parent / rname, RESULTS / rname, RESULTS / "paper" / rname):
+            if candidate.exists():
+                return candidate
     return None
 
 
-@hydra.main(config_path="../../../conf", config_name="config", version_base=None)
-def main(cfg) -> None:
-    values = config_mod.to_plain(cfg)
+def execute_config(values: dict) -> Path | None:
+    """Execute a single run given a parsed configuration dict."""
     limits = values.get("limits") or {}
+
+    category = values.get("category")
+    exp_val = values.get("experiment")
+    if isinstance(exp_val, dict):
+        exp_name = exp_val.get("name") or "experiment"
+        category = exp_val.get("category") or category
+    elif isinstance(exp_val, str):
+        exp_name = exp_val
+    else:
+        exp_name = values.get("tag")
+
+    if exp_name:
+        out_dir = RESULTS / (category or "experiments") / exp_name
+    elif category:
+        out_dir = RESULTS / category
+    elif values.get("paper"):
+        out_dir = RESULTS / "paper"
+    else:
+        out_dir = RESULTS / "experiments"
 
     prev = find_existing(values)
     if prev:
@@ -424,7 +437,7 @@ def main(cfg) -> None:
         d = json.loads(prev.read_text())
         d.pop("rows", None)
         report(d)
-        return
+        return prev
 
     cats = limits.get("categories")
     mode = config_mod.group_name(values["mode"])
@@ -439,7 +452,7 @@ def main(cfg) -> None:
             benchmark=benchmark, mode_cfg=mode_cfg,
             sample_per_category=sample_per_cat,
             split=split)
-    path = save(s)
+    path = save(s, out_dir=out_dir)
     mpath = manifest.write(
         manifest.build(values, path,
                        extra={"summary": {k: v for k, v in s.items() if k != "rows"}}),
@@ -447,6 +460,13 @@ def main(cfg) -> None:
     )
     report(s)
     print(f"  saved -> {path}\n  manifest -> {mpath}")
+    return path
+
+
+@hydra.main(config_path="../../../conf", config_name="config", version_base=None)
+def main(cfg) -> None:
+    values = config_mod.to_plain(cfg)
+    execute_config(values)
 
 
 if __name__ == "__main__":

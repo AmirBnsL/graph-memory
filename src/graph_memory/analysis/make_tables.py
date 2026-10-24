@@ -67,7 +67,7 @@ def load_runs() -> list[dict]:
     Derived artifacts are skipped: rescored files (same numbers, new name),
     recall probes, and smoke tests (n <= 2)."""
     runs: dict[tuple, dict] = {}
-    for f in sorted(glob.glob(str(RESULTS / "*.json"))):
+    for f in sorted(glob.glob(str(RESULTS / "**/*.json"), recursive=True)):
         p = Path(f)
         if p.name.endswith(".manifest.json") or "_probe" in p.name or "_rescored" in p.name:
             continue
@@ -406,7 +406,10 @@ def main() -> None:
 
     print_h1_decomposition(runs)
 
-    import predict_utility
+    try:
+        from graph_memory.analysis import predict_utility
+    except ImportError:
+        import predict_utility
     predict_utility.print_h2_diagnostics(runs)
 
     for b in ("locomo", "longmemeval"):

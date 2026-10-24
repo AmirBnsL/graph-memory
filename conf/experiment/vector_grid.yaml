@@ -1,0 +1,8 @@
+name: vector_grid
+category: paper
+benchmark: longmemeval
+reader: qwen25-7b
+retriever: qwen3-06b
+modes:
+  - vector
+k: [2, 5, 10, 25, 50]

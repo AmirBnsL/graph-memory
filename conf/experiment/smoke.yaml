@@ -1,0 +1,11 @@
+name: smoke
+category: scratch
+benchmark: longmemeval
+reader: qwen25-7b
+retriever: qwen3-06b
+limits:
+  n_conv: 1
+  n_qa: 2
+modes:
+  - vector
+k: [2]

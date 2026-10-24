@@ -58,20 +58,38 @@ say "LoCoMo pinned OK (sha256 ${GOT_SHA:0:16}...)"
 LONGMEMEVAL_FILE="$REPO_DIR/data/longmemeval/longmemeval_oracle.json"
 if [ ! -f "$LONGMEMEVAL_FILE" ]; then
   say "fetching LongMemEval oracle dataset"
-  python3 "$REPO_DIR/src/download_longmemeval.py" --target oracle
+  python3 -m graph_memory.pipeline.download_longmemeval --target oracle
 fi
 say "LongMemEval dataset ready"
 
+# 2.3 Persistent Drive Cache Integration -------------------------------------
+DRIVE_STORAGE="/content/drive/MyDrive/graph-memory-storage"
+if [ -d "/content/drive/MyDrive" ]; then
+  say "Google Drive detected: linking persistent storage at $DRIVE_STORAGE"
+  mkdir -p "$DRIVE_STORAGE/ollama"
+  mkdir -p "$DRIVE_STORAGE/huggingface"
+  mkdir -p "$DRIVE_STORAGE/cache/extract"
+
+  # Link Ollama models directory
+  mkdir -p /root
+  ln -sfn "$DRIVE_STORAGE/ollama" /root/.ollama
+
+  # Link HuggingFace cache
+  mkdir -p /root/.cache
+  ln -sfn "$DRIVE_STORAGE/huggingface" /root/.cache/huggingface
+
+  # Link dataset extraction cache
+  mkdir -p "$REPO_DIR/cache"
+  ln -sfn "$DRIVE_STORAGE/cache/extract" "$REPO_DIR/cache/extract"
+  say "Persistent Drive links established (zero re-download penalty for models & caches)"
+fi
+
 # 3. extras the stock image lacks ---------------------------------------------
-# hydra-core: the config layer (conf/). Not in requirements.txt's install path
-# here because that file pins torch==+cpu and must never be installed on the VM.
-say "installing cloud delta: bitsandbytes + hydra (config layer)"
-uv pip install --system --quiet bitsandbytes hydra-core omegaconf
+say "installing graph-memory in editable mode + dependencies"
+uv pip install --system --quiet -e "$REPO_DIR" bitsandbytes hydra-core omegaconf
 
 # 4. model server -------------------------------------------------------------
 if ! command -v ollama >/dev/null 2>&1; then
-  # The stock Colab image ships no zstd, and ollama's installer hard-fails
-  # without it. This is the single most common cold-VM failure here.
   if ! command -v zstd >/dev/null 2>&1; then
     say "installing zstd (required by the ollama installer)"
     apt-get update -qq
@@ -86,8 +104,10 @@ if ! pgrep -x ollama >/dev/null 2>&1; then
   sleep 8
 fi
 if ! ollama list 2>/dev/null | grep -q "${MODEL%%:*}"; then
-  say "pulling $MODEL (several GB, first time only)"
+  say "pulling $MODEL (several GB, first time only -- persisted to Drive)"
   ollama pull "$MODEL"
+else
+  say "found $MODEL in persistent cache -- skipping download"
 fi
 say "ensuring 32k context window on $MODEL"
 printf "FROM %s\nPARAMETER num_ctx 32768\n" "$MODEL" > /tmp/Modelfile.32k
