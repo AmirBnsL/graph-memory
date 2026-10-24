@@ -187,10 +187,14 @@ def run(mode: str, k: int, n_conv: int | None, n_qa: int | None,
         b_name = mode_cfg.get("backend", "flat")
         if mode_cfg.get("flatten_structure"):
             b_name += "_flattened"
+        elif mode_cfg.get("rewire_structure"):
+            b_name += "_rewired"
         run_mode_name = f"memory_{b_name}"
 
     summary = summarize(rows, mode=run_mode_name, k=k, t_start=t_start, identity=identity,
                         benchmark=benchmark)
+    if mode == "memory" and mode_cfg and mode_cfg.get("extractor_model"):
+        summary["extractor_model"] = str(mode_cfg["extractor_model"])
     # The retriever MUST be recorded: make_tables keys rows on (mode, retriever,
     # k), so a missing key would make runs from different retrievers collide and
     # silently overwrite each other in the ledger -- exactly the comparison we
@@ -308,9 +312,13 @@ def save(summary: dict, suffix: str = "") -> Path:
     RESULTS.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     model = (summary.get("model") or "unknown").replace("/", "-")
+    ext_model = summary.get("extractor_model")
+    ext_tag = ""
+    if ext_model and ext_model != summary.get("model"):
+        ext_tag = f"_ext-{str(ext_model).replace('/', '-')}"
     benchmark = summary.get("benchmark", "locomo")
     prefix = f"{stamp}_{benchmark}_" if benchmark != "locomo" else f"{stamp}_"
-    p = RESULTS / f"{prefix}{summary['mode']}_k{summary['k']}_{model}{suffix}.json"
+    p = RESULTS / f"{prefix}{summary['mode']}_k{summary['k']}_{model}{ext_tag}{suffix}.json"
     p.write_text(json.dumps(summary, indent=2, ensure_ascii=False))
     return p
 
@@ -318,7 +326,8 @@ def save(summary: dict, suffix: str = "") -> Path:
 def report(s: dict) -> None:
     print("\n" + "=" * 60)
     b_name = s.get("benchmark", "locomo")
-    print(f"benchmark={b_name} mode={s['mode']} k={s['k']} model={s['provider']}/{s['model']} n={s['n']}")
+    ext_info = f" extractor={s['extractor_model']}" if s.get("extractor_model") else ""
+    print(f"benchmark={b_name} mode={s['mode']} k={s['k']} model={s['provider']}/{s['model']}{ext_info} n={s['n']}")
     print(f"  F1            (adversarial scored 0 -- floor)     = {s['F1']:.3f}")
     if s.get("F1_paper") is not None:
         c5_label = "c5=refusal" if b_name == "longmemeval" else "LoCoMo convention, c5=refusal"

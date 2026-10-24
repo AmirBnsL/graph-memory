@@ -118,6 +118,25 @@ class TestMemoryIntegration(unittest.TestCase):
         self.assertIsNotNone(s_temp.get("graph_metrics"))
         self.assertIn("temporal_edge_ratio", s_temp["graph_metrics"])
 
+        # Test HippoRAG Rewired + Extractor Model Decoupling
+        s_rewired = eval_mod.run(
+            mode="memory",
+            k=2,
+            n_conv=1,
+            n_qa=2,
+            categories=None,
+            benchmark="longmemeval",
+            mode_cfg={
+                "backend": "hipporag",
+                "rewire_structure": True,
+                "extractor_model": "mock-qwen-14b",
+            },
+            reader={"provider": "ollama", "model": "mock-qwen"},
+        )
+        self.assertEqual(s_rewired["mode"], "memory_hipporag_rewired")
+        self.assertEqual(s_rewired.get("extractor_model"), "mock-qwen-14b")
+        self.assertEqual(s_rewired.get("model"), "mock-qwen")
+
 
 if __name__ == "__main__":
     unittest.main()

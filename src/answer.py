@@ -141,10 +141,29 @@ def answer_memory(conv: Conversation, qa: QA, k: int = 10,
     mcfg = mode_cfg or {}
     backend = mcfg.get("backend", "flat")
     flatten = bool(mcfg.get("flatten_structure", False))
+    rewire = bool(mcfg.get("rewire_structure", False))
+    rewire_seed = int(mcfg.get("rewire_seed", 42))
     syn_thresh = float(mcfg.get("synonym_threshold", 0.85))
 
+    ext_overrides = dict(reader or {})
+    if mcfg.get("extractor_model"):
+        ext_overrides["model"] = str(mcfg["extractor_model"])
+    if mcfg.get("extractor_provider"):
+        ext_overrides["provider"] = str(mcfg["extractor_provider"])
+    ext_model_key = str(ext_overrides.get("model") or "")
+
     s = embed.spec(retriever)
-    cache_key = (conv.sample_id, backend, flatten, syn_thresh, s["name"], s.get("query_prefix", ""))
+    cache_key = (
+        conv.sample_id,
+        backend,
+        flatten,
+        rewire,
+        rewire_seed,
+        syn_thresh,
+        ext_model_key,
+        s["name"],
+        s.get("query_prefix", ""),
+    )
     if cache_key in _CONV_MEMORY_CACHE:
         mem = _CONV_MEMORY_CACHE[cache_key]
     else:
@@ -152,13 +171,19 @@ def answer_memory(conv: Conversation, qa: QA, k: int = 10,
         if backend == "flat":
             mem = FlatMemory(embedder=emb)
         elif backend == "hipporag":
-            mem = HippoRAGMemory(embedder=emb, synonym_threshold=syn_thresh, flatten_structure=flatten)
+            mem = HippoRAGMemory(
+                embedder=emb,
+                synonym_threshold=syn_thresh,
+                flatten_structure=flatten,
+                rewire_structure=rewire,
+                rewire_seed=rewire_seed,
+            )
         elif backend in ("temporal", "temporal_bteg"):
             mem = BiTemporalMemory(embedder=emb)
         else:
             raise ValueError(f"unknown memory backend {backend!r}; choose flat | hipporag | temporal_bteg")
 
-        records = extract.extract_conversation(conv, overrides=reader)
+        records = extract.extract_conversation(conv, overrides=ext_overrides)
         mem.add_records(records)
         _CONV_MEMORY_CACHE[cache_key] = mem
 

@@ -11,6 +11,7 @@ Implements the methodology from Jiménez Gutiérrez et al. (§2.2-§2.3):
 from __future__ import annotations
 
 import math
+import random
 import re
 from collections import defaultdict
 from typing import Any
@@ -47,11 +48,15 @@ class HippoRAGMemory(BaseMemory):
         synonym_threshold: float = 0.85,
         ppr_damping: float = 0.5,
         flatten_structure: bool = False,
+        rewire_structure: bool = False,
+        rewire_seed: int = 42,
     ):
         self.embedder = embedder
         self.synonym_threshold = synonym_threshold
         self.ppr_damping = ppr_damping
         self.flatten_structure = flatten_structure
+        self.rewire_structure = rewire_structure
+        self.rewire_seed = rewire_seed
 
         self.records: list[MemoryRecord] = []
         self._record_vectors: list[list[float]] = []
@@ -127,6 +132,49 @@ class HippoRAGMemory(BaseMemory):
                         sim = _cosine(v_new, self.entity_embeddings[other_ent])
                         if sim >= self.synonym_threshold:
                             self.graph.add_edge(new_ent, other_ent, relation="synonym", type="synonym", weight=float(sim))
+
+        if self.rewire_structure and not self.flatten_structure:
+            self._rewire_degree_preserving()
+
+    def _rewire_degree_preserving(self) -> None:
+        """Degree-preserving random double-edge swaps over E ∪ E' (H1 control).
+
+        Randomizes which entities are connected while keeping every node's exact
+        degree sequence (and therefore Degree Gini, Max Degree Ratio, and Edge
+        Density) invariant. Uses a seeded deterministic loop with graceful
+        fallback on sparse/small subgraphs.
+        """
+        m = self.graph.number_of_edges()
+        if m < 2 or self.graph.number_of_nodes() < 4:
+            return
+        rng = random.Random(self.rewire_seed)
+        target_swaps = m * 2
+        max_attempts = m * 15
+        swaps = 0
+        for _ in range(max_attempts):
+            if swaps >= target_swaps:
+                break
+            edges = list(self.graph.edges(data=True))
+            if len(edges) < 2:
+                break
+            (u, v, d1), (x, y, d2) = rng.sample(edges, 2)
+            if len({u, v, x, y}) < 4:
+                continue
+            if rng.random() < 0.5:
+                nx_u, nx_v = u, x
+                ny_u, ny_v = v, y
+            else:
+                nx_u, nx_v = u, y
+                ny_u, ny_v = v, x
+            if self.graph.has_edge(nx_u, nx_v) or self.graph.has_edge(ny_u, ny_v):
+                continue
+            attr1 = dict(d1)
+            attr2 = dict(d2)
+            self.graph.remove_edge(u, v)
+            self.graph.remove_edge(x, y)
+            self.graph.add_edge(nx_u, nx_v, **attr1)
+            self.graph.add_edge(ny_u, ny_v, **attr2)
+            swaps += 1
 
     def retrieve(self, query: str, k: int, timestamp: str | None = None) -> list[RetrievedItem]:
         if not self.records or self.graph.number_of_nodes() == 0:

@@ -284,7 +284,15 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="Limit number of conversations")
     parser.add_argument("--sample-per-cat", type=int, default=None, help="Balanced sample per category")
     parser.add_argument("--workers", type=int, default=4, help="Concurrent worker threads per conversation")
+    parser.add_argument("--model", type=str, default=None, help="Extractor LLM model override (e.g. qwen2.5:14b-instruct)")
+    parser.add_argument("--provider", type=str, default=None, help="Extractor LLM provider override (e.g. ollama)")
     args = parser.parse_args()
+
+    overrides: dict[str, Any] = {}
+    if args.model:
+        overrides["model"] = args.model
+    if args.provider:
+        overrides["provider"] = args.provider
 
     from load import load_loco, load_longmemeval
     if args.benchmark == "longmemeval":
@@ -292,10 +300,11 @@ def main() -> None:
     else:
         convs = load_loco(limit=args.limit)
 
-    print(f"Extracting {len(convs)} conversation(s) from {args.benchmark} (workers={args.workers})...")
+    model_label = args.model or "default"
+    print(f"Extracting {len(convs)} conversation(s) from {args.benchmark} (model={model_label}, workers={args.workers})...")
     total_records = 0
     for idx, conv in enumerate(convs, 1):
-        records = extract_conversation(conv, workers=args.workers)
+        records = extract_conversation(conv, overrides=overrides or None, workers=args.workers)
         total_records += len(records)
         print(f"[{idx}/{len(convs)}] Conversation {conv.sample_id}: {len(conv.turns)} turns -> {len(records)} memory records")
 

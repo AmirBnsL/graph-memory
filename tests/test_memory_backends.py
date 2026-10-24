@@ -158,6 +158,40 @@ class TestMemoryBackends(unittest.TestCase):
         # Should only have 1 edge between alice and paris, not 5
         self.assertEqual(g.number_of_edges("alice", "paris"), 1)
 
+    def test_hipporag_rewire_structure_preserves_degrees(self):
+        import graph_metrics
+
+        recs = [
+            MemoryRecord(
+                id=f"r_{i}", sample_id="c1", turn_id=i, speaker="User",
+                timestamp="2023-01-01",
+                fact_text=f"EntityA{i} connects to EntityB{i}.",
+                entities=[f"EntityA{i}", f"EntityB{i}"],
+                triples=[(f"EntityA{i}", "rel", f"EntityB{i}")],
+            )
+            for i in range(6)
+        ]
+        # Use high synonym_threshold=2.0 so only explicit relation triples form edges
+        h_orig = HippoRAGMemory(embedder=self.mock_embedder, synonym_threshold=2.0, rewire_structure=False)
+        h_orig.add_records(recs)
+        g_orig = h_orig.export_graph()
+
+        h_rew = HippoRAGMemory(embedder=self.mock_embedder, synonym_threshold=2.0, rewire_structure=True, rewire_seed=42)
+        h_rew.add_records(recs)
+        g_rew = h_rew.export_graph()
+
+        # Exact node degrees must be identical
+        self.assertEqual(dict(g_orig.degree()), dict(g_rew.degree()))
+        # Metrics (Degree Gini, Max Degree Ratio, Edge Density) must be invariant
+        m_orig = graph_metrics.compute_graph_metrics(g_orig)
+        m_rew = graph_metrics.compute_graph_metrics(g_rew)
+        self.assertAlmostEqual(m_orig["degree_gini"], m_rew["degree_gini"], places=6)
+        self.assertAlmostEqual(m_orig["max_degree_ratio"], m_rew["max_degree_ratio"], places=6)
+        # Edge set must be altered by rewiring
+        orig_edges = {tuple(sorted(e)) for e in g_orig.edges()}
+        rew_edges = {tuple(sorted(e)) for e in g_rew.edges()}
+        self.assertNotEqual(orig_edges, rew_edges)
+
 
 if __name__ == "__main__":
     unittest.main()
