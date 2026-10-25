@@ -258,7 +258,7 @@ class HippoRAGMemory(BaseMemory):
             matched_ents: set[str] = set()
             for ent in rec.entities:
                 en = _norm(ent)
-                if en in self.graph and (en in rec_text_lower or len(rec.entities) <= 3):
+                if en in self.graph and en in rec_text_lower:
                     matched_ents.add(en)
             for sub, _, obj in rec.triples:
                 s_norm, o_norm = _norm(sub), _norm(obj)
@@ -266,6 +266,13 @@ class HippoRAGMemory(BaseMemory):
                     matched_ents.add(s_norm)
                 if o_norm in self.graph and o_norm in rec_text_lower:
                     matched_ents.add(o_norm)
+
+            # Fallback: if no entities strictly matched the proposition text, match turn entities
+            if not matched_ents:
+                for ent in rec.entities:
+                    en = _norm(ent)
+                    if en in self.graph:
+                        matched_ents.add(en)
 
             # Weight stationary PPR probability by entity node specificity s_i = 1/|turns(i)| (HippoRAG Eq 6)
             # This ensures that rare, informative entities carry higher weight than ubiquitous hubs

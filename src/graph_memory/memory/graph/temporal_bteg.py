@@ -115,7 +115,7 @@ class BiTemporalMemory(BaseMemory):
                 o_clean = _norm(obj)
                 if not s_clean or not o_clean or s_clean in STOP_NODES or o_clean in STOP_NODES:
                     continue
-                if s_clean in rec_text_lower or o_clean in rec_text_lower or len(rec.triples) <= 2:
+                if s_clean in rec_text_lower or o_clean in rec_text_lower:
                     candidate_triples.append((sub, pred, obj, s_clean, p_clean, o_clean))
 
             if not candidate_triples and rec.triples:
