@@ -136,6 +136,8 @@ def main() -> int:
         for d in ["ollama", "huggingface", "cache/extract"]:
             os.makedirs(os.path.join(drive_storage, d), exist_ok=True)
 
+        os.environ["OLLAMA_MODELS"] = os.path.join(drive_storage, "ollama")
+
         def _ensure_symlink(src: str, dst: str) -> None:
             if os.path.islink(dst):
                 return

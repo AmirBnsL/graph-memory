@@ -65,12 +65,16 @@ say "LongMemEval dataset ready"
 # 2.3 Persistent Drive Cache Integration -------------------------------------
 DRIVE_STORAGE="/content/drive/MyDrive/graph-memory-storage"
 if [ -d "/content/drive/MyDrive" ]; then
-  say "Google Drive detected: linking persistent storage at $DRIVE_STORAGE"
+  say "Google Drive detected: configuring native OLLAMA_MODELS and linking persistent storage at $DRIVE_STORAGE"
   mkdir -p "$DRIVE_STORAGE/ollama"
   mkdir -p "$DRIVE_STORAGE/huggingface"
   mkdir -p "$DRIVE_STORAGE/cache/extract"
 
-  # Link Ollama models directory
+  # Native OLLAMA_MODELS location to bypass fuse symlink overhead
+  export OLLAMA_MODELS="$DRIVE_STORAGE/ollama"
+  echo "export OLLAMA_MODELS=\"$DRIVE_STORAGE/ollama\"" >> /root/.bashrc
+
+  # Fallback link Ollama models directory
   mkdir -p /root
   ln -sfn "$DRIVE_STORAGE/ollama" /root/.ollama
 
@@ -99,26 +103,32 @@ if ! command -v ollama >/dev/null 2>&1; then
   curl -fsSL https://ollama.com/install.sh | sh
 fi
 if ! pgrep -x ollama >/dev/null 2>&1; then
-  say "starting ollama"
-  nohup ollama serve >/content/ollama-serve.log 2>&1 &
+  say "starting ollama (OLLAMA_MODELS=${OLLAMA_MODELS:-default})"
+  nohup env OLLAMA_MODELS="${OLLAMA_MODELS:-/root/.ollama/models}" ollama serve >/content/ollama-serve.log 2>&1 &
   sleep 8
 fi
-if ! ollama list 2>/dev/null | grep -q "${MODEL%%:*}"; then
-  say "pulling $MODEL (several GB, first time only -- persisted to Drive)"
-  ollama pull "$MODEL"
-else
-  say "found $MODEL in persistent cache -- skipping download"
-fi
-say "ensuring 32k context window on $MODEL"
-printf "FROM %s\nPARAMETER num_ctx 32768\n" "$MODEL" > /tmp/Modelfile.32k
-ollama create "$MODEL" -f /tmp/Modelfile.32k
-say "model ready:"
+
+MODELS=("qwen2.5:7b-instruct" "qwen2.5:14b-instruct")
+
+for M in "${MODELS[@]}"; do
+  if ! ollama list 2>/dev/null | grep -q "${M%%:*}"; then
+    say "pulling $M (persisting directly to Drive via OLLAMA_MODELS)..."
+    ollama pull "$M"
+  else
+    say "found $M in persistent cache -- skipping download"
+  fi
+  say "ensuring 32k context window on $M"
+  printf "FROM %s\nPARAMETER num_ctx 32768\n" "$M" > "/tmp/Modelfile.32k.$M"
+  ollama create "$M" -f "/tmp/Modelfile.32k.$M"
+done
+
+say "models ready:"
 ollama list
 
 # 5. prove the harness can reach the model ------------------------------------
 say "harness healthcheck"
 cd "$REPO_DIR"
-LLM_PROVIDER=ollama LLM_MODEL="$MODEL" python3 src/llm.py
+LLM_PROVIDER=ollama LLM_MODEL="qwen2.5:7b-instruct" python3 -m graph_memory.core.llm
 
 say "done."
 echo
