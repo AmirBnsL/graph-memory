@@ -90,6 +90,7 @@ def run_experiments(args: argparse.Namespace) -> None:
         benchmark = prof.get("benchmark", "longmemeval")
         reader = prof.get("reader", "qwen25-7b")
         retriever = prof.get("retriever", "qwen3-06b")
+        extractor = prof.get("extractor")
         modes = prof.get("modes", ["vector"])
         if isinstance(modes, str):
             modes = [modes]
@@ -118,6 +119,8 @@ def run_experiments(args: argparse.Namespace) -> None:
                 for limit_k, limit_v in limits.items():
                     if limit_v is not None:
                         overrides.append(f"limits.{limit_k}={limit_v}")
+                if extractor:
+                    overrides.append(f"mode.extractor_model={extractor}")
                 if args.extra:
                     overrides.extend(args.extra)
 
