@@ -35,7 +35,10 @@ class FlatMemory(BaseMemory):
 
     def _ensure_embedder(self) -> None:
         if self.embedder is None:
-            import embed
+            try:
+                from graph_memory.core import embed
+            except ImportError:
+                import embed
             self.embedder = embed.Embedder()
 
     def add_records(self, records: list[MemoryRecord]) -> None:

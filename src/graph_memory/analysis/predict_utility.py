@@ -468,7 +468,10 @@ def print_h2_diagnostics(runs: list[dict]) -> None:
 
 
 def main() -> None:
-    import make_tables
+    try:
+        from graph_memory.analysis import make_tables
+    except ImportError:
+        import make_tables
     runs = make_tables.load_runs()
     if not runs:
         print("No result files found in results/.")

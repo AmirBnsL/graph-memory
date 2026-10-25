@@ -1,0 +1,6 @@
+name: memory
+backend: hipporag
+flatten_structure: false
+rewire_structure: true
+rewire_seed: 42
+synonym_threshold: 0.85

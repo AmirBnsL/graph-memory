@@ -1,0 +1,4 @@
+name: memory
+backend: flat
+flatten_structure: false
+synonym_threshold: 0.85

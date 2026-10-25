@@ -1,0 +1,4 @@
+name: memory
+backend: hipporag
+flatten_structure: true
+synonym_threshold: 0.85

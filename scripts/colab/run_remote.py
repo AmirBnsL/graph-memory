@@ -69,7 +69,10 @@ def reader_from_config(repo: str) -> dict:
     src = os.path.join(repo, "src")
     if src not in sys.path:
         sys.path.insert(0, src)
-    import config as config_mod  # noqa: PLC0415 -- late import: repo must exist
+    try:
+        from graph_memory.core import config as config_mod
+    except ImportError:
+        import config as config_mod  # noqa: PLC0415 -- legacy fallback
     from hydra import compose, initialize_config_dir  # noqa: PLC0415
 
     cfg_dir = os.path.join(repo, "conf")

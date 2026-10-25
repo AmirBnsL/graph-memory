@@ -116,3 +116,22 @@ def compute_graph_metrics(g: nx.Graph | nx.DiGraph | nx.MultiDiGraph | None) -> 
         "temporal_edge_ratio": round(temp_edge_ratio, 4),
         "invalidated_edge_ratio": round(inval_edge_ratio, 4),
     }
+
+
+def main() -> None:
+    """Print topological diagnostics across committed runs in results/."""
+    try:
+        from graph_memory.analysis import make_tables, predict_utility
+    except ImportError:
+        import make_tables
+        import predict_utility
+
+    runs = make_tables.load_runs()
+    if not runs:
+        print("No result files found in results/.")
+        return
+    predict_utility.print_h2_diagnostics(runs)
+
+
+if __name__ == "__main__":
+    main()

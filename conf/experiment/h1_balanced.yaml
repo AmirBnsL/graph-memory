@@ -9,6 +9,7 @@ modes:
   - vector
   - memory/flat
   - memory/hipporag
+  - memory/hipporag_rewired
   - memory/hipporag_flattened
   - memory/temporal_bteg
 k: [10]
