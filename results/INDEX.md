@@ -32,10 +32,10 @@ Rows are keyed by **(benchmark, mode, retriever, extractor, k, n)**. `n` is part
 
 ### Hypothesis 1 (Table 1): Overall Structure vs. Extraction Decomposition (`F1_answerable`)
 
-| benchmark | retriever | extractor | k | n | Vector (Raw) | Flat (No Graph) | HippoRAG | Hippo Rewired | Hippo Flattened | Bi-Temporal | Δ_extraction | Δ_structure | Δ_rewire | Δ_ablation | Δ_temporal |
+| benchmark | retriever | extractor | k | n | Vector Baseline | Flat Memory | Concept Graph | Rewired Graph | Flattened Graph | Bi-Temporal Event Graph (BTEG) | Δ_extraction | Δ_entity_bottleneck | Δ_topology | Δ_rewire | Δ_temporal |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 0.491 | 0.523 | 0.429 | – | 0.432 | 0.200 | +0.032 | -0.093 | – | -0.002 | -0.323 |
-| longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 0.268 | 0.303 | 0.090 | – | 0.202 | 0.241 | +0.035 | -0.213 | – | -0.112 | -0.062 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 0.491 | 0.523 | 0.429 | – | 0.432 | 0.200 | +0.032 | -0.091 | -0.002 | – | -0.323 |
+| longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 0.268 | 0.303 | 0.090 | – | 0.202 | 0.241 | +0.035 | -0.102 | -0.112 | – | -0.062 |
 
 ### Hypothesis 1 (Table 2): Category-Stratified F1 & Abstention Breakdown
 
@@ -45,29 +45,29 @@ Categories 1–4 report token `F1`; Category 5 (`abstention`/`adversarial`) repo
 
 | Arm / Comparison | Cat 1: extraction | Cat 2: multi-session | Cat 3: temporal | Cat 4: update | Cat 5: abstention (refusal) | F1_answerable |
 |---|---|---|---|---|---|---|
-| Vector (Raw Chunks) | 0.612 | 0.080 | 0.473 | 0.800 | 0.800 | 0.491 |
-| Flat Facts (No Graph) | 0.331 | 0.280 | 0.600 | 0.880 | 1.000 | 0.523 |
-| HippoRAG (Full Graph) | 0.391 | 0.200 | 0.247 | 0.880 | 1.000 | 0.429 |
-| HippoRAG (Flattened) | 0.400 | 0.000 | 0.447 | 0.880 | 1.000 | 0.432 |
-| Bi-Temporal Graph (BTEG) | 0.200 | 0.000 | 0.200 | 0.400 | 1.000 | 0.200 |
-| **Δ_extraction (Flat - Raw)** | -0.281 | +0.200 | +0.127 | +0.080 | +0.200 | **+0.032** |
-| **Δ_structure (HippoRAG - Flat)** | +0.060 | -0.080 | -0.353 | +0.000 | +0.000 | **-0.093** |
-| **Δ_ablation (HippoRAG - Flattened)** | -0.009 | +0.200 | -0.200 | +0.000 | +0.000 | **-0.002** |
-| **Δ_temporal (BTEG - Flat)** | -0.131 | -0.280 | -0.400 | -0.480 | +0.000 | **-0.323** |
+| Vector Baseline | 0.612 | 0.080 | 0.473 | 0.800 | 0.800 | 0.491 |
+| Flat Memory | 0.331 | 0.280 | 0.600 | 0.880 | 1.000 | 0.523 |
+| Concept Graph | 0.391 | 0.200 | 0.247 | 0.880 | 1.000 | 0.429 |
+| Flattened Graph | 0.400 | 0.000 | 0.447 | 0.880 | 1.000 | 0.432 |
+| Bi-Temporal Event Graph (BTEG) | 0.200 | 0.000 | 0.200 | 0.400 | 1.000 | 0.200 |
+| **Δ_extraction (Flat Memory - Vector Baseline)** | -0.281 | +0.200 | +0.127 | +0.080 | +0.200 | **+0.032** |
+| **Δ_entity_bottleneck (Flattened Graph - Flat Memory)** | +0.069 | -0.280 | -0.153 | +0.000 | +0.000 | **-0.091** |
+| **Δ_topology (Concept Graph - Flattened Graph)** | -0.009 | +0.200 | -0.200 | +0.000 | +0.000 | **-0.002** |
+| **Δ_temporal (BTEG - Flat Memory)** | -0.131 | -0.280 | -0.400 | -0.480 | +0.000 | **-0.323** |
 
 #### `longmemeval` · retriever=`all-MiniLM-L6-v2` · extractor=`qwen2.5:7b-instruct` · `k=10` · `n=25`
 
 | Arm / Comparison | Cat 1: extraction | Cat 2: multi-session | Cat 3: temporal | Cat 4: update | Cat 5: abstention (refusal) | F1_answerable |
 |---|---|---|---|---|---|---|
-| Vector (Raw Chunks) | 0.019 | 0.080 | 0.473 | 0.500 | 1.000 | 0.268 |
-| Flat Facts (No Graph) | 0.000 | 0.080 | 0.453 | 0.680 | 1.000 | 0.303 |
-| HippoRAG (Full Graph) | 0.000 | 0.000 | 0.200 | 0.160 | 0.800 | 0.090 |
-| HippoRAG (Flattened) | 0.000 | 0.000 | 0.447 | 0.360 | 1.000 | 0.202 |
-| Bi-Temporal Graph (BTEG) | 0.000 | 0.000 | 0.483 | 0.480 | 0.800 | 0.241 |
-| **Δ_extraction (Flat - Raw)** | -0.019 | +0.000 | -0.019 | +0.180 | +0.000 | **+0.035** |
-| **Δ_structure (HippoRAG - Flat)** | +0.000 | -0.080 | -0.253 | -0.520 | -0.200 | **-0.213** |
-| **Δ_ablation (HippoRAG - Flattened)** | +0.000 | +0.000 | -0.247 | -0.200 | -0.200 | **-0.112** |
-| **Δ_temporal (BTEG - Flat)** | +0.000 | -0.080 | +0.030 | -0.200 | -0.200 | **-0.062** |
+| Vector Baseline | 0.019 | 0.080 | 0.473 | 0.500 | 1.000 | 0.268 |
+| Flat Memory | 0.000 | 0.080 | 0.453 | 0.680 | 1.000 | 0.303 |
+| Concept Graph | 0.000 | 0.000 | 0.200 | 0.160 | 0.800 | 0.090 |
+| Flattened Graph | 0.000 | 0.000 | 0.447 | 0.360 | 1.000 | 0.202 |
+| Bi-Temporal Event Graph (BTEG) | 0.000 | 0.000 | 0.483 | 0.480 | 0.800 | 0.241 |
+| **Δ_extraction (Flat Memory - Vector Baseline)** | -0.019 | +0.000 | -0.019 | +0.180 | +0.000 | **+0.035** |
+| **Δ_entity_bottleneck (Flattened Graph - Flat Memory)** | +0.000 | -0.080 | -0.006 | -0.320 | +0.000 | **-0.102** |
+| **Δ_topology (Concept Graph - Flattened Graph)** | +0.000 | +0.000 | -0.247 | -0.200 | -0.200 | **-0.112** |
+| **Δ_temporal (BTEG - Flat Memory)** | +0.000 | -0.080 | +0.030 | -0.200 | -0.200 | **-0.062** |
 
 ### Hypothesis 1 (Table 3): Paired Statistical Significance (Answerable Qs, Cat 1–4)
 
@@ -75,14 +75,14 @@ Categories 1–4 report token `F1`; Category 5 (`abstention`/`adversarial`) repo
 
 | benchmark | retriever | extractor | k | Comparison (A vs B) | n_pairs (clusters) | ΔF1_ans | 95% Cluster CI | p_perm (ΔF1) | EM (A+,B- / A-,B+) | p_McNemar (EM) | Recall (A+,B- / A-,B+) | p_McNemar (Rec) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Flat vs Raw (Δ_extraction) | 20 (20) | +0.032 | [-0.125, +0.215] | 0.737 | 2/1 | 1.000 | 0/2 | 0.500 |
-| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | HippoRAG vs Flat (Δ_structure) | 20 (20) | -0.093 | [-0.250, +0.030] | 0.322 | 0/2 | 0.500 | 1/1 | 1.000 |
-| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | HippoRAG vs Flattened (Δ_ablation) | 20 (20) | -0.002 | [-0.202, +0.200] | 1.000 | 2/3 | 1.000 | 0/1 | 1.000 |
-| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Bi-Temporal vs Flat (Δ_temporal) | 20 (20) | -0.323 | [-0.515, -0.150] | 0.003 | 0/5 | 0.062 | 0/3 | 0.250 |
-| longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | Flat vs Raw (Δ_extraction) | 20 (20) | +0.035 | [-0.165, +0.240] | 0.811 | 3/2 | 1.000 | 1/1 | 1.000 |
-| longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | HippoRAG vs Flat (Δ_structure) | 20 (20) | -0.213 | [-0.423, -0.003] | 0.096 | 1/5 | 0.219 | 0/9 | 0.004 |
-| longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | HippoRAG vs Flattened (Δ_ablation) | 20 (20) | -0.112 | [-0.262, +0.000] | 0.250 | 0/2 | 0.500 | 1/6 | 0.125 |
-| longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | Bi-Temporal vs Flat (Δ_temporal) | 20 (20) | -0.062 | [-0.241, +0.108] | 0.527 | 1/2 | 1.000 | 1/4 | 0.375 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Flat Memory vs Vector Baseline (Δ_extraction) | 20 (20) | +0.032 | [-0.125, +0.215] | 0.737 | 2/1 | 1.000 | 0/2 | 0.500 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Flattened Graph vs Flat Memory (Δ_entity_bottleneck) | 20 (20) | -0.091 | [-0.253, +0.045] | 0.315 | 1/2 | 1.000 | 1/0 | 1.000 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Concept Graph vs Flattened Graph (Δ_topology) | 20 (20) | -0.002 | [-0.202, +0.200] | 1.000 | 2/3 | 1.000 | 0/1 | 1.000 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Bi-Temporal Event Graph vs Flat Memory (Δ_temporal) | 20 (20) | -0.323 | [-0.515, -0.150] | 0.003 | 0/5 | 0.062 | 0/3 | 0.250 |
+| longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | Flat Memory vs Vector Baseline (Δ_extraction) | 20 (20) | +0.035 | [-0.165, +0.240] | 0.811 | 3/2 | 1.000 | 1/1 | 1.000 |
+| longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | Flattened Graph vs Flat Memory (Δ_entity_bottleneck) | 20 (20) | -0.102 | [-0.323, +0.127] | 0.416 | 2/4 | 0.688 | 0/4 | 0.125 |
+| longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | Concept Graph vs Flattened Graph (Δ_topology) | 20 (20) | -0.112 | [-0.262, +0.000] | 0.250 | 0/2 | 0.500 | 1/6 | 0.125 |
+| longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | Bi-Temporal Event Graph vs Flat Memory (Δ_temporal) | 20 (20) | -0.062 | [-0.241, +0.108] | 0.527 | 1/2 | 1.000 | 1/4 | 0.375 |
 
 ### Hypothesis 2 (Table 1): Mean Topological Graph Metrics Across Runs
 

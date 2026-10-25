@@ -34,6 +34,18 @@ _Avoid_: Edge, link, RDF statement, fact
 A graph memory representation that distinguishes valid time (when an event occurred in the real world) from transaction time (when the dialogue turn was observed).
 _Avoid_: Temporal KG, time graph
 
+**Concept Graph**:
+An entity-and-synonym graph memory representation ($G = (N, E \cup E')$) connecting extracted entities via relation triples and embedding synonymy bridges, traversed via Personalized PageRank.
+_Avoid_: Entity KG, HippoRAG graph, semantic network
+
+**Flattened Graph**:
+A zero-edge ablation of a Concept Graph ($E = \emptyset, E' = \emptyset$) that preserves entity-to-turn occurrence mapping and specificity weighting while eliminating relational traversal.
+_Avoid_: Isolated nodes graph, 0-edge graph
+
+**Rewired Graph**:
+A degree-preserving randomized control of a Concept Graph that applies double-edge swaps to randomize relational connectivity while holding exact node degrees, density, and degree inequality invariant.
+_Avoid_: Randomized graph, shuffled KG
+
 ## Retrieval & Evaluation
 
 **Provenance**:

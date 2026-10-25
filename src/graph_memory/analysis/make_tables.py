@@ -252,7 +252,7 @@ def print_h1_decomposition(runs: list[dict]) -> None:
         return
 
     print("\n### Hypothesis 1 (Table 1): Overall Structure vs. Extraction Decomposition (`F1_answerable`)\n")
-    print("| benchmark | retriever | extractor | k | n | Vector (Raw) | Flat (No Graph) | HippoRAG | Hippo Rewired | Hippo Flattened | Bi-Temporal | Δ_extraction | Δ_structure | Δ_rewire | Δ_ablation | Δ_temporal |")
+    print("| benchmark | retriever | extractor | k | n | Vector Baseline | Flat Memory | Concept Graph | Rewired Graph | Flattened Graph | Bi-Temporal Event Graph (BTEG) | Δ_extraction | Δ_entity_bottleneck | Δ_topology | Δ_rewire | Δ_temporal |")
     print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
 
     for (b, retr, ext, k, n), mm in sorted(groups.items()):
@@ -273,14 +273,14 @@ def print_h1_decomposition(runs: list[dict]) -> None:
         t_val = t_run.get(f1_metric) if t_run else None
 
         d_ext = (f_val - v_val) if (f_val is not None and v_val is not None) else None
-        d_struct = (h_val - f_val) if (h_val is not None and f_val is not None) else None
+        d_bottleneck = (hf_val - f_val) if (hf_val is not None and f_val is not None) else None
+        d_topol = (h_val - hf_val) if (h_val is not None and hf_val is not None) else None
         d_rewire = (h_val - hr_val) if (h_val is not None and hr_val is not None) else None
-        d_ablate = (h_val - hf_val) if (h_val is not None and hf_val is not None) else None
         d_temp = (t_val - f_val) if (t_val is not None and f_val is not None) else None
 
         print(f"| {b} | {retr} | {ext} | {k} | {n} | {fmt(v_val)} | {fmt(f_val)} | {fmt(h_val)} | "
               f"{fmt(hr_val)} | {fmt(hf_val)} | {fmt(t_val)} | {fmt_signed(d_ext)} | "
-              f"{fmt_signed(d_struct)} | {fmt_signed(d_rewire)} | {fmt_signed(d_ablate)} | {fmt_signed(d_temp)} |")
+              f"{fmt_signed(d_bottleneck)} | {fmt_signed(d_topol)} | {fmt_signed(d_rewire)} | {fmt_signed(d_temp)} |")
 
     # Table 2: Category-Stratified H1 Breakdown
     print("\n### Hypothesis 1 (Table 2): Category-Stratified F1 & Abstention Breakdown\n")
@@ -293,12 +293,12 @@ def print_h1_decomposition(runs: list[dict]) -> None:
         print("|---|" + "---|" * (len(cats) + 1))
 
         arm_order = [
-            ("vector", "Vector (Raw Chunks)"),
-            ("memory_flat", "Flat Facts (No Graph)"),
-            ("memory_hipporag", "HippoRAG (Full Graph)"),
-            ("memory_hipporag_rewired", "HippoRAG (Degree-Rewired)"),
-            ("memory_hipporag_flattened", "HippoRAG (Flattened)"),
-            ("memory_temporal_bteg", "Bi-Temporal Graph (BTEG)"),
+            ("vector", "Vector Baseline"),
+            ("memory_flat", "Flat Memory"),
+            ("memory_hipporag", "Concept Graph"),
+            ("memory_hipporag_rewired", "Rewired Graph"),
+            ("memory_hipporag_flattened", "Flattened Graph"),
+            ("memory_temporal_bteg", "Bi-Temporal Event Graph (BTEG)"),
         ]
         cat_vals_by_mode: dict[str, dict[int, float | None]] = {}
         for m_key, m_label in arm_order:
@@ -320,15 +320,13 @@ def print_h1_decomposition(runs: list[dict]) -> None:
 
         # Print Δ rows per category
         delta_specs = [
-            ("Δ_extraction (Flat - Raw)", "memory_flat", "vector"),
-            ("Δ_structure (HippoRAG - Flat)", "memory_hipporag", "memory_flat"),
-            ("Δ_rewire (HippoRAG - Rewired)", "memory_hipporag_rewired", None),
-            ("Δ_ablation (HippoRAG - Flattened)", "memory_hipporag", "memory_hipporag_flattened"),
-            ("Δ_temporal (BTEG - Flat)", "memory_temporal_bteg", "memory_flat"),
+            ("Δ_extraction (Flat Memory - Vector Baseline)", "memory_flat", "vector"),
+            ("Δ_entity_bottleneck (Flattened Graph - Flat Memory)", "memory_hipporag_flattened", "memory_flat"),
+            ("Δ_topology (Concept Graph - Flattened Graph)", "memory_hipporag", "memory_hipporag_flattened"),
+            ("Δ_rewire (Concept Graph - Rewired Graph)", "memory_hipporag", "memory_hipporag_rewired"),
+            ("Δ_temporal (BTEG - Flat Memory)", "memory_temporal_bteg", "memory_flat"),
         ]
         for d_label, ma, mb in delta_specs:
-            if d_label.startswith("Δ_rewire"):
-                ma, mb = "memory_hipporag", "memory_hipporag_rewired"
             if ma not in cat_vals_by_mode or mb not in cat_vals_by_mode:
                 continue
             d_cells: list[str] = []
@@ -351,11 +349,11 @@ def print_h1_decomposition(runs: list[dict]) -> None:
     print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
 
     pair_specs = [
-        ("Flat vs Raw (Δ_extraction)", "memory_flat", "vector"),
-        ("HippoRAG vs Flat (Δ_structure)", "memory_hipporag", "memory_flat"),
-        ("HippoRAG vs Rewired (Δ_rewire)", "memory_hipporag", "memory_hipporag_rewired"),
-        ("HippoRAG vs Flattened (Δ_ablation)", "memory_hipporag", "memory_hipporag_flattened"),
-        ("Bi-Temporal vs Flat (Δ_temporal)", "memory_temporal_bteg", "memory_flat"),
+        ("Flat Memory vs Vector Baseline (Δ_extraction)", "memory_flat", "vector"),
+        ("Flattened Graph vs Flat Memory (Δ_entity_bottleneck)", "memory_hipporag_flattened", "memory_flat"),
+        ("Concept Graph vs Flattened Graph (Δ_topology)", "memory_hipporag", "memory_hipporag_flattened"),
+        ("Concept Graph vs Rewired Graph (Δ_rewire)", "memory_hipporag", "memory_hipporag_rewired"),
+        ("Bi-Temporal Event Graph vs Flat Memory (Δ_temporal)", "memory_temporal_bteg", "memory_flat"),
     ]
     for (b, retr, ext, k, n), mm in sorted(groups.items()):
         for label, mode_a, mode_b in pair_specs:
