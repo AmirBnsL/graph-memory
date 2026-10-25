@@ -16,12 +16,18 @@ Rows are keyed by **(benchmark, mode, retriever, extractor, k, n)**. `n` is part
 | locomo | vector | 10 | Qwen/Qwen3-Embedding-0.6B | – | 1986 | 0.161 | 0.346 | 0.080 | 0.208 | 0.823 | 0.366 | 0.308 | 0.333 | 1652 | 0.28 | 20261019-220137_vector_k10_qwen2.5:7b-instruct.json |
 | locomo | vector | 25 | Qwen/Qwen3-Embedding-0.6B | – | 1986 | 0.224 | 0.389 | 0.115 | 0.289 | 0.735 | 0.503 | 0.416 | 0.454 | 4109 | 0.44 | 20261019-221610_vector_k25_qwen2.5:7b-instruct.json |
 | locomo | vector | 50 | Qwen/Qwen3-Embedding-0.6B | – | 1986 | 0.267 | 0.419 | 0.139 | 0.345 | 0.675 | 0.647 | 0.546 | 0.594 | 8290 | 0.74 | 20261019-224044_vector_k50_qwen2.5:7b-instruct.json |
+| longmemeval | memory_flat | 10 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 25 | 0.408 | 0.608 | 0.320 | 0.510 | 1.000 | 0.958 | 0.708 | 0.838 | 2398 | 2.74 | 20261025-132854_longmemeval_memory_flat_k10_qwen2.5:7b-instruct_ext-qwen2.5:14b-instruct.json |
 | longmemeval | memory_flat | 10 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 25 | 0.418 | 0.618 | 0.360 | 0.523 | 1.000 | 0.917 | 0.750 | 0.851 | 2281 | 2.52 | 20261023-105519_longmemeval_memory_flat_k10_qwen2.5:7b-instruct.json |
 | longmemeval | memory_flat | 10 | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 25 | 0.243 | 0.443 | 0.200 | 0.303 | 1.000 | 0.917 | 0.583 | 0.761 | 2959 | 1.20 | 20261022-092917_longmemeval_memory_flat_k10_qwen2.5:7b-instruct.json |
+| longmemeval | memory_hipporag | 10 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 25 | 0.379 | 0.539 | 0.320 | 0.473 | 0.800 | 0.833 | 0.625 | 0.732 | 3122 | 8.24 | 20261025-133221_longmemeval_memory_hipporag_k10_qwen2.5:7b-instruct_ext-qwen2.5:14b-instruct.json |
 | longmemeval | memory_hipporag | 10 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 25 | 0.344 | 0.544 | 0.280 | 0.429 | 1.000 | 0.875 | 0.667 | 0.763 | 4018 | 13.04 | 20261023-110049_longmemeval_memory_hipporag_k10_qwen2.5:7b-instruct.json |
 | longmemeval | memory_hipporag | 10 | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 25 | 0.072 | 0.232 | 0.040 | 0.090 | 0.800 | 0.458 | 0.042 | 0.246 | 3468 | 3.99 | 20261022-093059_longmemeval_memory_hipporag_k10_qwen2.5:7b-instruct.json |
+| longmemeval | memory_hipporag_flattened | 10 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 25 | 0.405 | 0.605 | 0.320 | 0.507 | 1.000 | 0.917 | 0.667 | 0.787 | 2680 | 0.56 | 20261025-133551_longmemeval_memory_hipporag_flattened_k10_qwen2.5:7b-instruct_ext-qwen2.5:14b-instruct.json |
 | longmemeval | memory_hipporag_flattened | 10 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 25 | 0.345 | 0.545 | 0.320 | 0.432 | 1.000 | 0.958 | 0.708 | 0.829 | 3516 | 1.89 | 20261023-110139_longmemeval_memory_hipporag_flattened_k10_qwen2.5:7b-instruct.json |
 | longmemeval | memory_hipporag_flattened | 10 | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 25 | 0.161 | 0.361 | 0.120 | 0.202 | 1.000 | 0.750 | 0.292 | 0.524 | 6221 | 1.30 | 20261022-093135_longmemeval_memory_hipporag_flattened_k10_qwen2.5:7b-instruct.json |
+| longmemeval | memory_hipporag_rewired | 10 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 25 | 0.274 | 0.434 | 0.200 | 0.343 | 0.800 | 0.917 | 0.583 | 0.753 | 2827 | 7.81 | 20261025-133537_longmemeval_memory_hipporag_rewired_k10_qwen2.5:7b-instruct_ext-qwen2.5:14b-instruct.json |
+| longmemeval | memory_hipporag_rewired | 10 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 25 | 0.360 | 0.560 | 0.320 | 0.450 | 1.000 | 0.833 | 0.625 | 0.722 | 3912 | 26.60 | 20261025-111954_longmemeval_memory_hipporag_rewired_k10_qwen2.5:7b-instruct.json |
+| longmemeval | memory_temporal_bteg | 10 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 25 | 0.116 | 0.316 | 0.080 | 0.145 | 1.000 | 0.667 | 0.208 | 0.435 | 1272 | 1.10 | 20261025-133619_longmemeval_memory_temporal_bteg_k10_qwen2.5:7b-instruct_ext-qwen2.5:14b-instruct.json |
 | longmemeval | memory_temporal_bteg | 10 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 25 | 0.160 | 0.360 | 0.160 | 0.200 | 1.000 | 0.750 | 0.292 | 0.511 | 1347 | 1.90 | 20261023-110230_longmemeval_memory_temporal_bteg_k10_qwen2.5:7b-instruct.json |
 | longmemeval | memory_temporal_bteg | 10 | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 25 | 0.193 | 0.353 | 0.160 | 0.241 | 0.800 | 0.792 | 0.417 | 0.583 | 916 | 0.93 | 20261022-093202_longmemeval_memory_temporal_bteg_k10_qwen2.5:7b-instruct.json |
 | longmemeval | vector | 5 | Qwen/Qwen3-Embedding-0.6B | – | 500 | 0.417 | 0.471 | 0.320 | 0.443 | 0.900 | 0.939 | 0.708 | 0.824 | 2386 | 1.33 | 20261020-131028_longmemeval_vector_k5_qwen2.5:7b-instruct.json |
@@ -34,12 +40,29 @@ Rows are keyed by **(benchmark, mode, retriever, extractor, k, n)**. `n` is part
 
 | benchmark | retriever | extractor | k | n | Vector Baseline | Flat Memory | Concept Graph | Rewired Graph | Flattened Graph | Bi-Temporal Event Graph (BTEG) | Δ_extraction | Δ_entity_bottleneck | Δ_topology | Δ_rewire | Δ_temporal |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 0.491 | 0.523 | 0.429 | – | 0.432 | 0.200 | +0.032 | -0.091 | -0.002 | – | -0.323 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 0.491 | 0.510 | 0.473 | 0.343 | 0.507 | 0.145 | +0.018 | -0.003 | -0.033 | +0.130 | -0.365 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 0.491 | 0.523 | 0.429 | 0.450 | 0.432 | 0.200 | +0.032 | -0.091 | -0.002 | -0.020 | -0.323 |
 | longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 0.268 | 0.303 | 0.090 | – | 0.202 | 0.241 | +0.035 | -0.102 | -0.112 | – | -0.062 |
 
 ### Hypothesis 1 (Table 2): Category-Stratified F1 & Abstention Breakdown
 
 Categories 1–4 report token `F1`; Category 5 (`abstention`/`adversarial`) reports `refusal_accuracy`.
+
+#### `longmemeval` · retriever=`Qwen/Qwen3-Embedding-0.6B` · extractor=`qwen2.5:14b-instruct` · `k=10` · `n=25`
+
+| Arm / Comparison | Cat 1: extraction | Cat 2: multi-session | Cat 3: temporal | Cat 4: update | Cat 5: abstention (refusal) | F1_answerable |
+|---|---|---|---|---|---|---|
+| Vector Baseline | 0.612 | 0.080 | 0.473 | 0.800 | 0.800 | 0.491 |
+| Flat Memory | 0.345 | 0.413 | 0.400 | 0.880 | 1.000 | 0.510 |
+| Concept Graph | 0.533 | 0.280 | 0.400 | 0.680 | 0.800 | 0.473 |
+| Rewired Graph | 0.545 | 0.080 | 0.200 | 0.547 | 0.800 | 0.343 |
+| Flattened Graph | 0.533 | 0.213 | 0.600 | 0.680 | 1.000 | 0.507 |
+| Bi-Temporal Event Graph (BTEG) | 0.200 | 0.000 | 0.200 | 0.180 | 1.000 | 0.145 |
+| **Δ_extraction (Flat Memory - Vector Baseline)** | -0.267 | +0.333 | -0.073 | +0.080 | +0.200 | **+0.018** |
+| **Δ_entity_bottleneck (Flattened Graph - Flat Memory)** | +0.188 | -0.200 | +0.200 | -0.200 | +0.000 | **-0.003** |
+| **Δ_topology (Concept Graph - Flattened Graph)** | +0.000 | +0.067 | -0.200 | +0.000 | -0.200 | **-0.033** |
+| **Δ_rewire (Concept Graph - Rewired Graph)** | -0.012 | +0.200 | +0.200 | +0.133 | +0.000 | **+0.130** |
+| **Δ_temporal (BTEG - Flat Memory)** | -0.145 | -0.413 | -0.200 | -0.700 | +0.000 | **-0.365** |
 
 #### `longmemeval` · retriever=`Qwen/Qwen3-Embedding-0.6B` · extractor=`qwen2.5:7b-instruct` · `k=10` · `n=25`
 
@@ -48,11 +71,13 @@ Categories 1–4 report token `F1`; Category 5 (`abstention`/`adversarial`) repo
 | Vector Baseline | 0.612 | 0.080 | 0.473 | 0.800 | 0.800 | 0.491 |
 | Flat Memory | 0.331 | 0.280 | 0.600 | 0.880 | 1.000 | 0.523 |
 | Concept Graph | 0.391 | 0.200 | 0.247 | 0.880 | 1.000 | 0.429 |
+| Rewired Graph | 0.342 | 0.000 | 0.657 | 0.800 | 1.000 | 0.450 |
 | Flattened Graph | 0.400 | 0.000 | 0.447 | 0.880 | 1.000 | 0.432 |
 | Bi-Temporal Event Graph (BTEG) | 0.200 | 0.000 | 0.200 | 0.400 | 1.000 | 0.200 |
 | **Δ_extraction (Flat Memory - Vector Baseline)** | -0.281 | +0.200 | +0.127 | +0.080 | +0.200 | **+0.032** |
 | **Δ_entity_bottleneck (Flattened Graph - Flat Memory)** | +0.069 | -0.280 | -0.153 | +0.000 | +0.000 | **-0.091** |
 | **Δ_topology (Concept Graph - Flattened Graph)** | -0.009 | +0.200 | -0.200 | +0.000 | +0.000 | **-0.002** |
+| **Δ_rewire (Concept Graph - Rewired Graph)** | +0.049 | +0.200 | -0.410 | +0.080 | +0.000 | **-0.020** |
 | **Δ_temporal (BTEG - Flat Memory)** | -0.131 | -0.280 | -0.400 | -0.480 | +0.000 | **-0.323** |
 
 #### `longmemeval` · retriever=`all-MiniLM-L6-v2` · extractor=`qwen2.5:7b-instruct` · `k=10` · `n=25`
@@ -75,9 +100,15 @@ Categories 1–4 report token `F1`; Category 5 (`abstention`/`adversarial`) repo
 
 | benchmark | retriever | extractor | k | Comparison (A vs B) | n_pairs (clusters) | ΔF1_ans | 95% Cluster CI | p_perm (ΔF1) | EM (A+,B- / A-,B+) | p_McNemar (EM) | Recall (A+,B- / A-,B+) | p_McNemar (Rec) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | Flat Memory vs Vector Baseline (Δ_extraction) | 20 (20) | +0.018 | [-0.200, +0.235] | 0.875 | 2/2 | 1.000 | 0/1 | 1.000 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | Flattened Graph vs Flat Memory (Δ_entity_bottleneck) | 20 (20) | -0.003 | [-0.214, +0.201] | 1.000 | 2/2 | 1.000 | 1/1 | 1.000 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | Concept Graph vs Flattened Graph (Δ_topology) | 20 (20) | -0.033 | [-0.183, +0.117] | 1.000 | 1/1 | 1.000 | 0/2 | 0.500 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | Concept Graph vs Rewired Graph (Δ_rewire) | 20 (20) | +0.130 | [-0.082, +0.344] | 0.303 | 4/1 | 0.375 | 0/1 | 1.000 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | Bi-Temporal Event Graph vs Flat Memory (Δ_temporal) | 20 (20) | -0.365 | [-0.579, -0.139] | 0.007 | 1/7 | 0.070 | 0/6 | 0.031 |
 | longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Flat Memory vs Vector Baseline (Δ_extraction) | 20 (20) | +0.032 | [-0.125, +0.215] | 0.737 | 2/1 | 1.000 | 0/2 | 0.500 |
 | longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Flattened Graph vs Flat Memory (Δ_entity_bottleneck) | 20 (20) | -0.091 | [-0.253, +0.045] | 0.315 | 1/2 | 1.000 | 1/0 | 1.000 |
 | longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Concept Graph vs Flattened Graph (Δ_topology) | 20 (20) | -0.002 | [-0.202, +0.200] | 1.000 | 2/3 | 1.000 | 0/1 | 1.000 |
+| longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Concept Graph vs Rewired Graph (Δ_rewire) | 20 (20) | -0.020 | [-0.200, +0.151] | 0.858 | 1/2 | 1.000 | 0/0 | 1.000 |
 | longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | Bi-Temporal Event Graph vs Flat Memory (Δ_temporal) | 20 (20) | -0.323 | [-0.515, -0.150] | 0.003 | 0/5 | 0.062 | 0/3 | 0.250 |
 | longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | Flat Memory vs Vector Baseline (Δ_extraction) | 20 (20) | +0.035 | [-0.165, +0.240] | 0.811 | 3/2 | 1.000 | 1/1 | 1.000 |
 | longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | Flattened Graph vs Flat Memory (Δ_entity_bottleneck) | 20 (20) | -0.102 | [-0.323, +0.127] | 0.416 | 2/4 | 0.688 | 0/4 | 0.125 |
@@ -88,27 +119,32 @@ Categories 1–4 report token `F1`; Category 5 (`abstention`/`adversarial`) repo
 
 | benchmark | mode | retriever | extractor | k | n | Nodes | Edges | LCC Ratio (ρ_LCC) | Components | Degree Gini (G_deg) | Max/Avg Deg | Density | Clustering | Bridge Ratio | Temporal Ratio | Superseded Ratio |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| longmemeval | memory_hipporag | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 192.8 | 159.2 | 0.397 | 69.5 | 0.576 | 11.54 | 0.0166 | 0.115 | 0.550 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 235.1 | 162.0 | 0.350 | 108.6 | 0.590 | 10.58 | 0.0162 | 0.093 | 0.569 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 258.2 | 141.9 | 0.337 | 127.8 | 0.642 | 24.43 | 0.0053 | 0.024 | 0.000 | 0.000 | 0.000 |
+| longmemeval | memory_hipporag_flattened | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 192.8 | 0.0 | 0.008 | 192.8 | 0.000 | 0.00 | 0.0000 | 0.000 | 0.000 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag_flattened | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 235.1 | 0.0 | 0.008 | 235.1 | 0.000 | 0.00 | 0.0000 | 0.000 | 0.000 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag_flattened | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 196.6 | 0.0 | 0.006 | 196.6 | 0.000 | 0.00 | 0.0000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| longmemeval | memory_hipporag_rewired | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 192.8 | 159.2 | 0.585 | 66.8 | 0.576 | 11.54 | 0.0166 | 0.029 | 0.539 | 0.000 | 0.000 |
+| longmemeval | memory_hipporag_rewired | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 236.4 | 164.4 | 0.532 | 102.9 | 0.589 | 10.31 | 0.0170 | 0.028 | 0.548 | 0.000 | 0.000 |
+| longmemeval | memory_temporal_bteg | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 175.4 | 99.8 | 0.208 | 84.2 | 0.615 | 15.80 | 0.0094 | 0.006 | 0.899 | 1.000 | 0.051 |
 | longmemeval | memory_temporal_bteg | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 221.7 | 85.5 | 0.141 | 140.7 | 0.654 | 17.19 | 0.0090 | 0.004 | 0.932 | 1.000 | 0.037 |
 | longmemeval | memory_temporal_bteg | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 133.5 | 1041.0 | 0.535 | 18.2 | 0.474 | 12.45 | 0.0204 | 0.010 | 0.000 | 1.000 | 0.448 |
 
-### Hypothesis 2 (Table 2): Univariate Topological Correlations (`n=40` active graph QA observations)
+### Hypothesis 2 (Table 2): Univariate Topological Correlations (`n=120` active graph QA observations)
 
 Reports Spearman rank correlation `ρ` (and two-sided permutation `p`-value) between `O(|V|+|E|)` structural metrics and per-query retrieval/QA outcomes.
 
 | Structural Predictor | ρ (Evidence Coverage) | p-val | ρ (Precision@k) | p-val | ρ (Answerable F1) | p-val | ρ (ΔF1 vs Flat) | p-val |
 |---|---|---|---|---|---|---|---|---|
-| `degree_gini` | -0.070 | 0.670 | +0.181 | 0.279 | -0.074 | 0.656 | -0.330 | 0.043 |
-| `max_degree_ratio` | -0.519 | 0.003 | -0.333 | 0.040 | -0.327 | 0.044 | -0.310 | 0.063 |
-| `largest_component_ratio` | +0.161 | 0.328 | +0.067 | 0.702 | +0.205 | 0.202 | +0.125 | 0.456 |
-| `edge_density` | +0.149 | 0.361 | -0.128 | 0.432 | +0.190 | 0.238 | +0.109 | 0.507 |
-| `clustering_coefficient` | +0.244 | 0.139 | +0.251 | 0.124 | +0.153 | 0.349 | +0.116 | 0.475 |
-| `bridge_edge_ratio` | -0.290 | 0.076 | -0.285 | 0.080 | -0.222 | 0.166 | -0.174 | 0.277 |
-| `temporal_edge_ratio` | -0.369 | 0.022 | -0.144 | 0.371 | -0.313 | 0.059 | -0.355 | 0.031 |
-| `invalidated_edge_ratio` | -0.234 | 0.142 | -0.094 | 0.556 | -0.098 | 0.554 | -0.426 | 0.008 |
+| `degree_gini` | -0.060 | 0.531 | +0.074 | 0.430 | -0.072 | 0.441 | -0.286 | 0.002 |
+| `max_degree_ratio` | -0.406 | 0.000 | -0.215 | 0.020 | -0.159 | 0.087 | -0.190 | 0.036 |
+| `largest_component_ratio` | +0.227 | 0.013 | +0.207 | 0.025 | +0.161 | 0.077 | +0.273 | 0.004 |
+| `edge_density` | +0.289 | 0.002 | -0.049 | 0.583 | +0.290 | 0.002 | +0.283 | 0.003 |
+| `clustering_coefficient` | +0.238 | 0.004 | +0.263 | 0.005 | +0.120 | 0.188 | +0.165 | 0.062 |
+| `bridge_edge_ratio` | -0.253 | 0.006 | -0.322 | 0.001 | -0.139 | 0.135 | -0.146 | 0.110 |
+| `temporal_edge_ratio` | -0.373 | 0.000 | -0.180 | 0.053 | -0.298 | 0.002 | -0.316 | 0.001 |
+| `invalidated_edge_ratio` | -0.298 | 0.002 | -0.132 | 0.153 | -0.197 | 0.029 | -0.338 | 0.000 |
 
 ### Hypothesis 2 (Table 3): Multivariate OLS Regression (`Y ~ G_deg + MaxDegRatio + ρ_LCC + Density + BridgeRatio`)
 
@@ -116,10 +152,10 @@ Standardized OLS coefficients (`β`) and model fit (`R²`, `F`-stat, permutation
 
 | Dependent Target (Y) | n | R² | Adj R² | F-stat | p-val (Model) | β (degree_gini) | β (max_deg_ratio) | β (LCC_ratio) | β (edge_density) | β (bridge_ratio) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Retrieval Evidence Coverage | 40 | **0.251** | 0.141 | 2.28 | 0.0623 | +0.158 | -0.383 | -0.196 | +0.295 | -0.186 |
-| Retrieval Precision@k | 40 | **0.199** | 0.082 | 1.69 | 0.1609 | +0.352 | -0.198 | -0.023 | +0.489 | -0.079 |
-| End-to-End Answerable F1 | 40 | **0.145** | 0.019 | 1.15 | 0.3386 | +0.061 | -0.462 | +0.180 | -0.362 | +0.125 |
-| Structural Gain (ΔF1 vs Flat) | 40 | **0.162** | 0.039 | 1.31 | 0.2876 | -0.088 | -0.414 | -0.005 | -0.090 | +0.067 |
+| Retrieval Evidence Coverage | 120 | **0.202** | 0.167 | 5.79 | 0.0007 | +0.183 | -0.322 | -0.053 | +0.238 | -0.149 |
+| Retrieval Precision@k | 120 | **0.183** | 0.147 | 5.10 | 0.0003 | +0.238 | -0.116 | +0.092 | +0.355 | -0.116 |
+| End-to-End Answerable F1 | 120 | **0.067** | 0.026 | 1.63 | 0.1516 | -0.003 | -0.253 | +0.106 | -0.259 | +0.031 |
+| Structural Gain (ΔF1 vs Flat) | 120 | **0.062** | 0.021 | 1.50 | 0.2039 | -0.033 | -0.103 | +0.183 | +0.055 | +0.122 |
 
 ### Retrieval recall by category: locomo
 
@@ -139,12 +175,18 @@ Standardized OLS coefficients (`β`) and model fit (`R²`, `F`-stat, permutation
 
 | mode | retriever | extractor | k | n | extraction | multi-session | temporal | update | abstention | overall |
 |---|---|---|---|---|---|---|---|---|---|---|
+| memory_flat | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 0.800 | 1.000 | 1.000 | 1.000 | 1.000 | 0.958 |
 | memory_flat | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 0.600 | 1.000 | 1.000 | 1.000 | 1.000 | 0.917 |
 | memory_flat | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 1.000 | 0.800 | 1.000 | 1.000 | 0.750 | 0.917 |
+| memory_hipporag | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 0.800 | 0.800 | 0.800 | 1.000 | 0.750 | 0.833 |
 | memory_hipporag | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 0.800 | 0.800 | 1.000 | 1.000 | 0.750 | 0.875 |
 | memory_hipporag | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 0.400 | 0.600 | 0.800 | 0.200 | 0.250 | 0.458 |
+| memory_hipporag_flattened | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 0.800 | 1.000 | 1.000 | 1.000 | 0.750 | 0.917 |
 | memory_hipporag_flattened | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 0.800 | 1.000 | 1.000 | 1.000 | 1.000 | 0.958 |
 | memory_hipporag_flattened | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 0.800 | 0.600 | 0.800 | 0.800 | 0.750 | 0.750 |
+| memory_hipporag_rewired | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 1.000 | 0.800 | 0.800 | 1.000 | 1.000 | 0.917 |
+| memory_hipporag_rewired | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 0.800 | 0.800 | 1.000 | 1.000 | 0.500 | 0.833 |
+| memory_temporal_bteg | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 0.400 | 0.800 | 0.600 | 0.800 | 0.750 | 0.667 |
 | memory_temporal_bteg | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 0.400 | 1.000 | 1.000 | 0.600 | 0.750 | 0.750 |
 | memory_temporal_bteg | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 0.400 | 1.000 | 1.000 | 0.800 | 0.750 | 0.792 |
 | vector | Qwen/Qwen3-Embedding-0.6B | – | 5 | 500 | 0.907 | 0.967 | 0.937 | 0.972 | 0.889 | 0.939 |
