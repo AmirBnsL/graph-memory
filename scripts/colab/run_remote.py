@@ -96,11 +96,12 @@ def main() -> int:
               f"continuing on the bundle checkout")
     else:
         print("git fetch: ok")
-    git("checkout", "--quiet", "master")
-    ff = git("merge", "--ff-only", "--quiet", "origin/master")
-    if ff.returncode != 0:
-        print("WARNING: fast-forward failed -- VM tree has local commits or edits")
-        print(ff.stderr.strip()[:400])
+        cur_branch = git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+        if cur_branch and cur_branch != "HEAD":
+            ff = git("merge", "--ff-only", "--quiet", f"origin/{cur_branch}")
+            if ff.returncode != 0:
+                print("WARNING: fast-forward failed -- VM tree has local commits or edits")
+                print(ff.stderr.strip()[:400])
 
     head = git("rev-parse", "--short", "HEAD").stdout.strip()
     dirty = git("status", "--porcelain").stdout.strip()

@@ -41,7 +41,7 @@ def do_setup(args: argparse.Namespace) -> None:
     session = args.session
     bundle_path = "/tmp/gm.bundle"
     print(f"Creating git bundle at {bundle_path}...")
-    run_cmd(["git", "bundle", "create", bundle_path, "--all"])
+    run_cmd(["git", "bundle", "create", bundle_path, "--all", "HEAD"])
 
     print(f"Uploading bundle to Colab session {session}...")
     run_cmd(["colab", "upload", "-s", session, bundle_path, "/content/gm.bundle"])

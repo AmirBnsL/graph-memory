@@ -58,7 +58,7 @@ say "LoCoMo pinned OK (sha256 ${GOT_SHA:0:16}...)"
 LONGMEMEVAL_FILE="$REPO_DIR/data/longmemeval/longmemeval_oracle.json"
 if [ ! -f "$LONGMEMEVAL_FILE" ]; then
   say "fetching LongMemEval oracle dataset"
-  python3 -m graph_memory.pipeline.download_longmemeval --target oracle
+  python3 "$REPO_DIR/src/graph_memory/pipeline/download_longmemeval.py" --target oracle
 fi
 say "LongMemEval dataset ready"
 
@@ -86,6 +86,13 @@ if [ -d "/content/drive/MyDrive" ]; then
   mkdir -p "$REPO_DIR/cache"
   ln -sfn "$DRIVE_STORAGE/cache/extract" "$REPO_DIR/cache/extract"
   say "Persistent Drive links established (zero re-download penalty for models & caches)"
+else
+  say "Google Drive not mounted -- using local storage at /content/ollama-storage"
+  export OLLAMA_MODELS="/content/ollama-storage"
+  echo "export OLLAMA_MODELS=\"/content/ollama-storage\"" >> /root/.bashrc
+  mkdir -p /content/ollama-storage
+  mkdir -p /root
+  ln -sfn /content/ollama-storage /root/.ollama
 fi
 
 # 3. extras the stock image lacks ---------------------------------------------
@@ -103,19 +110,19 @@ if ! command -v ollama >/dev/null 2>&1; then
   curl -fsSL https://ollama.com/install.sh | sh
 fi
 if ! pgrep -x ollama >/dev/null 2>&1; then
-  say "starting ollama (OLLAMA_MODELS=${OLLAMA_MODELS:-default})"
-  nohup env OLLAMA_MODELS="${OLLAMA_MODELS:-/root/.ollama/models}" ollama serve >/content/ollama-serve.log 2>&1 &
+  say "starting ollama (OLLAMA_MODELS=${OLLAMA_MODELS:-/content/ollama-storage})"
+  nohup env OLLAMA_MODELS="${OLLAMA_MODELS:-/content/ollama-storage}" ollama serve >/content/ollama-serve.log 2>&1 &
   sleep 8
 fi
 
 MODELS=("qwen2.5:7b-instruct" "qwen2.5:14b-instruct")
 
 for M in "${MODELS[@]}"; do
-  if ! ollama list 2>/dev/null | grep -q "${M%%:*}"; then
-    say "pulling $M (persisting directly to Drive via OLLAMA_MODELS)..."
+  if ! ollama list 2>/dev/null | grep -q "$M"; then
+    say "pulling $M..."
     ollama pull "$M"
   else
-    say "found $M in persistent cache -- skipping download"
+    say "found $M in cache -- skipping download"
   fi
   say "ensuring 32k context window on $M"
   printf "FROM %s\nPARAMETER num_ctx 32768\n" "$M" > "/tmp/Modelfile.32k.$M"
