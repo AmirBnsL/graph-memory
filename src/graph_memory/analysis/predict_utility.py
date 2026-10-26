@@ -256,8 +256,13 @@ def _row_precision_at_k(row: dict) -> float:
     return hits / len(uniq_ctx)
 
 
-def collect_sample_observations(runs: list[dict]) -> list[dict[str, Any]]:
-    """Extract per-question observations with graph metrics and paired Flat deltas."""
+def collect_sample_observations(runs: list[dict], natural_only: bool = False) -> list[dict[str, Any]]:
+    """Extract per-question observations with graph metrics and paired Flat deltas.
+
+    If natural_only=True, restricts observations strictly to natural LLM-extracted
+    graph memory substrates (Concept Graph and Bi-Temporal Event Graph), excluding
+    synthetic randomized controls (rewired) and zero-edge ablations (flattened).
+    """
     # Map (benchmark, retriever, extractor, k, n) -> memory_flat run
     flat_lookup: dict[tuple, dict[tuple[str, str], dict]] = {}
     for d in runs:
@@ -280,6 +285,8 @@ def collect_sample_observations(runs: list[dict]) -> list[dict[str, Any]]:
     for d in runs:
         mode = str(d.get("mode") or "")
         if not mode.startswith("memory_") or mode == "memory_flat":
+            continue
+        if natural_only and mode not in ("memory_hipporag", "memory_temporal_bteg"):
             continue
         by_sample = d.get("graph_metrics_by_sample") or {}
         if not by_sample:
@@ -394,8 +401,8 @@ def analyze_observations(obs: list[dict[str, Any]]) -> dict[str, Any]:
 
 def print_h2_diagnostics(runs: list[dict]) -> None:
     """Print Hypothesis 2 (Topological Diagnostics & Utility Prediction) markdown tables."""
-    # Group graph metrics per run first
-    graph_runs = [d for d in runs if d.get("graph_metrics")]
+    # Group graph metrics per run first (requiring per-sample breakdowns to exclude legacy runs)
+    graph_runs = [d for d in runs if d.get("graph_metrics") and d.get("graph_metrics_by_sample")]
     if not graph_runs:
         return
 
@@ -415,19 +422,20 @@ def print_h2_diagnostics(runs: list[dict]) -> None:
             f"{gm.get('invalidated_edge_ratio', 0.0):.3f} |"
         )
 
-    obs = collect_sample_observations(runs)
+    obs = collect_sample_observations(runs, natural_only=True)
     if not obs:
         return
 
-    # Analyze pooled across active graph traversals (HippoRAG + Bi-Temporal, excluding flattened 0-edge control)
-    active_obs = [o for o in obs if o["mode"] in ("memory_hipporag", "memory_hipporag_rewired", "memory_temporal_bteg")]
+    # Analyze pooled across natural graph memory substrates (Concept Graph + Bi-Temporal Event Graph),
+    # strictly excluding synthetic randomized controls (rewired) and 0-edge ablations (flattened)
+    active_obs = [o for o in obs if o["mode"] in ("memory_hipporag", "memory_temporal_bteg")]
     if len(active_obs) < 6:
         active_obs = obs
 
     res = analyze_observations(active_obs)
 
     print("\n### Hypothesis 2 (Table 2): Univariate Topological Correlations (`n="
-          f"{res['n']}` active graph QA observations)\n")
+          f"{res['n']}` natural graph QA observations)\n")
     print("Reports Spearman rank correlation `ρ` (and two-sided permutation `p`-value) between `O(|V|+|E|)` "
           "structural metrics and per-query retrieval/QA outcomes.\n")
     print("| Structural Predictor | ρ (Evidence Coverage) | p-val | ρ (Precision@k) | p-val | ρ (Answerable F1) | p-val | ρ (ΔF1 vs Flat) | p-val |")
