@@ -25,7 +25,10 @@ import math
 import re
 from collections import defaultdict
 from typing import Any
+import json
+from pathlib import Path
 import networkx as nx
+import numpy as np
 
 try:
     from graph_memory.pipeline.extract import MemoryRecord
@@ -33,6 +36,44 @@ try:
 except ImportError:
     from extract import MemoryRecord
     from memory.base import BaseMemory, RetrievedItem
+
+
+def _find_repo_root() -> Path:
+    p = Path(__file__).resolve()
+    for parent in [p] + list(p.parents):
+        if (parent / "conf").is_dir() or (parent / "pyproject.toml").is_file():
+            return parent
+    return p.parents[4]
+
+
+_CACHE_FILE = _find_repo_root() / "cache" / "entity_cache.json"
+_GLOBAL_ENTITY_EMB_CACHE: dict[tuple[str, str], list[float]] = {}
+
+
+def _load_entity_cache() -> None:
+    global _GLOBAL_ENTITY_EMB_CACHE
+    if _GLOBAL_ENTITY_EMB_CACHE or not _CACHE_FILE.exists():
+        return
+    try:
+        data = json.loads(_CACHE_FILE.read_text())
+        for k, v in data.items():
+            if "|" in k:
+                m, e = k.split("|", 1)
+                _GLOBAL_ENTITY_EMB_CACHE[(m, e)] = v
+    except Exception:
+        pass
+
+
+def _save_entity_cache() -> None:
+    try:
+        _CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        flat = {f"{m}|{e}": v for (m, e), v in _GLOBAL_ENTITY_EMB_CACHE.items()}
+        _CACHE_FILE.write_text(json.dumps(flat))
+    except Exception:
+        pass
+
+
+_load_entity_cache()
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
@@ -167,29 +208,38 @@ class HippoRAG2Memory(BaseMemory):
         # Compute embeddings for new entity vertices
         ents_to_embed = [e for e in new_entities if e not in self.entity_embeddings]
         if ents_to_embed:
-            vecs = self.embedder.embed_texts(ents_to_embed)
-            for e, v in zip(ents_to_embed, vecs):
-                self.entity_embeddings[e] = v
+            emb_key = str(getattr(self.embedder, "s", {}).get("name", id(self.embedder)))
+            uncached = [e for e in ents_to_embed if (emb_key, e) not in _GLOBAL_ENTITY_EMB_CACHE]
+            if uncached:
+                vecs = self.embedder.embed_texts(uncached)
+                for e, v in zip(uncached, vecs):
+                    _GLOBAL_ENTITY_EMB_CACHE[(emb_key, e)] = list(v)
+                _save_entity_cache()
+            for e in ents_to_embed:
+                self.entity_embeddings[e] = _GLOBAL_ENTITY_EMB_CACHE[(emb_key, e)]
 
         # Add entity-entity synonym edges based on cosine similarity
         if len(self.entity_embeddings) > 1:
             all_ents = list(self.entity_embeddings.keys())
-            for new_ent in ents_to_embed:
-                v_new = self.entity_embeddings[new_ent]
-                u_node = f"entity:{new_ent}"
-                for other_ent in all_ents:
-                    if new_ent != other_ent:
-                        v_node = f"entity:{other_ent}"
-                        if not self.graph.has_edge(u_node, v_node):
-                            sim = _cosine(v_new, self.entity_embeddings[other_ent])
-                            if sim >= self.synonym_threshold:
-                                self.graph.add_edge(
-                                    u_node,
-                                    v_node,
-                                    relation="synonym",
-                                    type="synonym",
-                                    weight=float(sim),
-                                )
+            ents_mat = np.array([self.entity_embeddings[e] for e in all_ents], dtype=np.float32)
+            norms = np.linalg.norm(ents_mat, axis=1, keepdims=True)
+            norms[norms == 0] = 1.0
+            ents_mat = ents_mat / norms
+            sim_matrix = ents_mat @ ents_mat.T
+            for i, u_ent in enumerate(all_ents):
+                u_node = f"entity:{u_ent}"
+                for j in range(i + 1, len(all_ents)):
+                    v_node = f"entity:{all_ents[j]}"
+                    if not self.graph.has_edge(u_node, v_node):
+                        sim = float(sim_matrix[i, j])
+                        if sim >= self.synonym_threshold:
+                            self.graph.add_edge(
+                                u_node,
+                                v_node,
+                                relation="synonym",
+                                type="synonym",
+                                weight=sim,
+                            )
 
     def _build_transition_matrix(self) -> dict[str, dict[str, float]]:
         """Construct transition probabilities according to HippoRAG 2 bipartite rules.

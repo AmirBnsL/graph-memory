@@ -29,9 +29,15 @@ from sklearn.cluster import AgglomerativeClustering
 try:
     from graph_memory.pipeline.extract import MemoryRecord
     from graph_memory.memory.base import BaseMemory, RetrievedItem
+    from graph_memory.memory.graph.hipporag2 import _GLOBAL_ENTITY_EMB_CACHE, _save_entity_cache
 except ImportError:
     from extract import MemoryRecord
     from memory.base import BaseMemory, RetrievedItem
+    try:
+        from memory.graph.hipporag2 import _GLOBAL_ENTITY_EMB_CACHE, _save_entity_cache
+    except ImportError:
+        _GLOBAL_ENTITY_EMB_CACHE = {}
+        def _save_entity_cache(): pass
 
 
 def _cosine(a: list[float] | np.ndarray, b: list[float] | np.ndarray) -> float:
@@ -148,22 +154,31 @@ class LightRAGMemory(BaseMemory):
         # Compute embeddings for any newly encountered entities
         ents_to_embed = [e for e in new_entities if e not in self.entity_embeddings]
         if ents_to_embed:
-            vecs = self.embedder.embed_texts(ents_to_embed)
-            for e, v in zip(ents_to_embed, vecs):
-                self.entity_embeddings[e] = list(v)
+            emb_key = str(getattr(self.embedder, "s", {}).get("name", id(self.embedder)))
+            uncached = [e for e in ents_to_embed if (emb_key, e) not in _GLOBAL_ENTITY_EMB_CACHE]
+            if uncached:
+                vecs = self.embedder.embed_texts(uncached)
+                for e, v in zip(uncached, vecs):
+                    _GLOBAL_ENTITY_EMB_CACHE[(emb_key, e)] = list(v)
+                _save_entity_cache()
+            for e in ents_to_embed:
+                self.entity_embeddings[e] = _GLOBAL_ENTITY_EMB_CACHE[(emb_key, e)]
 
         # Level 1: Add synonymy edges between entities with cosine similarity >= synonym_threshold
-        all_ents = sorted(self.entity_embeddings.keys())
-        for new_ent in ents_to_embed:
-            v_new = self.entity_embeddings[new_ent]
-            u = f"entity:{new_ent}"
-            for other_ent in all_ents:
-                if new_ent != other_ent:
-                    v = f"entity:{other_ent}"
-                    if not self.graph.has_edge(u, v):
-                        sim = _cosine(v_new, self.entity_embeddings[other_ent])
-                        if sim >= self.synonym_threshold:
-                            self.graph.add_edge(u, v, relation="synonym", type="synonym", weight=float(sim))
+        if len(self.entity_embeddings) > 1:
+            all_ents = sorted(self.entity_embeddings.keys())
+            ents_mat = np.array([self.entity_embeddings[e] for e in all_ents], dtype=np.float32)
+            norms = np.linalg.norm(ents_mat, axis=1, keepdims=True)
+            norms[norms == 0] = 1.0
+            ents_mat = ents_mat / norms
+            sim_matrix = ents_mat @ ents_mat.T
+            for i, u_ent in enumerate(all_ents):
+                u = f"entity:{u_ent}"
+                for j in range(i + 1, len(all_ents)):
+                    sim = float(sim_matrix[i, j])
+                    if sim >= self.synonym_threshold:
+                        v = f"entity:{all_ents[j]}"
+                        self.graph.add_edge(u, v, relation="synonym", type="synonym", weight=sim)
 
         # Level 2: Construct thematic cluster vertices
         self._build_thematic_clusters()
