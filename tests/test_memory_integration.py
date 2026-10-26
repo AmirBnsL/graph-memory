@@ -88,6 +88,22 @@ class TestMemoryIntegration(unittest.TestCase):
         self.assertIsNotNone(s_hippo.get("graph_metrics"))
         self.assertIn("largest_component_ratio", s_hippo["graph_metrics"])
 
+        # Test HippoRAG 2 Memory (Bipartite Concept Graph)
+        s_hippo2 = eval_mod.run(
+            mode="memory",
+            k=2,
+            n_conv=1,
+            n_qa=2,
+            categories=None,
+            benchmark="longmemeval",
+            mode_cfg={"backend": "hipporag2"},
+            reader={"provider": "ollama", "model": "mock-qwen"},
+        )
+        self.assertEqual(s_hippo2["mode"], "memory_hipporag2")
+        self.assertEqual(len(s_hippo2["rows"]), 2)
+        self.assertIsNotNone(s_hippo2.get("graph_metrics"))
+        self.assertIn("largest_component_ratio", s_hippo2["graph_metrics"])
+
         # Test HippoRAG Flattened (Structure Ablation)
         s_hippo_flat = eval_mod.run(
             mode="memory",
