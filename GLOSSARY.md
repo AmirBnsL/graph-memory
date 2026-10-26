@@ -46,6 +46,14 @@ _Avoid_: Isolated nodes graph, 0-edge graph
 A degree-preserving randomized control of a Concept Graph that applies double-edge swaps to randomize relational connectivity while holding exact node degrees, density, and degree inequality invariant.
 _Avoid_: Randomized graph, shuffled KG
 
+**Bipartite Concept Graph**:
+A heterogeneous graph memory representation that integrates dialogue turns and extracted entities as co-equal graph vertices, linking turns to their constituent entities via occurrence edges and entities to entities via relation triples and synonymy bridges, traversed via joint bi-directional Personalized PageRank.
+_Avoid_: HippoRAG 2 graph, passage-entity graph, two-tier graph
+
+**Dual-Level Graph**:
+A hierarchical graph memory representation that stratifies memory into low-level entity-relation triples and high-level thematic concept nodes derived from semantic clustering of subgraphs, supporting dual-level query routing.
+_Avoid_: LightRAG graph, hierarchical KG, community graph
+
 ## Retrieval & Evaluation
 
 **Provenance**:
