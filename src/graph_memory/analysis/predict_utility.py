@@ -315,7 +315,7 @@ def collect_sample_observations(runs: list[dict], natural_only: bool = True) -> 
         mode = str(d.get("mode") or "")
         if not mode.startswith("memory_") or mode == "memory_flat":
             continue
-        if natural_only and mode not in ("memory_hipporag", "memory_temporal_bteg"):
+        if natural_only and mode not in ("memory_hipporag", "memory_temporal_bteg", "memory_hipporag2", "memory_lightrag"):
             continue
         by_sample = d.get("graph_metrics_by_sample") or {}
         if not by_sample:

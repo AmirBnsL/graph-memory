@@ -140,10 +140,10 @@ def answer_memory(conv: Conversation, qa: QA, k: int = 10,
     """Answer using one of the pluggable memory backends (H1 decomposition)."""
     try:
         from graph_memory.pipeline import extract
-        from graph_memory import FlatMemory, HippoRAGMemory, BiTemporalMemory
+        from graph_memory import FlatMemory, HippoRAGMemory, BiTemporalMemory, LightRAGMemory
     except ImportError:
         import extract
-        from memory import FlatMemory, HippoRAGMemory, BiTemporalMemory
+        from memory import FlatMemory, HippoRAGMemory, BiTemporalMemory, LightRAGMemory
 
     t0 = time.time()
     mcfg = mode_cfg or {}
@@ -188,8 +188,13 @@ def answer_memory(conv: Conversation, qa: QA, k: int = 10,
             )
         elif backend in ("temporal", "temporal_bteg"):
             mem = BiTemporalMemory(embedder=emb)
+        elif backend in ("lightrag", "memory_lightrag"):
+            mem = LightRAGMemory(
+                embedder=emb,
+                synonym_threshold=syn_thresh,
+            )
         else:
-            raise ValueError(f"unknown memory backend {backend!r}; choose flat | hipporag | temporal_bteg")
+            raise ValueError(f"unknown memory backend {backend!r}; choose flat | hipporag | temporal_bteg | lightrag")
 
         records = extract.extract_conversation(conv, overrides=ext_overrides)
         mem.add_records(records)
