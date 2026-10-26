@@ -121,30 +121,27 @@ Categories 1–4 report token `F1`; Category 5 (`abstention`/`adversarial`) repo
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | longmemeval | memory_hipporag | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 192.8 | 159.2 | 0.397 | 69.5 | 0.576 | 11.54 | 0.0166 | 0.115 | 0.550 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 235.1 | 162.0 | 0.350 | 108.6 | 0.590 | 10.58 | 0.0162 | 0.093 | 0.569 | 0.000 | 0.000 |
-| longmemeval | memory_hipporag | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 258.2 | 141.9 | 0.337 | 127.8 | 0.642 | 24.43 | 0.0053 | 0.024 | 0.000 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag_flattened | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 192.8 | 0.0 | 0.008 | 192.8 | 0.000 | 0.00 | 0.0000 | 0.000 | 0.000 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag_flattened | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 235.1 | 0.0 | 0.008 | 235.1 | 0.000 | 0.00 | 0.0000 | 0.000 | 0.000 | 0.000 | 0.000 |
-| longmemeval | memory_hipporag_flattened | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 196.6 | 0.0 | 0.006 | 196.6 | 0.000 | 0.00 | 0.0000 | 0.000 | 0.000 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag_rewired | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 192.8 | 159.2 | 0.585 | 66.8 | 0.576 | 11.54 | 0.0166 | 0.029 | 0.539 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag_rewired | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 236.4 | 164.4 | 0.532 | 102.9 | 0.589 | 10.31 | 0.0170 | 0.028 | 0.548 | 0.000 | 0.000 |
 | longmemeval | memory_temporal_bteg | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 175.4 | 99.8 | 0.208 | 84.2 | 0.615 | 15.80 | 0.0094 | 0.006 | 0.899 | 1.000 | 0.051 |
 | longmemeval | memory_temporal_bteg | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 221.7 | 85.5 | 0.141 | 140.7 | 0.654 | 17.19 | 0.0090 | 0.004 | 0.932 | 1.000 | 0.037 |
-| longmemeval | memory_temporal_bteg | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 133.5 | 1041.0 | 0.535 | 18.2 | 0.474 | 12.45 | 0.0204 | 0.010 | 0.000 | 1.000 | 0.448 |
 
-### Hypothesis 2 (Table 2): Univariate Topological Correlations (`n=120` active graph QA observations)
+### Hypothesis 2 (Table 2): Univariate Topological Correlations (`n=80` natural graph QA observations)
 
 Reports Spearman rank correlation `ρ` (and two-sided permutation `p`-value) between `O(|V|+|E|)` structural metrics and per-query retrieval/QA outcomes.
 
 | Structural Predictor | ρ (Evidence Coverage) | p-val | ρ (Precision@k) | p-val | ρ (Answerable F1) | p-val | ρ (ΔF1 vs Flat) | p-val |
 |---|---|---|---|---|---|---|---|---|
-| `degree_gini` | -0.060 | 0.531 | +0.074 | 0.430 | -0.072 | 0.441 | -0.286 | 0.002 |
-| `max_degree_ratio` | -0.406 | 0.000 | -0.215 | 0.020 | -0.159 | 0.087 | -0.190 | 0.036 |
-| `largest_component_ratio` | +0.227 | 0.013 | +0.207 | 0.025 | +0.161 | 0.077 | +0.273 | 0.004 |
-| `edge_density` | +0.289 | 0.002 | -0.049 | 0.583 | +0.290 | 0.002 | +0.283 | 0.003 |
-| `clustering_coefficient` | +0.238 | 0.004 | +0.263 | 0.005 | +0.120 | 0.188 | +0.165 | 0.062 |
-| `bridge_edge_ratio` | -0.253 | 0.006 | -0.322 | 0.001 | -0.139 | 0.135 | -0.146 | 0.110 |
-| `temporal_edge_ratio` | -0.373 | 0.000 | -0.180 | 0.053 | -0.298 | 0.002 | -0.316 | 0.001 |
-| `invalidated_edge_ratio` | -0.298 | 0.002 | -0.132 | 0.153 | -0.197 | 0.029 | -0.338 | 0.000 |
+| `degree_gini` | -0.093 | 0.395 | +0.001 | 0.994 | -0.127 | 0.272 | -0.321 | 0.002 |
+| `max_degree_ratio` | -0.407 | 0.000 | -0.258 | 0.020 | -0.242 | 0.036 | -0.242 | 0.030 |
+| `largest_component_ratio` | +0.272 | 0.016 | +0.255 | 0.026 | +0.269 | 0.017 | +0.314 | 0.008 |
+| `edge_density` | +0.227 | 0.043 | -0.041 | 0.720 | +0.287 | 0.011 | +0.273 | 0.018 |
+| `clustering_coefficient` | +0.281 | 0.015 | +0.328 | 0.005 | +0.205 | 0.077 | +0.189 | 0.094 |
+| `bridge_edge_ratio` | -0.284 | 0.011 | -0.350 | 0.002 | -0.200 | 0.086 | -0.163 | 0.137 |
+| `temporal_edge_ratio` | -0.396 | 0.000 | -0.214 | 0.060 | -0.343 | 0.003 | -0.334 | 0.002 |
+| `invalidated_edge_ratio` | -0.291 | 0.012 | -0.156 | 0.175 | -0.195 | 0.084 | -0.360 | 0.000 |
 
 ### Hypothesis 2 (Table 3): Multivariate OLS Regression (`Y ~ G_deg + MaxDegRatio + ρ_LCC + Density + BridgeRatio`)
 
@@ -152,10 +149,26 @@ Standardized OLS coefficients (`β`) and model fit (`R²`, `F`-stat, permutation
 
 | Dependent Target (Y) | n | R² | Adj R² | F-stat | p-val (Model) | β (degree_gini) | β (max_deg_ratio) | β (LCC_ratio) | β (edge_density) | β (bridge_ratio) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Retrieval Evidence Coverage | 120 | **0.202** | 0.167 | 5.79 | 0.0007 | +0.183 | -0.322 | -0.053 | +0.238 | -0.149 |
-| Retrieval Precision@k | 120 | **0.183** | 0.147 | 5.10 | 0.0003 | +0.238 | -0.116 | +0.092 | +0.355 | -0.116 |
-| End-to-End Answerable F1 | 120 | **0.067** | 0.026 | 1.63 | 0.1516 | -0.003 | -0.253 | +0.106 | -0.259 | +0.031 |
-| Structural Gain (ΔF1 vs Flat) | 120 | **0.062** | 0.021 | 1.50 | 0.2039 | -0.033 | -0.103 | +0.183 | +0.055 | +0.122 |
+| Retrieval Evidence Coverage | 80 | **0.209** | 0.156 | 3.91 | 0.0027 | +0.115 | -0.249 | -0.076 | +0.254 | -0.224 |
+| Retrieval Precision@k | 80 | **0.201** | 0.147 | 3.73 | 0.0030 | +0.155 | -0.083 | +0.145 | +0.304 | -0.151 |
+| End-to-End Answerable F1 | 80 | **0.105** | 0.045 | 1.74 | 0.1280 | -0.010 | -0.273 | +0.192 | -0.294 | -0.025 |
+| Structural Gain (ΔF1 vs Flat) | 80 | **0.083** | 0.021 | 1.33 | 0.2666 | -0.058 | -0.107 | +0.187 | +0.012 | +0.024 |
+
+### Hypothesis 2 (Table 4): Topological Regime Breakdown (Median Splits on Natural Graphs)
+
+Stratifies natural graph memory QA observations (`n=80`) at the median across the three core structural bottleneck dimensions. `Δ` reports the regime contrast (Low Hub vs High Hub; Connected vs Fragmented); `p`-values use two-sided two-sample permutation tests (2,500 draws).
+
+| Structural Dimension | Partition Threshold | Regime | n | Evidence Coverage | Precision@k | Answerable F1 | ΔF1 vs Flat |
+|---|---|---|---|---|---|---|---|
+| **Hub Inequality (G_deg)** | Median G_deg = 0.608 | Low Inequality (≤ 0.608) | 41 | 0.612 | 0.193 | 0.370 | -0.072 |
+| | | High Inequality (> 0.608) | 39 | 0.577 | 0.199 | 0.251 | -0.343 |
+| | | **Regime Contrast (Low - High)** | – | **+0.035** (p=0.693) | **-0.007** (p=0.828) | **+0.118** (p=0.224) | **+0.271** (p=0.013) |
+| **Super-Hub Dominance** | Median Max/Avg = 12.26 | Low Dominance (≤ 12.26) | 41 | 0.740 | 0.229 | 0.443 | -0.064 |
+| | | High Dominance (> 12.26) | 39 | 0.443 | 0.161 | 0.174 | -0.352 |
+| | | **Regime Contrast (Low - High)** | – | **+0.297** (p=0.002) | **+0.067** (p=0.036) | **+0.268** (p=0.008) | **+0.288** (p=0.008) |
+| **Component Connectivity** | Median ρ_LCC = 0.239 | Fragmented Component (≤ 0.239) | 41 | 0.434 | 0.147 | 0.198 | -0.342 |
+| | | Connected Component (> 0.239) | 39 | 0.764 | 0.247 | 0.432 | -0.059 |
+| | | **Regime Contrast (Conn - Frag)** | – | **+0.330** (p=0.000) | **+0.101** (p=0.001) | **+0.235** (p=0.020) | **+0.282** (p=0.009) |
 
 ### Retrieval recall by category: locomo
 

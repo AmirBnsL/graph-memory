@@ -99,6 +99,51 @@ class TestPredictUtility(unittest.TestCase):
             if "flattened" not in d["mode"]:
                 self.assertGreater(d["graph_metrics"]["edge_density"], 0.0)
 
+    def test_regime_breakdown_and_table4_rendering(self):
+        import io
+        import sys
+        from graph_memory.analysis import make_tables
+
+        runs = make_tables.load_runs()
+        obs_nat = predict_utility.collect_sample_observations(runs, natural_only=True)
+        regimes = predict_utility.compute_regime_splits(obs_nat)
+
+        self.assertIn("hub_inequality", regimes)
+        self.assertIn("super_hub_dominance", regimes)
+        self.assertIn("component_connectivity", regimes)
+
+        # Connected component connectivity significantly outperforms fragmented
+        conn = regimes["component_connectivity"]
+        self.assertGreater(conn["targets"]["evidence_coverage"]["delta"], 0.25)
+        self.assertLess(conn["targets"]["evidence_coverage"]["p_value"], 0.05)
+        self.assertGreater(conn["targets"]["precision_at_k"]["delta"], 0.05)
+        self.assertLess(conn["targets"]["precision_at_k"]["p_value"], 0.05)
+        self.assertGreater(conn["targets"]["delta_f1_vs_flat"]["delta"], 0.20)
+        self.assertLess(conn["targets"]["delta_f1_vs_flat"]["p_value"], 0.05)
+
+        # Low super-hub dominance significantly outperforms high dominance
+        hub = regimes["super_hub_dominance"]
+        self.assertGreater(hub["targets"]["evidence_coverage"]["delta"], 0.20)
+        self.assertLess(hub["targets"]["evidence_coverage"]["p_value"], 0.05)
+        self.assertGreater(hub["targets"]["delta_f1_vs_flat"]["delta"], 0.20)
+        self.assertLess(hub["targets"]["delta_f1_vs_flat"]["p_value"], 0.05)
+
+        # Output capture check
+        buf = io.StringIO()
+        old_stdout = sys.stdout
+        try:
+            sys.stdout = buf
+            predict_utility.print_h2_diagnostics(runs)
+        finally:
+            sys.stdout = old_stdout
+
+        out = buf.getvalue()
+        self.assertIn("### Hypothesis 2 (Table 4): Topological Regime Breakdown", out)
+        self.assertIn("Hub Inequality (G_deg)", out)
+        self.assertIn("Super-Hub Dominance", out)
+        self.assertIn("Component Connectivity", out)
+
+
 
 
 if __name__ == "__main__":

@@ -128,6 +128,34 @@ def permutation_p_corr(
     return (exceed + 1) / (n_perm + 1)
 
 
+def permutation_p_diff(
+    vals1: list[float],
+    vals2: list[float],
+    n_perm: int = 2500,
+    seed: int = 42,
+) -> float:
+    """Two-sided permutation test p-value for the difference in means between two independent groups."""
+    if not vals1 or not vals2:
+        return 1.0
+    obs_diff = abs(_mean(vals1) - _mean(vals2))
+    if obs_diff < 1e-12:
+        return 1.0
+    pool = list(vals1) + list(vals2)
+    n1 = len(vals1)
+    n_tot = len(pool)
+    rng = random.Random(seed)
+    exceed = 0
+    p_shuf = list(pool)
+    for _ in range(n_perm):
+        rng.shuffle(p_shuf)
+        m1 = sum(p_shuf[:n1]) / n1
+        m2 = sum(p_shuf[n1:]) / (n_tot - n1)
+        if abs(m1 - m2) >= obs_diff - 1e-12:
+            exceed += 1
+    return (exceed + 1) / (n_perm + 1)
+
+
+
 def _solve_linear_system(a: list[list[float]], b: list[float]) -> list[float]:
     """Solve A x = b via Gaussian elimination with partial pivoting and Tikhonov ridge."""
     p = len(b)
@@ -371,6 +399,8 @@ def analyze_observations(obs: list[dict[str, Any]]) -> dict[str, Any]:
         for tgt in targets
     }
 
+    regimes = compute_regime_splits(obs)
+
     # Regime split: High Hub Concentration (degree_gini >= median) vs Low Hub Concentration
     ginis = sorted(o["degree_gini"] for o in obs)
     med_gini = ginis[len(ginis) // 2]
@@ -381,6 +411,7 @@ def analyze_observations(obs: list[dict[str, Any]]) -> dict[str, Any]:
         "n": len(obs),
         "correlations": correlations,
         "ols": ols_models,
+        "regimes": regimes,
         "median_gini": med_gini,
         "low_hub_summary": {
             "n": len(low_hub),
@@ -397,6 +428,89 @@ def analyze_observations(obs: list[dict[str, Any]]) -> dict[str, Any]:
             "mean_delta_f1": _mean([o["delta_f1_vs_flat"] for o in high_hub]),
         },
     }
+
+
+def compute_regime_splits(
+    obs: list[dict[str, Any]],
+    n_perm: int = 2500,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Compute 3-way median topological regime splits with permutation tests."""
+    if not obs:
+        return {}
+
+    targets = ["evidence_coverage", "precision_at_k", "F1", "delta_f1_vs_flat"]
+    split_configs = [
+        {
+            "key": "hub_inequality",
+            "name": "Hub Inequality (G_deg)",
+            "metric": "degree_gini",
+            "threshold_name": "Median G_deg",
+            "low_name": "Low Inequality",
+            "high_name": "High Inequality",
+            "delta_label": "Regime Contrast (Low - High)",
+            "invert_delta": False,  # low - high
+        },
+        {
+            "key": "super_hub_dominance",
+            "name": "Super-Hub Dominance",
+            "metric": "max_degree_ratio",
+            "threshold_name": "Median Max/Avg",
+            "low_name": "Low Dominance",
+            "high_name": "High Dominance",
+            "delta_label": "Regime Contrast (Low - High)",
+            "invert_delta": False,  # low - high
+        },
+        {
+            "key": "component_connectivity",
+            "name": "Component Connectivity",
+            "metric": "largest_component_ratio",
+            "threshold_name": "Median ρ_LCC",
+            "low_name": "Fragmented Component",
+            "high_name": "Connected Component",
+            "delta_label": "Regime Contrast (Conn - Frag)",
+            "invert_delta": True,  # high - low
+        },
+    ]
+
+    splits: dict[str, Any] = {}
+    for cfg in split_configs:
+        metric_key = cfg["metric"]
+        vals = sorted(o[metric_key] for o in obs)
+        med = vals[len(vals) // 2]
+        low_grp = [o for o in obs if o[metric_key] <= med]
+        high_grp = [o for o in obs if o[metric_key] > med]
+
+        target_stats: dict[str, dict[str, float]] = {}
+        for tgt in targets:
+            v_low = [o[tgt] for o in low_grp]
+            v_high = [o[tgt] for o in high_grp]
+            m_low = _mean(v_low)
+            m_high = _mean(v_high)
+            delta = (m_high - m_low) if cfg["invert_delta"] else (m_low - m_high)
+            p_val = permutation_p_diff(v_low, v_high, n_perm=n_perm, seed=seed)
+            target_stats[tgt] = {
+                "mean_low": m_low,
+                "mean_high": m_high,
+                "delta": delta,
+                "p_value": p_val,
+            }
+
+        splits[cfg["key"]] = {
+            "name": cfg["name"],
+            "metric": metric_key,
+            "threshold_name": cfg["threshold_name"],
+            "threshold_val": med,
+            "low_name": f"{cfg['low_name']} (≤ {med:.3f})" if med < 1.0 else f"{cfg['low_name']} (≤ {med:.2f})",
+            "high_name": f"{cfg['high_name']} (> {med:.3f})" if med < 1.0 else f"{cfg['high_name']} (> {med:.2f})",
+            "delta_label": cfg["delta_label"],
+            "invert_delta": cfg["invert_delta"],
+            "n_low": len(low_grp),
+            "n_high": len(high_grp),
+            "targets": target_stats,
+        }
+
+    return splits
 
 
 def print_h2_diagnostics(runs: list[dict]) -> None:
@@ -473,6 +587,45 @@ def print_h2_diagnostics(runs: list[dict]) -> None:
             f"{b.get('largest_component_ratio', 0.0):+.3f} | {b.get('edge_density', 0.0):+.3f} | "
             f"{b.get('bridge_edge_ratio', 0.0):+.3f} |"
         )
+
+    regimes = res.get("regimes") or compute_regime_splits(active_obs)
+    if regimes:
+        print("\n### Hypothesis 2 (Table 4): Topological Regime Breakdown (Median Splits on Natural Graphs)\n")
+        print("Stratifies natural graph memory QA observations (`n="
+              f"{res['n']}`) at the median across the three core structural bottleneck dimensions. "
+              "`Δ` reports the regime contrast (Low Hub vs High Hub; Connected vs Fragmented); "
+              "`p`-values use two-sided two-sample permutation tests (2,500 draws).\n")
+        print("| Structural Dimension | Partition Threshold | Regime | n | Evidence Coverage | Precision@k | Answerable F1 | ΔF1 vs Flat |")
+        print("|---|---|---|---|---|---|---|---|")
+        for r_key, r_info in regimes.items():
+            t_map = r_info["targets"]
+            med_fmt = f"{r_info['threshold_val']:.3f}" if r_info['threshold_val'] < 1.0 else f"{r_info['threshold_val']:.2f}"
+            thresh_str = f"{r_info['threshold_name']} = {med_fmt}"
+
+            # Row 1: Low/Fragmented
+            low_cov = f"{t_map['evidence_coverage']['mean_low']:.3f}"
+            low_prec = f"{t_map['precision_at_k']['mean_low']:.3f}"
+            low_f1 = f"{t_map['F1']['mean_low']:.3f}"
+            low_df1 = f"{t_map['delta_f1_vs_flat']['mean_low']:+.3f}"
+            print(f"| **{r_info['name']}** | {thresh_str} | {r_info['low_name']} | {r_info['n_low']} | "
+                  f"{low_cov} | {low_prec} | {low_f1} | {low_df1} |")
+
+            # Row 2: High/Connected
+            high_cov = f"{t_map['evidence_coverage']['mean_high']:.3f}"
+            high_prec = f"{t_map['precision_at_k']['mean_high']:.3f}"
+            high_f1 = f"{t_map['F1']['mean_high']:.3f}"
+            high_df1 = f"{t_map['delta_f1_vs_flat']['mean_high']:+.3f}"
+            print(f"| | | {r_info['high_name']} | {r_info['n_high']} | "
+                  f"{high_cov} | {high_prec} | {high_f1} | {high_df1} |")
+
+            # Row 3: Regime Contrast Delta
+            d_cov = f"**{t_map['evidence_coverage']['delta']:+.3f}** (p={t_map['evidence_coverage']['p_value']:.3f})"
+            d_prec = f"**{t_map['precision_at_k']['delta']:+.3f}** (p={t_map['precision_at_k']['p_value']:.3f})"
+            d_f1 = f"**{t_map['F1']['delta']:+.3f}** (p={t_map['F1']['p_value']:.3f})"
+            d_df1 = f"**{t_map['delta_f1_vs_flat']['delta']:+.3f}** (p={t_map['delta_f1_vs_flat']['p_value']:.3f})"
+            print(f"| | | **{r_info['delta_label']}** | – | "
+                  f"{d_cov} | {d_prec} | {d_f1} | {d_df1} |")
+
 
 
 def main() -> None:
