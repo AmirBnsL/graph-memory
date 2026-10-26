@@ -284,12 +284,13 @@ def _row_precision_at_k(row: dict) -> float:
     return hits / len(uniq_ctx)
 
 
-def collect_sample_observations(runs: list[dict], natural_only: bool = False) -> list[dict[str, Any]]:
+def collect_sample_observations(runs: list[dict], natural_only: bool = True) -> list[dict[str, Any]]:
     """Extract per-question observations with graph metrics and paired Flat deltas.
 
-    If natural_only=True, restricts observations strictly to natural LLM-extracted
+    By default (natural_only=True), restricts observations strictly to natural LLM-extracted
     graph memory substrates (Concept Graph and Bi-Temporal Event Graph), excluding
-    synthetic randomized controls (rewired) and zero-edge ablations (flattened).
+    synthetic randomized controls (rewired) and zero-edge ablations (flattened) as
+    mandated by ADR 0002. Set natural_only=False to collect all memory modes.
     """
     # Map (benchmark, retriever, extractor, k, n) -> memory_flat run
     flat_lookup: dict[tuple, dict[tuple[str, str], dict]] = {}
@@ -400,12 +401,8 @@ def analyze_observations(obs: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
     regimes = compute_regime_splits(obs)
-
-    # Regime split: High Hub Concentration (degree_gini >= median) vs Low Hub Concentration
-    ginis = sorted(o["degree_gini"] for o in obs)
-    med_gini = ginis[len(ginis) // 2]
-    low_hub = [o for o in obs if o["degree_gini"] <= med_gini]
-    high_hub = [o for o in obs if o["degree_gini"] > med_gini]
+    hub_split = regimes.get("hub_concentration", {})
+    med_gini = float(hub_split.get("threshold_val", 0.0))
 
     return {
         "n": len(obs),
@@ -414,18 +411,18 @@ def analyze_observations(obs: list[dict[str, Any]]) -> dict[str, Any]:
         "regimes": regimes,
         "median_gini": med_gini,
         "low_hub_summary": {
-            "n": len(low_hub),
-            "mean_coverage": _mean([o["evidence_coverage"] for o in low_hub]),
-            "mean_precision": _mean([o["precision_at_k"] for o in low_hub]),
-            "mean_f1": _mean([o["F1"] for o in low_hub]),
-            "mean_delta_f1": _mean([o["delta_f1_vs_flat"] for o in low_hub]),
+            "n": hub_split.get("n_low", 0),
+            "mean_coverage": hub_split.get("targets", {}).get("evidence_coverage", {}).get("mean_low", 0.0),
+            "mean_precision": hub_split.get("targets", {}).get("precision_at_k", {}).get("mean_low", 0.0),
+            "mean_f1": hub_split.get("targets", {}).get("F1", {}).get("mean_low", 0.0),
+            "mean_delta_f1": hub_split.get("targets", {}).get("delta_f1_vs_flat", {}).get("mean_low", 0.0),
         },
         "high_hub_summary": {
-            "n": len(high_hub),
-            "mean_coverage": _mean([o["evidence_coverage"] for o in high_hub]),
-            "mean_precision": _mean([o["precision_at_k"] for o in high_hub]),
-            "mean_f1": _mean([o["F1"] for o in high_hub]),
-            "mean_delta_f1": _mean([o["delta_f1_vs_flat"] for o in high_hub]),
+            "n": hub_split.get("n_high", 0),
+            "mean_coverage": hub_split.get("targets", {}).get("evidence_coverage", {}).get("mean_high", 0.0),
+            "mean_precision": hub_split.get("targets", {}).get("precision_at_k", {}).get("mean_high", 0.0),
+            "mean_f1": hub_split.get("targets", {}).get("F1", {}).get("mean_high", 0.0),
+            "mean_delta_f1": hub_split.get("targets", {}).get("delta_f1_vs_flat", {}).get("mean_high", 0.0),
         },
     }
 
@@ -442,12 +439,12 @@ def compute_regime_splits(
     targets = ["evidence_coverage", "precision_at_k", "F1", "delta_f1_vs_flat"]
     split_configs = [
         {
-            "key": "hub_inequality",
-            "name": "Hub Inequality (G_deg)",
+            "key": "hub_concentration",
+            "name": "Hub Concentration",
             "metric": "degree_gini",
             "threshold_name": "Median G_deg",
-            "low_name": "Low Inequality",
-            "high_name": "High Inequality",
+            "low_name": "Low Degree Gini",
+            "high_name": "High Degree Gini",
             "delta_label": "Regime Contrast (Low - High)",
             "invert_delta": False,  # low - high
         },
@@ -456,8 +453,8 @@ def compute_regime_splits(
             "name": "Super-Hub Dominance",
             "metric": "max_degree_ratio",
             "threshold_name": "Median Max/Avg",
-            "low_name": "Low Dominance",
-            "high_name": "High Dominance",
+            "low_name": "Low Max Degree Ratio",
+            "high_name": "High Max Degree Ratio",
             "delta_label": "Regime Contrast (Low - High)",
             "invert_delta": False,  # low - high
         },
@@ -466,8 +463,8 @@ def compute_regime_splits(
             "name": "Component Connectivity",
             "metric": "largest_component_ratio",
             "threshold_name": "Median ρ_LCC",
-            "low_name": "Fragmented Component",
-            "high_name": "Connected Component",
+            "low_name": "Fragmented Component Ratio",
+            "high_name": "Connected Component Ratio",
             "delta_label": "Regime Contrast (Conn - Frag)",
             "invert_delta": True,  # high - low
         },
@@ -540,13 +537,7 @@ def print_h2_diagnostics(runs: list[dict]) -> None:
     if not obs:
         return
 
-    # Analyze pooled across natural graph memory substrates (Concept Graph + Bi-Temporal Event Graph),
-    # strictly excluding synthetic randomized controls (rewired) and 0-edge ablations (flattened)
-    active_obs = [o for o in obs if o["mode"] in ("memory_hipporag", "memory_temporal_bteg")]
-    if len(active_obs) < 6:
-        active_obs = obs
-
-    res = analyze_observations(active_obs)
+    res = analyze_observations(obs)
 
     print("\n### Hypothesis 2 (Table 2): Univariate Topological Correlations (`n="
           f"{res['n']}` natural graph QA observations)\n")

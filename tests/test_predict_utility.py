@@ -108,7 +108,7 @@ class TestPredictUtility(unittest.TestCase):
         obs_nat = predict_utility.collect_sample_observations(runs, natural_only=True)
         regimes = predict_utility.compute_regime_splits(obs_nat)
 
-        self.assertIn("hub_inequality", regimes)
+        self.assertIn("hub_concentration", regimes)
         self.assertIn("super_hub_dominance", regimes)
         self.assertIn("component_connectivity", regimes)
 
@@ -139,7 +139,7 @@ class TestPredictUtility(unittest.TestCase):
 
         out = buf.getvalue()
         self.assertIn("### Hypothesis 2 (Table 4): Topological Regime Breakdown", out)
-        self.assertIn("Hub Inequality (G_deg)", out)
+        self.assertIn("Hub Concentration", out)
         self.assertIn("Super-Hub Dominance", out)
         self.assertIn("Component Connectivity", out)
 

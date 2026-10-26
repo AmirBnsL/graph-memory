@@ -160,14 +160,14 @@ Stratifies natural graph memory QA observations (`n=80`) at the median across th
 
 | Structural Dimension | Partition Threshold | Regime | n | Evidence Coverage | Precision@k | Answerable F1 | ΔF1 vs Flat |
 |---|---|---|---|---|---|---|---|
-| **Hub Inequality (G_deg)** | Median G_deg = 0.608 | Low Inequality (≤ 0.608) | 41 | 0.612 | 0.193 | 0.370 | -0.072 |
-| | | High Inequality (> 0.608) | 39 | 0.577 | 0.199 | 0.251 | -0.343 |
+| **Hub Concentration** | Median G_deg = 0.608 | Low Degree Gini (≤ 0.608) | 41 | 0.612 | 0.193 | 0.370 | -0.072 |
+| | | High Degree Gini (> 0.608) | 39 | 0.577 | 0.199 | 0.251 | -0.343 |
 | | | **Regime Contrast (Low - High)** | – | **+0.035** (p=0.693) | **-0.007** (p=0.828) | **+0.118** (p=0.224) | **+0.271** (p=0.013) |
-| **Super-Hub Dominance** | Median Max/Avg = 12.26 | Low Dominance (≤ 12.26) | 41 | 0.740 | 0.229 | 0.443 | -0.064 |
-| | | High Dominance (> 12.26) | 39 | 0.443 | 0.161 | 0.174 | -0.352 |
+| **Super-Hub Dominance** | Median Max/Avg = 12.26 | Low Max Degree Ratio (≤ 12.26) | 41 | 0.740 | 0.229 | 0.443 | -0.064 |
+| | | High Max Degree Ratio (> 12.26) | 39 | 0.443 | 0.161 | 0.174 | -0.352 |
 | | | **Regime Contrast (Low - High)** | – | **+0.297** (p=0.002) | **+0.067** (p=0.036) | **+0.268** (p=0.008) | **+0.288** (p=0.008) |
-| **Component Connectivity** | Median ρ_LCC = 0.239 | Fragmented Component (≤ 0.239) | 41 | 0.434 | 0.147 | 0.198 | -0.342 |
-| | | Connected Component (> 0.239) | 39 | 0.764 | 0.247 | 0.432 | -0.059 |
+| **Component Connectivity** | Median ρ_LCC = 0.239 | Fragmented Component Ratio (≤ 0.239) | 41 | 0.434 | 0.147 | 0.198 | -0.342 |
+| | | Connected Component Ratio (> 0.239) | 39 | 0.764 | 0.247 | 0.432 | -0.059 |
 | | | **Regime Contrast (Conn - Frag)** | – | **+0.330** (p=0.000) | **+0.101** (p=0.001) | **+0.235** (p=0.020) | **+0.282** (p=0.009) |
 
 ### Retrieval recall by category: locomo
