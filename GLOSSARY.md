@@ -59,3 +59,30 @@ _Avoid_: Naive memory, raw memory, unlinked facts
 **Vector Baseline**:
 Dense semantic retrieval executed directly over raw dialogue turns without fact or entity extraction.
 _Avoid_: Vanilla RAG, naive RAG, dense baseline
+
+**Evidence Coverage**:
+The fraction of gold ground-truth provenance turns retrieved within the top-$k$ context items ($|\text{retrieved} \cap \text{provenance}| / |\text{provenance}|$).
+_Avoid_: Fractional recall, turn overlap, evidence hit rate
+
+**Precision@k**:
+The fraction of unique retrieved context turns that belong to the ground-truth provenance set ($|\text{retrieved} \cap \text{provenance}| / |\text{retrieved}|$).
+_Avoid_: Context purity, turn precision, hit accuracy
+
+## Topological Diagnostics (H2)
+
+**Degree Gini ($G_{\text{deg}}$)**:
+A non-parametric Lorenz-curve inequality metric ($G_{\text{deg}} \in [0, 1]$) computed over the graph's node degree distribution, measuring super-hub concentration where generic entities divert associative traversal away from specific evidence.
+_Avoid_: Hub Gini, degree skewness, hubness score
+
+**Max Degree Ratio**:
+The ratio of the maximum node degree to the average node degree ($\max_v \deg(v) / \bar{d}$), capturing extreme single-entity hub dominance.
+_Avoid_: Peak degree ratio, hub ratio, maximum connectivity ratio
+
+**Largest Connected Component Ratio ($\rho_{\text{LCC}}$)**:
+The fraction of total graph nodes contained in the largest connected component ($|V_{\text{LCC}}| / |V|$), measuring global topological reachability versus component fragmentation.
+_Avoid_: LCC fraction, giant component size, connectivity score
+
+**Bridge Edge Ratio**:
+The fraction of simple undirected edges whose removal increases the number of connected components ($|E_{\text{bridges}}| / |E_{\text{simple}}|$), measuring fragile single-path topological bottlenecks.
+_Avoid_: Cut-edge fraction, bottleneck ratio, bridge frequency
+

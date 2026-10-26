@@ -1,4 +1,4 @@
-"""Topological Quality Metrics for Agent Memory Graphs (Hypothesis 3).
+"""Topological Quality Metrics for Agent Memory Graphs (Hypothesis 2).
 
 Computes cheap, non-parametric structural statistics on memory graphs:
   - Connectivity: Largest connected component ratio (LCC / |V|), number of components.

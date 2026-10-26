@@ -11,8 +11,9 @@ Rigorous evaluation harness and neurobiologically inspired graph memory engine f
 ## Overview
 
 Conversational agents interacting over long horizons need reliable episodic and semantic memory. **Graph Memory** evaluates and investigates:
-1. **H1 — Structure vs. Extraction:** Does topological graph structure provide retrieval power beyond the raw factual extraction of an LLM? Evaluated across naive dense retrieval, flattened facts, HippoRAG, and Bi-Temporal Event Graphs (BTEG).
-2. **H3 — Structural Quality & Utility Prediction:** Do cheap graph-topological metrics (degree Gini, largest component ratio, edge density, bridge edge ratio) statistically predict downstream QA utility?
+1. **H1 — Structure vs. Extraction Decomposition:** Does topological graph structure provide retrieval power beyond the raw factual extraction of an LLM? Evaluated across naive dense retrieval, flat atomic facts, HippoRAG concept graphs, and Bi-Temporal Event Graphs (BTEG).
+2. **H2 — Predictive Non-Parametric Topological Diagnostics:** Do cheap $\mathcal{O}(|V|+|E|)$ graph-topological metrics (Degree Gini, Max Degree Ratio, Largest Connected Component Ratio, Edge Density, Bridge Edge Ratio) statistically predict downstream retrieval coverage and precision?
+3. **H3 — Zero-LLM Causal Graph Repair:** Can deterministic, post-hoc graph repairs ($\mathcal{T}_{\text{repair}}$) close the performance gap between open 7B and frontier 70B extractors without additional LLM inference tokens?
 
 ```mermaid
 flowchart LR
