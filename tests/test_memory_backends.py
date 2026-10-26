@@ -7,11 +7,12 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from graph_memory.pipeline.extract import MemoryRecord
 from graph_memory.memory.base import BaseMemory
-from graph_memory import FlatMemory, HippoRAGMemory, HippoRAG2Memory, BiTemporalMemory
+from graph_memory import FlatMemory, HippoRAGMemory, HippoRAG2Memory, LightRAGMemory, BiTemporalMemory
 from graph_memory.memory.vector import FlatMemory as FlatMemoryFromVector
 from graph_memory.memory.graph import (
     HippoRAGMemory as HippoRAGMemoryFromGraph,
     HippoRAG2Memory as HippoRAG2MemoryFromGraph,
+    LightRAGMemory as LightRAGMemoryFromGraph,
     BiTemporalMemory as BiTemporalMemoryFromGraph,
 )
 
@@ -68,6 +69,22 @@ class TestMemoryBackends(unittest.TestCase):
         self.assertIs(HippoRAGMemory, HippoRAGMemoryFromGraph)
         self.assertIs(HippoRAG2Memory, HippoRAG2MemoryFromGraph)
         self.assertIs(BiTemporalMemory, BiTemporalMemoryFromGraph)
+        self.assertIs(LightRAGMemory, LightRAGMemoryFromGraph)
+
+    def test_lightrag_memory(self):
+        lightrag = LightRAGMemory(embedder=self.mock_embedder)
+        lightrag.add_records(self.records)
+
+        g = lightrag.export_graph()
+        self.assertIsNotNone(g)
+        self.assertIn("entity:alice", g.nodes)
+        self.assertIn("entity:bmw", g.nodes)
+
+        # Retrieval
+        res = lightrag.retrieve(query="What car did Alice buy? BMW", k=2)
+        self.assertGreaterEqual(len(res), 1)
+        self.assertGreater(res[0].score, 0.0)
+        self.assertTrue(res[0].id.startswith("turn:"))
 
     def test_flat_memory(self):
         flat = FlatMemory(embedder=self.mock_embedder)

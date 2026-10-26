@@ -1,0 +1,6 @@
+name: memory
+backend: lightrag
+flatten_structure: false
+synonym_threshold: 0.85
+extractor_model: null
+extractor_provider: null
