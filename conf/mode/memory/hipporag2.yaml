@@ -1,0 +1,5 @@
+name: memory
+backend: hipporag2
+synonym_threshold: 0.85
+extractor_model: null
+extractor_provider: null

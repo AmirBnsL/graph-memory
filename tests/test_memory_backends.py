@@ -7,9 +7,13 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from graph_memory.pipeline.extract import MemoryRecord
 from graph_memory.memory.base import BaseMemory
-from graph_memory import FlatMemory, HippoRAGMemory, BiTemporalMemory
+from graph_memory import FlatMemory, HippoRAGMemory, HippoRAG2Memory, BiTemporalMemory
 from graph_memory.memory.vector import FlatMemory as FlatMemoryFromVector
-from graph_memory.memory.graph import HippoRAGMemory as HippoRAGMemoryFromGraph, BiTemporalMemory as BiTemporalMemoryFromGraph
+from graph_memory.memory.graph import (
+    HippoRAGMemory as HippoRAGMemoryFromGraph,
+    HippoRAG2Memory as HippoRAG2MemoryFromGraph,
+    BiTemporalMemory as BiTemporalMemoryFromGraph,
+)
 
 
 class MockEmbedder:
@@ -62,6 +66,7 @@ class TestMemoryBackends(unittest.TestCase):
     def test_subpackage_exports(self):
         self.assertIs(FlatMemory, FlatMemoryFromVector)
         self.assertIs(HippoRAGMemory, HippoRAGMemoryFromGraph)
+        self.assertIs(HippoRAG2Memory, HippoRAG2MemoryFromGraph)
         self.assertIs(BiTemporalMemory, BiTemporalMemoryFromGraph)
 
     def test_flat_memory(self):

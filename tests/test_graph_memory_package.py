@@ -11,6 +11,7 @@ class TestGraphMemoryPackage(unittest.TestCase):
         self.assertTrue(hasattr(graph_memory, "BaseMemory"))
         self.assertTrue(hasattr(graph_memory, "FlatMemory"))
         self.assertTrue(hasattr(graph_memory, "HippoRAGMemory"))
+        self.assertTrue(hasattr(graph_memory, "HippoRAG2Memory"))
         self.assertTrue(hasattr(graph_memory, "BiTemporalMemory"))
 
     def test_core_package_exports(self):
