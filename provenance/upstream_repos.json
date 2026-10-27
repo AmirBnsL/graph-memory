@@ -1,0 +1,22 @@
+{
+  "repositories": {
+    "MAGMA": {
+      "repo": "https://github.com/FredJiang0324/MAGMA.git",
+      "commit": "467cb70b67ac337b22fdb42194d37c04ad701b62",
+      "venue": "ACL 2026",
+      "paper": "MAGMA: A Multi-Graph based Agentic Memory Architecture for AI Agents (arXiv:2601.03236)"
+    },
+    "EMem": {
+      "repo": "https://github.com/KevinSRR/EMem.git",
+      "commit": "4390269ecda5ab7e3ecce0e10bf8ebfd692ec406",
+      "venue": "Preprint 2025",
+      "paper": "A Simple Yet Strong Baseline for Long-Term Conversational Memory of LLM Agents (arXiv:2511.17208)"
+    },
+    "AgenticMemory": {
+      "repo": "https://github.com/WujiangXu/AgenticMemory.git",
+      "commit": "b31a1dddf56f87ec762cce3539418602d7e2ffb1",
+      "venue": "NeurIPS 2025",
+      "paper": "A-MEM: Agentic Memory for LLM Agents (arXiv:2502.12110)"
+    }
+  }
+}
