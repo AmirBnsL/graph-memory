@@ -295,7 +295,7 @@ NATURAL_MODES: tuple[str, ...] = (
 )
 
 
-def collect_sample_observations(runs: list[dict], natural_only: bool = True) -> list[dict[str, Any]]:
+def collect_sample_observations(runs: list[dict], natural_only: bool = True, cohort: str = "all") -> list[dict[str, Any]]:
     """Extract per-question observations with graph metrics and paired Flat deltas.
 
     By default (natural_only=True), restricts observations strictly to natural LLM-extracted
@@ -303,7 +303,11 @@ def collect_sample_observations(runs: list[dict], natural_only: bool = True) -> 
     MAGMA, EMem-G, A-MEM), excluding synthetic randomized controls (rewired) and zero-edge
     ablations (flattened) as mandated by ADR 0002 and ADR 0005. Set natural_only=False to
     collect all memory modes.
+
+    cohort: 'all' | 'part_a' | 'part_b'
     """
+    part_a_modes = {"memory_hipporag", "memory_temporal_bteg", "memory_hipporag2", "memory_lightrag"}
+    part_b_modes = {"memory_magma", "memory_emem_g", "memory_amem"}
     # Map (benchmark, retriever, extractor, k, n) -> memory_flat / memory_emem_flat run
     flat_lookup: dict[tuple, dict[tuple[str, str], dict]] = {}
     emem_flat_lookup: dict[tuple, dict[tuple[str, str], dict]] = {}
@@ -333,8 +337,13 @@ def collect_sample_observations(runs: list[dict], natural_only: bool = True) -> 
         mode = str(d.get("mode") or "")
         if not mode.startswith("memory_") or mode in ("memory_flat", "memory_emem_flat"):
             continue
-        if natural_only and mode not in NATURAL_MODES:
-            continue
+        if natural_only:
+            if mode not in NATURAL_MODES:
+                continue
+            if cohort == "part_a" and mode not in part_a_modes:
+                continue
+            if cohort == "part_b" and mode not in part_b_modes:
+                continue
         by_sample = d.get("graph_metrics_by_sample") or {}
         if not by_sample:
             continue
