@@ -284,18 +284,32 @@ def _row_precision_at_k(row: dict) -> float:
     return hits / len(uniq_ctx)
 
 
+NATURAL_MODES: tuple[str, ...] = (
+    "memory_hipporag",
+    "memory_temporal_bteg",
+    "memory_hipporag2",
+    "memory_lightrag",
+    "memory_magma",
+    "memory_emem_g",
+    "memory_amem",
+)
+
+
 def collect_sample_observations(runs: list[dict], natural_only: bool = True) -> list[dict[str, Any]]:
     """Extract per-question observations with graph metrics and paired Flat deltas.
 
     By default (natural_only=True), restricts observations strictly to natural LLM-extracted
-    graph memory substrates (Concept Graph and Bi-Temporal Event Graph), excluding
-    synthetic randomized controls (rewired) and zero-edge ablations (flattened) as
-    mandated by ADR 0002. Set natural_only=False to collect all memory modes.
+    graph memory substrates (both Part A causal substrates and Part B upstream frameworks:
+    MAGMA, EMem-G, A-MEM), excluding synthetic randomized controls (rewired) and zero-edge
+    ablations (flattened) as mandated by ADR 0002 and ADR 0005. Set natural_only=False to
+    collect all memory modes.
     """
-    # Map (benchmark, retriever, extractor, k, n) -> memory_flat run
+    # Map (benchmark, retriever, extractor, k, n) -> memory_flat / memory_emem_flat run
     flat_lookup: dict[tuple, dict[tuple[str, str], dict]] = {}
+    emem_flat_lookup: dict[tuple, dict[tuple[str, str], dict]] = {}
     for d in runs:
-        if d.get("mode") != "memory_flat":
+        m = d.get("mode")
+        if m not in ("memory_flat", "memory_emem_flat"):
             continue
         ext = str(d.get("extractor_model") or d.get("model") or "")
         gkey = (
@@ -305,17 +319,21 @@ def collect_sample_observations(runs: list[dict], natural_only: bool = True) -> 
             int(d.get("k") or 0),
             int(d.get("n") or 0),
         )
-        flat_lookup[gkey] = {
+        row_map = {
             (str(r.get("sample_id")), str(r.get("question"))): r
             for r in d.get("rows", [])
         }
+        if m == "memory_emem_flat":
+            emem_flat_lookup[gkey] = row_map
+        else:
+            flat_lookup[gkey] = row_map
 
     observations: list[dict[str, Any]] = []
     for d in runs:
         mode = str(d.get("mode") or "")
-        if not mode.startswith("memory_") or mode == "memory_flat":
+        if not mode.startswith("memory_") or mode in ("memory_flat", "memory_emem_flat"):
             continue
-        if natural_only and mode not in ("memory_hipporag", "memory_temporal_bteg", "memory_hipporag2", "memory_lightrag"):
+        if natural_only and mode not in NATURAL_MODES:
             continue
         by_sample = d.get("graph_metrics_by_sample") or {}
         if not by_sample:
@@ -326,7 +344,8 @@ def collect_sample_observations(runs: list[dict], natural_only: bool = True) -> 
         b = d.get("benchmark", "locomo")
         k = int(d.get("k") or 0)
         n = int(d.get("n") or 0)
-        flat_rows = flat_lookup.get((b, retr, ext, k, n), {})
+        gkey = (b, retr, ext, k, n)
+        flat_rows = emem_flat_lookup.get(gkey) if mode == "memory_emem_g" and gkey in emem_flat_lookup else flat_lookup.get(gkey, {})
 
         for r in d.get("rows", []):
             if r.get("adversarial"):

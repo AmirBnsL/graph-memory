@@ -10,7 +10,10 @@ class TestTicket3Tables(unittest.TestCase):
         glossary_text = (ROOT / "GLOSSARY.md").read_text()
         self.assertIn("**Vector Baseline**:", glossary_text)
         self.assertIn("**Flat Memory**:", glossary_text)
-        self.assertIn("**Concept Graph**:", glossary_text)
+        self.assertTrue(
+            "**Concept Graph**:" in glossary_text or "**Concept Graph (Canonical)**:" in glossary_text,
+            "Concept graph canonical entry missing from GLOSSARY.md",
+        )
         self.assertIn("**Flattened Graph**:", glossary_text)
         self.assertIn("**Rewired Graph**:", glossary_text)
         self.assertIn("**Bi-Temporal Event Graph (BTEG)**:", glossary_text)

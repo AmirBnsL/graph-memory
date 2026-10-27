@@ -34,9 +34,13 @@ _Avoid_: Edge, link, RDF statement, fact
 A graph memory representation that distinguishes valid time (when an event occurred in the real world) from transaction time (when the dialogue turn was observed).
 _Avoid_: Temporal KG, time graph
 
-**Concept Graph**:
-An entity-and-synonym graph memory representation ($G = (N, E \cup E')$) connecting extracted entities via relation triples and embedding synonymy bridges, traversed via Personalized PageRank.
-_Avoid_: Entity KG, HippoRAG graph, semantic network
+**Concept Graph (Canonical)**:
+An entity-and-synonym graph memory representation ($G = (N, E \cup E')$) implementing the strict, unadulterated HippoRAG 1 specification (NeurIPS 2024) without stop-node filtering or structural intervention, traversed via Personalized PageRank with linear inverse occurrence specificity ($s_i = 1 / |P_i|$).
+_Avoid_: Pure HippoRAG, unpruned KG, raw entity graph
+
+**Concept Graph (Calibrated)**:
+A conversational adaptation of the Concept Graph that incorporates data-driven occurrence filtering ($|P_v| / |T| > \theta$) to suppress structural dialogue super-hubs before traversal via Personalized PageRank.
+_Avoid_: Tampered HippoRAG, hacked KG, stopword graph
 
 **Flattened Graph**:
 A zero-edge ablation of a Concept Graph ($E = \emptyset, E' = \emptyset$) that preserves entity-to-turn occurrence mapping and specificity weighting while eliminating relational traversal.
@@ -53,6 +57,22 @@ _Avoid_: HippoRAG 2 graph, passage-entity graph, two-tier graph
 **Dual-Level Graph**:
 A hierarchical graph memory representation that stratifies memory into low-level entity-relation triples and high-level thematic concept nodes derived from semantic clustering of subgraphs, supporting dual-level query routing.
 _Avoid_: LightRAG graph, hierarchical KG, community graph
+
+**Multi-Graph Agentic Memory (MAGMA)**:
+A conversational agent memory representation that stratifies dialogue events across four typed, orthogonal relational layers (Temporal, Causal, Entity, and Semantic) over segmented event nodes, supporting multi-view associative traversal.
+_Avoid_: Flat multi-graph, loose relation graph
+
+**EDU Heterogeneous Graph (EMem-G)**:
+A conversational memory representation that segments dialogue turns into elementary discourse units (EDUs) and extracted arguments (entities, temporal expressions, events) as distinct heterogeneous vertices, traversed via Personalized PageRank (or ablated via flat EDU retrieval in EMem).
+_Avoid_: Raw turn graph, homogeneous EDU graph
+
+**Dynamic Zettelkasten Graph (A-MEM)**:
+An agentic memory representation that models conversational experiences as structured memory note vertices, linking notes via LLM-evolved associative connections, semantic tags, and context descriptions.
+_Avoid_: Static note list, unlinked memo store
+
+**Topological Sidecar**:
+A read-only diagnostic observer that extracts and projects persisted graph memory representations from upstream agent runtimes into simple undirected graphs, computing non-parametric topological metrics without modifying upstream indexing or retrieval logic.
+_Avoid_: Intrusive graph wrapper, modified memory engine
 
 ## Retrieval & Evaluation
 
