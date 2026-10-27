@@ -5,6 +5,7 @@
 
 # benchmark data (cloned by hash; reproduce with `git clone`, don't commit)
 data/
+external/
 
 # caches -- rebuildable from cache/llm/*.json only if you keep them;
 # by default these are large and regenerable
