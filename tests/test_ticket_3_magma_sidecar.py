@@ -42,6 +42,24 @@ class TestTicket3MagmaSidecar(unittest.TestCase):
         self.assertFalse(simple_g.has_edge(0, 0), "Self-loops must be stripped")
         self.assertTrue(simple_g.has_edge(0, 1))
 
+    def test_magma_graph_json_export_format(self):
+        import json
+        json_data = {
+            "nodes": [{"node_id": "e1"}, {"node_id": "e2"}, {"node_id": "e3"}],
+            "links": [
+                {"source_id": "e1", "target_id": "e2"},
+                {"source_id": "e2", "target_id": "e3"},
+            ]
+        }
+        json_file = self.dir_path / "graph.json"
+        with open(json_file, "w") as f:
+            json.dump(json_data, f)
+
+        g = external_inspector.extract_magma_graph(json_file)
+        self.assertEqual(g.number_of_nodes(), 3)
+        self.assertTrue(g.has_edge("e1", "e2"))
+        self.assertTrue(g.has_edge("e2", "e3"))
+
     def test_inspect_magma_run_end_to_end_through_h2_seam(self):
         mg = nx.MultiDiGraph()
         for i in range(6):

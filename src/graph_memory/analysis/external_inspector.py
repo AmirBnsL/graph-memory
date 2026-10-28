@@ -29,19 +29,34 @@ def project_to_simple_undirected(g: nx.Graph | nx.MultiGraph | nx.DiGraph | nx.M
 
 
 def extract_magma_graph(cache_path: Path) -> nx.Graph:
-    """Load MAGMA's persisted NetworkX multi-graph and project to simple undirected graph.
+    """Load MAGMA's persisted graph (JSON or pickle) and project to simple undirected graph.
 
-    Handles either a direct pickle file or a sample directory containing graph.pickle / graph.pkl.
+    Handles either a direct JSON/pickle file or a sample directory containing graph.json / graph.pickle.
     """
     p = cache_path
     if p.is_dir():
-        for candidate in ["graph.pickle", "graph.pkl", "trg_graph.pkl", "magma_graph.pkl"]:
+        for candidate in ["graph.json", "graph.pickle", "graph.pkl", "trg_graph.pkl", "magma_graph.pkl"]:
             if (p / candidate).exists():
                 p = p / candidate
                 break
 
     if not p.is_file():
         raise FileNotFoundError(f"MAGMA graph artifact not found at {cache_path}")
+
+    if p.name.endswith(".json"):
+        with open(p, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        simple = nx.Graph()
+        for n in data.get("nodes", []):
+            nid = n.get("node_id") or n.get("id")
+            if nid is not None:
+                simple.add_node(nid)
+        for l in data.get("links", []):
+            u = l.get("source_id") or l.get("source")
+            v = l.get("target_id") or l.get("target")
+            if u is not None and v is not None and u != v:
+                simple.add_edge(u, v)
+        return simple
 
     with open(p, "rb") as f:
         raw_g = pickle.load(f)
