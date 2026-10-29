@@ -190,6 +190,27 @@ Stratifies natural graph memory QA observations (`n=160`) at the median across t
 | | | Connected Component Ratio (> 0.913) | 78 | 0.715 | 0.164 | 0.057 | -0.412 |
 | | | **Regime Contrast (Conn - Frag)** | – | **+0.110** (p=0.067) | **-0.025** (p=0.191) | **-0.251** (p=0.000) | **-0.213** (p=0.005) |
 
+### Hypothesis 2 Diagnostic Figures
+
+The following publication-quality diagnostic plots illustrate the non-parametric topological effects and regime boundaries evaluated on natural graph memory representations ($n=160$ natural graph QA observations plus unmodified upstream frameworks):
+
+- **Figure 1: Non-Parametric Topological Diagnostics vs Retrieval Outcomes (OLS Regression & Scatter)**
+  ![Figure 1: OLS Regression Scatter](../assets/fig1_ols_regression_scatter.png)
+  *Scatter plots and standardized OLS trendlines (with 95% confidence intervals) showing how Super-Hub Dominance ($\text{Max/Avg Degree}$) and Bridge Edge Fragility degrade Evidence Coverage and Precision@k.*
+
+- **Figure 2: Super-Hub Dominance Regime Breakdown (Median Splits on Natural Graphs)**
+  ![Figure 2: Regime Breakdown](../assets/fig2_regime_breakdown_bars.png)
+  *Grouped bar chart depicting Table 4's median splits for Super-Hub Dominance ($\text{Max/Avg} \le 13.56$ vs $> 13.56$) across Evidence Coverage (+0.191 contrast, $p=0.001$), Precision@k (+0.047 contrast, $p=0.009$), Answerable F1 (+0.148 contrast, $p=0.006$), and Structural Gain $\Delta\text{F1}$ vs Flat (+0.187 contrast, $p=0.017$).*
+
+- **Figure 3: Degree Lorenz Curves & Structural Gini Inequality**
+  ![Figure 3: Degree Lorenz Curves](../assets/fig3_degree_lorenz_curves.png)
+  *Degree Lorenz curves measuring structural degree inequality across memory architectures. Unconstrained entity graphs (HippoRAG, BTEG) exhibit severe Gini bowing ($G \ge 0.58$), whereas episode-chunked multi-graphs (MAGMA, $G = 0.144$) stay close to the line of perfect equality.*
+
+- **Figure 4: Multi-Dimensional Structural Topology Radar**
+  ![Figure 4: Topology Radar](../assets/fig4_topology_radar.png)
+  *Radar chart contrasting the six-dimensional structural fingerprint (Degree Equality, Hub Containment, Connectivity, Density, Clustering, and Robustness) across HippoRAG, HippoRAG 2, LightRAG, Temporal BTEG, and MAGMA.*
+
+
 ### Retrieval recall by category: locomo
 
 | mode | retriever | extractor | k | n | multi-hop | temporal | open-domain | single-hop | adversarial | overall |

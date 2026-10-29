@@ -52,8 +52,8 @@ def extract_magma_graph(cache_path: Path) -> nx.Graph:
             if nid is not None:
                 simple.add_node(nid)
         for l in data.get("links", []):
-            u = l.get("source_id") or l.get("source")
-            v = l.get("target_id") or l.get("target")
+            u = l.get("source_node_id") or l.get("source_id") or l.get("source") or l.get("src")
+            v = l.get("target_node_id") or l.get("target_id") or l.get("target") or l.get("dst")
             if u is not None and v is not None and u != v:
                 simple.add_edge(u, v)
         return simple

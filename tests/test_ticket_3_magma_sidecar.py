@@ -48,7 +48,7 @@ class TestTicket3MagmaSidecar(unittest.TestCase):
             "nodes": [{"node_id": "e1"}, {"node_id": "e2"}, {"node_id": "e3"}],
             "links": [
                 {"source_id": "e1", "target_id": "e2"},
-                {"source_id": "e2", "target_id": "e3"},
+                {"source_node_id": "e2", "target_node_id": "e3"},
             ]
         }
         json_file = self.dir_path / "graph.json"
