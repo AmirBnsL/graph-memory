@@ -194,7 +194,7 @@ def plot_fig2_regime_breakdown(regimes: dict[str, Any], out_path: Path) -> None:
     print(f"Saved: {out_path}")
 
 
-def plot_fig3_degree_lorenz(runs: list[dict[str, Any]], magma_graph_path: Path | None, out_path: Path) -> None:
+def plot_fig3_degree_lorenz(runs: list[dict[str, Any]], magma_graph_path: Path | None, emem_graph_path: Path | None, amem_graph_path: Path | None, out_path: Path) -> None:
     """Figure 3: Degree Lorenz curves comparing Gini inequality across architectures."""
     fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -223,12 +223,27 @@ def plot_fig3_degree_lorenz(runs: list[dict[str, Any]], magma_graph_path: Path |
         p, L, gini = compute_lorenz_curve(degs)
         ax.plot(p, L, label=f"MAGMA (G={gini:.3f})", color=PALETTE["memory_magma"], linewidth=2.5)
 
-    # 2. Extract runs for other architectures
+    # 2. EMem-G (from real on-disk graph)
+    if emem_graph_path and emem_graph_path.exists():
+        g_emem = external_inspector.extract_emem_graph(emem_graph_path)
+        degs = [float(d) for _, d in g_emem.degree()]
+        p, L, gini = compute_lorenz_curve(degs)
+        ax.plot(p, L, label=f"EMem-G (G={gini:.3f})", color=PALETTE["memory_emem_g"], linewidth=2.5)
+
+    # 3. A-MEM (from real on-disk graph)
+    if amem_graph_path and amem_graph_path.exists():
+        g_amem = external_inspector.extract_amem_graph(amem_graph_path)
+        degs = [float(d) for _, d in g_amem.degree()]
+        p, L, gini = compute_lorenz_curve(degs)
+        ax.plot(p, L, label=f"A-MEM (G={gini:.3f})", color=PALETTE["memory_amem"], linewidth=2.5)
+
+    # 4. Extract runs for other architectures
     arch_runs = {}
     for d in runs:
         m = d.get("mode")
         if m in PALETTE and m not in arch_runs and d.get("graph_metrics"):
-            arch_runs[m] = d
+            if m not in ("memory_magma", "memory_emem_g", "memory_amem"):
+                arch_runs[m] = d
 
     # For architectures without direct node degree lists in results json,
     # generate calibrated degree sequences matching their empirical (mean_deg, deg_var, gini, max_deg_ratio)
@@ -267,7 +282,7 @@ def plot_fig3_degree_lorenz(runs: list[dict[str, Any]], magma_graph_path: Path |
     print(f"Saved: {out_path}")
 
 
-def plot_fig4_topology_radar(runs: list[dict[str, Any]], magma_metrics: dict[str, float] | None, out_path: Path) -> None:
+def plot_fig4_topology_radar(runs: list[dict[str, Any]], magma_metrics: dict[str, float] | None, emem_metrics: dict[str, float] | None, amem_metrics: dict[str, float] | None, out_path: Path) -> None:
     """Figure 4: Structural topology radar chart comparing architectural profiles."""
     labels = [
         "Degree Equality\n(1 - Gini)",
@@ -306,6 +321,8 @@ def plot_fig4_topology_radar(runs: list[dict[str, Any]], magma_metrics: dict[str
     # Plot architectures
     arch_configs = [
         ("memory_magma", "MAGMA (Multi-Graph)", magma_metrics, PALETTE["memory_magma"]),
+        ("memory_emem_g", "EMem-G (EDU Graph)", emem_metrics, PALETTE["memory_emem_g"]),
+        ("memory_amem", "A-MEM (Zettelkasten)", amem_metrics, PALETTE["memory_amem"]),
         ("memory_hipporag2", "HippoRAG 2 (Bipartite)", None, PALETTE["memory_hipporag2"]),
         ("memory_lightrag", "LightRAG (Dual-Level)", None, PALETTE["memory_lightrag"]),
         ("memory_hipporag", "HippoRAG (1-Hop)", None, PALETTE["memory_hipporag"]),
@@ -332,7 +349,7 @@ def plot_fig4_topology_radar(runs: list[dict[str, Any]], magma_metrics: dict[str
     ax.set_yticklabels(["0.2", "0.4", "0.6", "0.8", "1.0"], color="#666666", fontsize=8)
     ax.set_ylim(0, 1.05)
     ax.set_title("Figure 4: Multi-Dimensional Structural Topology Radar", fontsize=13, fontweight="bold", pad=25)
-    ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1), frameon=True, facecolor="white")
+    ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1.1), frameon=True, facecolor="white")
 
     plt.tight_layout()
     plt.savefig(out_path, bbox_inches="tight", dpi=300)
@@ -356,6 +373,24 @@ def main() -> None:
         g_magma = external_inspector.extract_magma_graph(magma_p)
         magma_metrics = external_inspector.compute_graph_metrics(g_magma)
 
+    # Check for local EMem graph
+    emem_p = ROOT / "external/EMem/outputs/emem_locomo_eval/sample_0/qwen2.5:7b-instruct_intfloat_e5-base-v2/graph.pickle"
+    emem_metrics = None
+    if emem_p.exists():
+        g_emem = external_inspector.extract_emem_graph(emem_p)
+        emem_metrics = external_inspector.compute_graph_metrics(g_emem)
+
+    # Check for local A-MEM graph
+    amem_candidates = [
+        ROOT / "external/AgenticMemory/cached_memories_robust_openai_qwen2.5:7b-instruct/memory_cache_sample_0.pkl",
+        ROOT / "external/AgenticMemory/memory_cache_sample_0.pkl",
+    ]
+    amem_p = next((p for p in amem_candidates if p.exists()), None)
+    amem_metrics = None
+    if amem_p and amem_p.exists():
+        g_amem = external_inspector.extract_amem_graph(amem_p)
+        amem_metrics = external_inspector.compute_graph_metrics(g_amem)
+
     print(f"Loaded {len(obs)} natural graph QA observations across {len(runs)} runs.")
 
     # 1. Figure 1
@@ -365,10 +400,10 @@ def main() -> None:
     plot_fig2_regime_breakdown(regimes, assets_dir / "fig2_regime_breakdown_bars.png")
 
     # 3. Figure 3
-    plot_fig3_degree_lorenz(runs, magma_p if magma_p.exists() else None, assets_dir / "fig3_degree_lorenz_curves.png")
+    plot_fig3_degree_lorenz(runs, magma_p if magma_p.exists() else None, emem_p if emem_p.exists() else None, amem_p if (amem_p and amem_p.exists()) else None, assets_dir / "fig3_degree_lorenz_curves.png")
 
     # 4. Figure 4
-    plot_fig4_topology_radar(runs, magma_metrics, assets_dir / "fig4_topology_radar.png")
+    plot_fig4_topology_radar(runs, magma_metrics, emem_metrics, amem_metrics, assets_dir / "fig4_topology_radar.png")
 
     print("\nAll 4 publication-quality figures successfully generated in assets/!")
 

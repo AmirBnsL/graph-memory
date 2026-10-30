@@ -42,8 +42,8 @@ class TestPredictUtility(unittest.TestCase):
     def test_natural_substrate_filtering(self):
         from graph_memory.analysis import make_tables
         runs = make_tables.load_runs()
-        obs_all = predict_utility.collect_sample_observations(runs, natural_only=False)
-        obs_nat = predict_utility.collect_sample_observations(runs, natural_only=True)
+        obs_all = predict_utility.collect_sample_observations(runs, natural_only=False, cohort="part_a")
+        obs_nat = predict_utility.collect_sample_observations(runs, natural_only=True, cohort="part_a")
 
         self.assertEqual(len(obs_nat), 160)
         self.assertGreater(len(obs_all), len(obs_nat))
@@ -56,7 +56,7 @@ class TestPredictUtility(unittest.TestCase):
     def test_h2_falsification_criteria_on_natural_graphs(self):
         from graph_memory.analysis import make_tables
         runs = make_tables.load_runs()
-        obs_nat = predict_utility.collect_sample_observations(runs, natural_only=True)
+        obs_nat = predict_utility.collect_sample_observations(runs, natural_only=True, cohort="part_a")
         res = predict_utility.analyze_observations(obs_nat)
 
         self.assertEqual(res["n"], 160)
@@ -96,7 +96,7 @@ class TestPredictUtility(unittest.TestCase):
     def test_table1_schema_filtering(self):
         from graph_memory.analysis import make_tables
         runs = make_tables.load_runs()
-        calibrated_runs = [d for d in runs if d.get("graph_metrics") and d.get("graph_metrics_by_sample")]
+        calibrated_runs = [d for d in runs if d.get("benchmark") == "longmemeval" and d.get("graph_metrics") and d.get("graph_metrics_by_sample")]
 
         # All calibrated runs have complete per-sample breakdowns and 25 samples
         self.assertEqual(len(calibrated_runs), 12)
@@ -112,7 +112,7 @@ class TestPredictUtility(unittest.TestCase):
         from graph_memory.analysis import make_tables
 
         runs = make_tables.load_runs()
-        obs_nat = predict_utility.collect_sample_observations(runs, natural_only=True)
+        obs_nat = predict_utility.collect_sample_observations(runs, natural_only=True, cohort="part_a")
         regimes = predict_utility.compute_regime_splits(obs_nat)
 
         self.assertIn("hub_concentration", regimes)

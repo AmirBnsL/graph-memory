@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import networkx as nx
+import numpy as np
 
 from graph_memory.analysis.graph_metrics import compute_graph_metrics
 
@@ -67,6 +68,19 @@ def extract_magma_graph(cache_path: Path) -> nx.Graph:
     return project_to_simple_undirected(raw_g)
 
 
+class _SafeIGraphUnpickler(pickle.Unpickler):
+    """Safely unpickle EMem igraph graph even if internal classes are not importable."""
+    def find_class(self, module: str, name: str) -> Any:
+        if "src.emem" in module or "turns" in module:
+            class DummyData:
+                def __init__(self, *args: Any, **kwargs: Any) -> None:
+                    pass
+                def __setstate__(self, state: Any) -> None:
+                    pass
+            return DummyData
+        return super().find_class(module, name)
+
+
 def extract_emem_graph(cache_path: Path) -> nx.Graph:
     """Load EMem-G's persisted graph and convert to simple undirected NetworkX graph.
 
@@ -83,7 +97,11 @@ def extract_emem_graph(cache_path: Path) -> nx.Graph:
         raise FileNotFoundError(f"EMem graph artifact not found at {cache_path}")
 
     with open(p, "rb") as f:
-        raw_obj = pickle.load(f)
+        try:
+            raw_obj = pickle.load(f)
+        except (AttributeError, ModuleNotFoundError):
+            f.seek(0)
+            raw_obj = _SafeIGraphUnpickler(f).load()
 
     simple = nx.Graph()
 
@@ -116,10 +134,13 @@ def extract_emem_graph(cache_path: Path) -> nx.Graph:
 class _SafeNoteUnpickler(pickle.Unpickler):
     """Safely unpickle A-MEM memory cache even if MemoryNote is not importable."""
     def find_class(self, module: str, name: str) -> Any:
-        if name == "MemoryNote":
+        if name in ("MemoryNote", "RobustMemoryNote") or "memory_layer" in module:
             class DummyMemoryNote:
                 def __init__(self, **kwargs: Any) -> None:
                     self.__dict__.update(kwargs)
+                def __setstate__(self, state: Any) -> None:
+                    if isinstance(state, dict):
+                        self.__dict__.update(state)
             return DummyMemoryNote
         return super().find_class(module, name)
 
@@ -152,15 +173,29 @@ def extract_amem_graph(cache_path: Path) -> nx.Graph:
     else:
         raise TypeError(f"Expected dict or list of memory notes, got {type(memories)}")
 
+    id_to_idx: dict[str, int] = {}
     for idx, note in enumerate(notes):
         simple.add_node(idx)
+        note_id = getattr(note, "id", None) or (note.get("id") if isinstance(note, dict) else None)
+        if note_id is not None:
+            id_to_idx[str(note_id)] = idx
 
     for idx, note in enumerate(notes):
         links = getattr(note, "links", None) or (note.get("links") if isinstance(note, dict) else None) or []
         for target in links:
-            if isinstance(target, int) and 0 <= target < len(notes):
-                if idx != target:
-                    simple.add_edge(idx, target)
+            t_idx = None
+            if isinstance(target, (int, np.integer)):
+                if 0 <= target < len(notes):
+                    t_idx = int(target)
+            elif isinstance(target, str):
+                if target.strip().isdigit():
+                    val = int(target.strip())
+                    if 0 <= val < len(notes):
+                        t_idx = val
+                elif target in id_to_idx:
+                    t_idx = id_to_idx[target]
+            if t_idx is not None and t_idx != idx:
+                simple.add_edge(idx, t_idx)
 
     return simple
 
@@ -228,20 +263,29 @@ def inspect_upstream_run(
 
         cov = _compute_evidence_coverage(ctx_ids, gold_ev)
         prec = _compute_precision_at_k(ctx_ids, gold_ev)
-        f1_val = float(qa.get("F1", qa.get("f1", 0.0)))
+
+        ans_str = str(qa.get("answer") or qa.get("reference") or qa.get("ground_truth") or "")
+        pred_str = str(qa.get("predicted") or qa.get("prediction") or "")
+
+        f1_candidate = qa.get("F1")
+        if f1_candidate is None:
+            f1_candidate = qa.get("f1")
+        if f1_candidate is None and isinstance(qa.get("metrics"), dict):
+            f1_candidate = qa["metrics"].get("f1") or qa["metrics"].get("F1")
+        f1_val = float(f1_candidate or 0.0)
 
         rows.append({
             "sample_id": sid,
             "question": str(qa.get("question", "")),
-            "answer": str(qa.get("answer", "")),
-            "predicted": str(qa.get("predicted", "")),
+            "answer": ans_str,
+            "predicted": pred_str,
             "evidence": gold_ev,
             "context_ids": ctx_ids,
             "evidence_coverage": cov,
             "precision_at_k": prec,
             "F1": f1_val,
             "category": int(qa.get("category", 1)),
-            "adversarial": bool(qa.get("adversarial", False)),
+            "adversarial": bool(qa.get("adversarial", False) or qa.get("category") == 5),
         })
 
     mode_map = {
@@ -261,6 +305,12 @@ def inspect_upstream_run(
             vals = [gm[metric_name] for gm in metrics_by_sample.values()]
             agg_metrics[metric_name] = sum(vals) / len(vals)
 
+    ans_rows = [r for r in rows if not r.get("adversarial")]
+    mean_f1 = sum(r["F1"] for r in rows) / len(rows) if rows else 0.0
+    ans_f1 = sum(r["F1"] for r in ans_rows) / len(ans_rows) if ans_rows else 0.0
+    mean_em = sum(1.0 for r in rows if r["predicted"].strip().lower() == r["answer"].strip().lower()) / len(rows) if rows else 0.0
+    mean_cov = sum(r["evidence_coverage"] for r in rows) / len(rows) if rows else 0.0
+
     return {
         "benchmark": benchmark,
         "mode": mode,
@@ -270,6 +320,11 @@ def inspect_upstream_run(
         "retriever": retriever,
         "k": k,
         "n": n,
+        "F1": mean_f1,
+        "F1_paper": mean_f1,
+        "F1_answerable": ans_f1,
+        "EM": mean_em,
+        "evidence_coverage": mean_cov,
         "graph_metrics": agg_metrics,
         "graph_metrics_by_sample": metrics_by_sample,
         "rows": rows,

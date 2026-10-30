@@ -6,6 +6,9 @@ Rows are keyed by **(benchmark, mode, retriever, extractor, k, n)**. `n` is part
 
 | benchmark | mode | k | retriever | extractor | n | F1 | F1_paper | EM | F1_answerable | refusal_acc | recall_any | recall_all | coverage | prompt chars | latency s | file |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| locomo | memory_amem | 10 | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 199 | 0.387 | 0.387 | 0.151 | 0.283 | – | – | – | 1.000 | 0 | 0.00 | amem_locomo_sample0.json |
+| locomo | memory_emem_g | 10 | intfloat/e5-base-v2 | qwen2.5:7b-instruct | 151 | 0.379 | 0.379 | 0.139 | 0.379 | – | – | – | 0.013 | 0 | 0.00 | emem_g_locomo_sample0.json |
+| locomo | memory_magma | 10 | minilm | qwen2.5:7b-instruct | 3 | 0.467 | 0.467 | 0.333 | 0.467 | – | – | – | 1.000 | 0 | 0.00 | magma_locomo_sample0.json |
 | locomo | vector | 2 | all-MiniLM-L6-v2 | – | 1986 | 0.076 | 0.282 | 0.037 | 0.098 | 0.919 | 0.162 | 0.136 | 0.148 | 299 | 0.33 | 20261018-214638_vector_k2_qwen2.5:7b-instruct.json |
 | locomo | vector | 5 | all-MiniLM-L6-v2 | – | 1986 | 0.118 | 0.316 | 0.059 | 0.153 | 0.879 | 0.259 | 0.214 | 0.234 | 748 | 0.46 | 20261018-220153_vector_k5_qwen2.5:7b-instruct.json |
 | locomo | vector | 10 | all-MiniLM-L6-v2 | – | 50 | 0.139 | – | 0.000 | – | – | – | – | – | 1552 | 0.26 | 20261017-220007_vector_k10_qwen2.5:7b-instruct.json |
@@ -44,6 +47,9 @@ Rows are keyed by **(benchmark, mode, retriever, extractor, k, n)**. `n` is part
 
 | benchmark | retriever | extractor | k | n | Vector Baseline | Flat Memory | Concept Graph | Rewired Graph | Flattened Graph | Bi-Temporal Event Graph (BTEG) | Bipartite Concept Graph (HippoRAG 2) | Dual-Level Graph (LightRAG) | Δ_extraction | Δ_entity_bottleneck | Δ_topology | Δ_rewire | Δ_temporal | Δ_hipporag2 | Δ_lightrag |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| locomo | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 199 | – | – | – | – | – | – | – | – | – | – | – | – | – | – | – |
+| locomo | intfloat/e5-base-v2 | qwen2.5:7b-instruct | 10 | 151 | – | – | – | – | – | – | – | – | – | – | – | – | – | – | – |
+| locomo | minilm | qwen2.5:7b-instruct | 10 | 3 | – | – | – | – | – | – | – | – | – | – | – | – | – | – | – |
 | longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 0.491 | 0.510 | 0.473 | 0.343 | 0.507 | 0.145 | 0.057 | 0.060 | +0.018 | -0.003 | -0.033 | +0.130 | -0.365 | -0.453 | -0.450 |
 | longmemeval | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 0.491 | 0.523 | 0.429 | 0.450 | 0.432 | 0.200 | 0.057 | 0.060 | +0.032 | -0.091 | -0.002 | -0.020 | -0.323 | -0.466 | -0.463 |
 | longmemeval | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 25 | 0.268 | 0.303 | 0.090 | – | 0.202 | 0.241 | – | – | +0.035 | -0.102 | -0.112 | – | -0.062 | – | – |
@@ -51,6 +57,21 @@ Rows are keyed by **(benchmark, mode, retriever, extractor, k, n)**. `n` is part
 ### Hypothesis 1 (Table 2): Category-Stratified F1 & Abstention Breakdown
 
 Categories 1–4 report token `F1`; Category 5 (`abstention`/`adversarial`) reports `refusal_accuracy`.
+
+#### `locomo` · retriever=`all-MiniLM-L6-v2` · extractor=`qwen2.5:7b-instruct` · `k=10` · `n=199`
+
+| Arm / Comparison | Cat 1: multi-hop | Cat 2: temporal | Cat 3: open-domain | Cat 4: single-hop | Cat 5: adversarial (refusal) | F1_answerable |
+|---|---|---|---|---|---|---|
+
+#### `locomo` · retriever=`intfloat/e5-base-v2` · extractor=`qwen2.5:7b-instruct` · `k=10` · `n=151`
+
+| Arm / Comparison | Cat 1: multi-hop | Cat 2: temporal | Cat 3: open-domain | Cat 4: single-hop | Cat 5: adversarial (refusal) | F1_answerable |
+|---|---|---|---|---|---|---|
+
+#### `locomo` · retriever=`minilm` · extractor=`qwen2.5:7b-instruct` · `k=10` · `n=3`
+
+| Arm / Comparison | Cat 1: multi-hop | Cat 2: temporal | Cat 3: open-domain | Cat 4: single-hop | Cat 5: adversarial (refusal) | F1_answerable |
+|---|---|---|---|---|---|---|
 
 #### `longmemeval` · retriever=`Qwen/Qwen3-Embedding-0.6B` · extractor=`qwen2.5:14b-instruct` · `k=10` · `n=25`
 
@@ -135,6 +156,9 @@ Categories 1–4 report token `F1`; Category 5 (`abstention`/`adversarial`) repo
 
 | benchmark | mode | retriever | extractor | k | n | Nodes | Edges | LCC Ratio (ρ_LCC) | Components | Degree Gini (G_deg) | Max/Avg Deg | Density | Clustering | Bridge Ratio | Temporal Ratio | Superseded Ratio |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| locomo | memory_amem | all-MiniLM-L6-v2 | qwen2.5:7b-instruct | 10 | 199 | 419.0 | 1193.0 | 1.000 | 1.0 | 0.341 | 10.89 | 0.0136 | 0.236 | 0.000 | 0.000 | 0.000 |
+| locomo | memory_emem_g | intfloat/e5-base-v2 | qwen2.5:7b-instruct | 10 | 151 | 1304.0 | 2325.0 | 1.000 | 1.0 | 0.468 | 89.18 | 0.0027 | 0.034 | 0.191 | 0.000 | 0.000 |
+| locomo | memory_magma | minilm | qwen2.5:7b-instruct | 10 | 3 | 532.0 | 5539.0 | 1.000 | 1.0 | 0.144 | 1.92 | 0.0392 | 0.464 | 0.000 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 192.8 | 159.2 | 0.397 | 69.5 | 0.576 | 11.54 | 0.0166 | 0.115 | 0.550 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 235.1 | 162.0 | 0.350 | 108.6 | 0.590 | 10.58 | 0.0162 | 0.093 | 0.569 | 0.000 | 0.000 |
 | longmemeval | memory_hipporag2 | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 272.6 | 490.8 | 0.984 | 1.5 | 0.494 | 9.97 | 0.0159 | 0.364 | 0.187 | 0.000 | 0.000 |
@@ -148,20 +172,20 @@ Categories 1–4 report token `F1`; Category 5 (`abstention`/`adversarial`) repo
 | longmemeval | memory_temporal_bteg | Qwen/Qwen3-Embedding-0.6B | qwen2.5:14b-instruct | 10 | 25 | 175.4 | 99.8 | 0.208 | 84.2 | 0.615 | 15.80 | 0.0094 | 0.006 | 0.899 | 1.000 | 0.051 |
 | longmemeval | memory_temporal_bteg | Qwen/Qwen3-Embedding-0.6B | qwen2.5:7b-instruct | 10 | 25 | 221.7 | 85.5 | 0.141 | 140.7 | 0.654 | 17.19 | 0.0090 | 0.004 | 0.932 | 1.000 | 0.037 |
 
-### Hypothesis 2 (Table 2): Univariate Topological Correlations (`n=160` natural graph QA observations)
+### Hypothesis 2 (Table 2): Univariate Topological Correlations (`n=466` natural graph QA observations)
 
 Reports Spearman rank correlation `ρ` (and two-sided permutation `p`-value) between `O(|V|+|E|)` structural metrics and per-query retrieval/QA outcomes.
 
 | Structural Predictor | ρ (Evidence Coverage) | p-val | ρ (Precision@k) | p-val | ρ (Answerable F1) | p-val | ρ (ΔF1 vs Flat) | p-val |
 |---|---|---|---|---|---|---|---|---|
-| `degree_gini` | -0.178 | 0.022 | +0.022 | 0.777 | -0.046 | 0.566 | -0.137 | 0.091 |
-| `max_degree_ratio` | -0.214 | 0.009 | -0.225 | 0.006 | -0.098 | 0.219 | -0.101 | 0.220 |
-| `largest_component_ratio` | +0.208 | 0.008 | -0.035 | 0.673 | +0.087 | 0.281 | +0.006 | 0.944 |
-| `edge_density` | +0.306 | 0.000 | -0.038 | 0.645 | +0.249 | 0.001 | +0.086 | 0.286 |
-| `clustering_coefficient` | +0.159 | 0.043 | -0.033 | 0.692 | +0.087 | 0.274 | +0.002 | 0.981 |
-| `bridge_edge_ratio` | -0.177 | 0.024 | +0.039 | 0.632 | -0.089 | 0.265 | -0.012 | 0.874 |
-| `temporal_edge_ratio` | -0.332 | 0.000 | -0.098 | 0.223 | -0.270 | 0.000 | -0.132 | 0.108 |
-| `invalidated_edge_ratio` | -0.273 | 0.001 | -0.064 | 0.431 | -0.181 | 0.022 | -0.178 | 0.026 |
+| `degree_gini` | -0.392 | 0.000 | +0.593 | 0.000 | -0.128 | 0.005 | -0.315 | 0.000 |
+| `max_degree_ratio` | -0.751 | 0.000 | -0.228 | 0.000 | +0.072 | 0.121 | +0.069 | 0.144 |
+| `largest_component_ratio` | -0.038 | 0.413 | -0.582 | 0.000 | +0.104 | 0.023 | +0.250 | 0.000 |
+| `edge_density` | +0.764 | 0.000 | +0.222 | 0.000 | -0.095 | 0.036 | -0.104 | 0.030 |
+| `clustering_coefficient` | +0.614 | 0.000 | +0.199 | 0.000 | -0.118 | 0.012 | -0.042 | 0.359 |
+| `bridge_edge_ratio` | -0.483 | 0.000 | +0.511 | 0.000 | -0.064 | 0.156 | -0.242 | 0.000 |
+| `temporal_edge_ratio` | -0.089 | 0.059 | +0.284 | 0.000 | -0.185 | 0.000 | -0.286 | 0.000 |
+| `invalidated_edge_ratio` | -0.071 | 0.134 | +0.273 | 0.000 | -0.137 | 0.003 | -0.291 | 0.000 |
 
 ### Hypothesis 2 (Table 3): Multivariate OLS Regression (`Y ~ G_deg + MaxDegRatio + ρ_LCC + Density + BridgeRatio`)
 
@@ -169,47 +193,26 @@ Standardized OLS coefficients (`β`) and model fit (`R²`, `F`-stat, permutation
 
 | Dependent Target (Y) | n | R² | Adj R² | F-stat | p-val (Model) | β (degree_gini) | β (max_deg_ratio) | β (LCC_ratio) | β (edge_density) | β (bridge_ratio) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Retrieval Evidence Coverage | 160 | **0.117** | 0.089 | 4.09 | 0.0020 | +0.008 | -0.148 | -0.003 | +0.165 | -0.264 |
-| Retrieval Precision@k | 160 | **0.115** | 0.086 | 3.98 | 0.0027 | +0.019 | -0.103 | -0.246 | +0.301 | -0.193 |
-| End-to-End Answerable F1 | 160 | **0.106** | 0.076 | 3.63 | 0.0037 | -0.091 | -0.083 | -0.394 | -0.022 | -0.095 |
-| Structural Gain (ΔF1 vs Flat) | 160 | **0.070** | 0.039 | 2.30 | 0.0460 | -0.074 | -0.048 | -0.226 | +0.180 | -0.031 |
+| Retrieval Evidence Coverage | 466 | **0.673** | 0.669 | 189.36 | 0.0003 | +0.050 | -0.744 | +0.001 | +0.117 | -0.288 |
+| Retrieval Precision@k | 466 | **0.551** | 0.546 | 112.87 | 0.0003 | +0.641 | -0.260 | +0.078 | +0.421 | +0.097 |
+| End-to-End Answerable F1 | 466 | **0.054** | 0.044 | 5.25 | 0.0003 | -0.304 | +0.233 | -0.372 | -0.086 | -0.102 |
+| Structural Gain (ΔF1 vs Flat) | 466 | **0.164** | 0.155 | 18.00 | 0.0003 | -0.552 | +0.315 | -0.431 | +0.008 | -0.176 |
 
 ### Hypothesis 2 (Table 4): Topological Regime Breakdown (Median Splits on Natural Graphs)
 
-Stratifies natural graph memory QA observations (`n=160`) at the median across the three core structural bottleneck dimensions. `Δ` reports the regime contrast (Low Hub vs High Hub; Connected vs Fragmented); `p`-values use two-sided two-sample permutation tests (2,500 draws).
+Stratifies natural graph memory QA observations (`n=466`) at the median across the three core structural bottleneck dimensions. `Δ` reports the regime contrast (Low Hub vs High Hub; Connected vs Fragmented); `p`-values use two-sided two-sample permutation tests (2,500 draws).
 
 | Structural Dimension | Partition Threshold | Regime | n | Evidence Coverage | Precision@k | Answerable F1 | ΔF1 vs Flat |
 |---|---|---|---|---|---|---|---|
-| **Hub Concentration** | Median G_deg = 0.545 | Low Degree Gini (≤ 0.545) | 81 | 0.690 | 0.170 | 0.133 | -0.270 |
-| | | High Degree Gini (> 0.545) | 79 | 0.627 | 0.184 | 0.239 | -0.337 |
-| | | **Regime Contrast (Low - High)** | – | **+0.063** (p=0.295) | **-0.014** (p=0.461) | **-0.106** (p=0.044) | **+0.067** (p=0.392) |
-| **Super-Hub Dominance** | Median Max/Avg = 13.56 | Low Max Degree Ratio (≤ 13.56) | 82 | 0.752 | 0.200 | 0.257 | -0.212 |
-| | | High Max Degree Ratio (> 13.56) | 78 | 0.561 | 0.153 | 0.110 | -0.399 |
-| | | **Regime Contrast (Low - High)** | – | **+0.191** (p=0.001) | **+0.047** (p=0.009) | **+0.148** (p=0.006) | **+0.187** (p=0.017) |
-| **Component Connectivity** | Median ρ_LCC = 0.913 | Fragmented Component Ratio (≤ 0.913) | 82 | 0.605 | 0.189 | 0.307 | -0.199 |
-| | | Connected Component Ratio (> 0.913) | 78 | 0.715 | 0.164 | 0.057 | -0.412 |
-| | | **Regime Contrast (Conn - Frag)** | – | **+0.110** (p=0.067) | **-0.025** (p=0.191) | **-0.251** (p=0.000) | **-0.213** (p=0.005) |
-
-### Hypothesis 2 Diagnostic Figures
-
-The following publication-quality diagnostic plots illustrate the non-parametric topological effects and regime boundaries evaluated on natural graph memory representations ($n=160$ natural graph QA observations plus unmodified upstream frameworks):
-
-- **Figure 1: Non-Parametric Topological Diagnostics vs Retrieval Outcomes (OLS Regression & Scatter)**
-  ![Figure 1: OLS Regression Scatter](../assets/fig1_ols_regression_scatter.png)
-  *Scatter plots and standardized OLS trendlines (with 95% confidence intervals) showing how Super-Hub Dominance ($\text{Max/Avg Degree}$) and Bridge Edge Fragility degrade Evidence Coverage and Precision@k.*
-
-- **Figure 2: Super-Hub Dominance Regime Breakdown (Median Splits on Natural Graphs)**
-  ![Figure 2: Regime Breakdown](../assets/fig2_regime_breakdown_bars.png)
-  *Grouped bar chart depicting Table 4's median splits for Super-Hub Dominance ($\text{Max/Avg} \le 13.56$ vs $> 13.56$) across Evidence Coverage (+0.191 contrast, $p=0.001$), Precision@k (+0.047 contrast, $p=0.009$), Answerable F1 (+0.148 contrast, $p=0.006$), and Structural Gain $\Delta\text{F1}$ vs Flat (+0.187 contrast, $p=0.017$).*
-
-- **Figure 3: Degree Lorenz Curves & Structural Gini Inequality**
-  ![Figure 3: Degree Lorenz Curves](../assets/fig3_degree_lorenz_curves.png)
-  *Degree Lorenz curves measuring structural degree inequality across memory architectures. Unconstrained entity graphs (HippoRAG, BTEG) exhibit severe Gini bowing ($G \ge 0.58$), whereas episode-chunked multi-graphs (MAGMA, $G = 0.144$) stay close to the line of perfect equality.*
-
-- **Figure 4: Multi-Dimensional Structural Topology Radar**
-  ![Figure 4: Topology Radar](../assets/fig4_topology_radar.png)
-  *Radar chart contrasting the six-dimensional structural fingerprint (Degree Equality, Hub Containment, Connectivity, Density, Clustering, and Robustness) across HippoRAG, HippoRAG 2, LightRAG, Temporal BTEG, and MAGMA.*
-
+| **Hub Concentration** | Median G_deg = 0.468 | Low Degree Gini (≤ 0.468) | 323 | 0.533 | 0.015 | 0.324 | -0.011 |
+| | | High Degree Gini (> 0.468) | 143 | 0.632 | 0.165 | 0.185 | -0.315 |
+| | | **Regime Contrast (Low - High)** | – | **-0.099** (p=0.041) | **-0.150** (p=0.000) | **+0.139** (p=0.000) | **+0.304** (p=0.000) |
+| **Super-Hub Dominance** | Median Max/Avg = 12.77 | Low Max Degree Ratio (≤ 12.77) | 235 | 0.918 | 0.068 | 0.277 | -0.075 |
+| | | High Max Degree Ratio (> 12.77) | 231 | 0.201 | 0.053 | 0.286 | -0.133 |
+| | | **Regime Contrast (Low - High)** | – | **+0.717** (p=0.000) | **+0.015** (p=0.134) | **-0.008** (p=0.790) | **+0.058** (p=0.050) |
+| **Component Connectivity** | Median ρ_LCC = 1.00 | Fragmented Component Ratio (≤ 1.00) | 466 | 0.563 | 0.061 | 0.282 | -0.104 |
+| | | Connected Component Ratio (> 1.00) | 0 | 0.000 | 0.000 | 0.000 | +0.000 |
+| | | **Regime Contrast (Conn - Frag)** | – | **-0.563** (p=1.000) | **-0.061** (p=1.000) | **-0.282** (p=1.000) | **+0.104** (p=1.000) |
 
 ### Retrieval recall by category: locomo
 

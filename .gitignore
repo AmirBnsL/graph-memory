@@ -15,9 +15,18 @@ graphs/embeddings/
 # results are small and SHOULD be committed so numbers are auditable
 # results/   <- intentionally NOT ignored
 
-# ...but the colab working logs are refreshed on every pull and churn the tree;
-# the metrics they echo live in results/*.json, which ARE committed
+# logs
+*.log
 results/*.log
+
+# AI tutoring & private session records
+MISSION.md
+NOTES.md
+RESOURCES.md
+learning-records/
+lessons/
+reference/
+skills/
 
 # python
 __pycache__/
